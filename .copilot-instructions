@@ -1,0 +1,31 @@
+# GitHub Copilot Instructions for MathPuzzle Project
+
+## General Rules
+- Always maintain up-to-date documentation when making code changes.
+- Update tests to reflect new functionality or bug fixes.
+- Ensure all changes are tested before committing.
+
+## Documentation Updates
+- **README.md**: Update features, installation, usage, and project structure as needed.
+- **USER_GUIDE.md**: Keep step-by-step instructions current with any UI or gameplay changes.
+- Add new sections or modify existing ones when introducing new features.
+
+## Testing Requirements
+- **Unit Tests**: Update `test_math_game.py` for console logic changes.
+- **Web App Tests**: Update `test_app.py` for Flask app changes.
+- Add new test cases for new features.
+- Ensure all tests pass before finalizing changes.
+
+## Code Changes
+- When adding new question categories or difficulties, update both console and web implementations.
+- Maintain consistency between console and web versions.
+- Update highscore handling if data structure changes.
+
+## File Management
+- Keep project structure organized as documented in README.md.
+- Update file lists in documentation when adding/removing files.
+
+## Quality Assurance
+- Run full test suite after any changes: `python -m unittest test_math_game.py test_app.py`
+- Verify web app functionality by starting server and testing manually.
+- Check for any broken links or outdated information in docs.

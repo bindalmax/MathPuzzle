@@ -95,7 +95,7 @@ class TestGame(unittest.TestCase):
     def test_run_game_loop_quit(self, mock_input, mock_thread):
         mock_factory = MagicMock()
         mock_factory.create_question.side_effect = [("What is 10 + 5? ", 15), ("What is 2 + 2? ", 4)]
-        game = Game("TestPlayer", mock_factory, self.mock_highscore_manager)
+        game = Game("TestPlayer", mock_factory)
         score = game.run()
         self.assertEqual(score, 1)
         self.assertEqual(mock_input.call_count, 2)
@@ -108,8 +108,8 @@ class TestGame(unittest.TestCase):
         mock_factory = MagicMock()
         mock_factory.create_question.return_value = ("What is 10 + 5? ", 15)
         
-        game = Game("TestPlayer", mock_factory, self.mock_highscore_manager, duration=20)
-        
+        game = Game("TestPlayer", mock_factory, duration=20)
+
         def input_side_effect(*args):
             if mock_input.call_count == 1:
                 return '15'
