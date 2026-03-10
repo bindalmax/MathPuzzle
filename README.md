@@ -15,7 +15,7 @@ A fun and educational math quiz game available in both console and web interface
 - **Decimals and Fractions**: Operations with decimal numbers and fractions.
 - **Percentages**: Calculate percentages and percentage-based problems.
 - **Profit and Loss**: Business math problems involving profit and loss calculations.
-- **Algebra**: Simple algebraic equations (easy level only).
+- **Algebra**: Simple algebraic equations.
 
 ### Difficulty Levels
 - **Easy**: Smaller numbers and simpler operations.
