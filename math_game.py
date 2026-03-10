@@ -38,11 +38,14 @@ class Game:
         self.score = 0
         self.duration = duration
         self.game_over = threading.Event()
+        self.timer_expired = False
 
     def timer_thread(self):
         time.sleep(self.duration)
-        self.game_over.set()
-        print("\nTime's up!")
+        if not self.game_over.is_set():
+            self.timer_expired = True
+            self.game_over.set()
+            print("\nTime's up! Press Enter to see your score.")
 
     def run(self):
         print(f"\nStarting game for {self.player_name}! You have {self.duration} seconds.")
@@ -77,48 +80,57 @@ class Game:
                 if not self.game_over.is_set():
                     print("Invalid input. Please enter a number or 'quit'.")
                 break
-
-        if timer.is_alive():
-            timer.join(timeout=1)
-            
         return self.score
 
 # --- Main Execution ---
 def main():
     player_name = input("Enter your name: ")
-
-    print("Select a question category:")
-    print("1. Basic Arithmetic (+, -, *, /)")
-    print("2. Decimals and Fractions")
-    print("3. Percentages")
-    print("4. Profit and Loss")
-    print("5. Algebra")
-    
-    category_map = {"1": "basic", "2": "decimal", "3": "percentage", "4": "profit_loss", "5": "algebra"}
-    while True:
-        choice = input("Enter your choice (1-5): ")
-        if choice in category_map:
-            category = category_map[choice]
-            break
-        else:
-            print("Invalid choice. Please select a valid category.")
-
-    while True:
-        level = input("Choose a difficulty (Easy, Medium, Hard): ").lower()
-        if level in ['easy', 'medium', 'hard']:
-            break
-        else:
-            print("Invalid difficulty.")
-
-    factory = QuestionFactory(category, level)
-    game = Game(player_name, factory)
-    final_score = game.run()
-
-    print(f"\nGame over, {player_name}! Your final score is {final_score}")
-
     highscore_manager = HighscoreManager()
-    highscores = highscore_manager.add_score(player_name, final_score)
-    highscore_manager.display(highscores)
+
+    while True:
+        print("\n--- Main Menu ---")
+        print("1. Basic Arithmetic")
+        print("2. Decimals and Fractions")
+        print("3. Percentages")
+        print("4. Profit and Loss")
+        print("5. Algebra")
+        print("6. Quit Game")
+        
+        choice = input("Enter your choice (1-6): ")
+
+        if choice == '6':
+            print("\nThanks for playing!")
+            break
+
+        category_map = {"1": "basic", "2": "decimal", "3": "percentage", "4": "profit_loss", "5": "algebra"}
+        if choice not in category_map:
+            print("Invalid choice. Please try again.")
+            continue
+        
+        category = category_map[choice]
+
+        print("\nChoose a difficulty:")
+        print("1. Easy")
+        print("2. Medium")
+        print("3. Hard")
+        level_map = {"1": "easy", "2": "medium", "3": "hard"}
+        while True:
+            level_choice = input("Enter your choice (1-3): ")
+            if level_choice in level_map:
+                level = level_map[level_choice]
+                break
+            else:
+                print("Invalid choice.")
+
+        factory = QuestionFactory(category, level)
+        game = Game(player_name, factory)
+        final_score = game.run()
+
+        print(f"\nRound over, {player_name}! Your score for this round is {final_score}")
+        highscore_manager.add_score(player_name, final_score)
+        highscore_manager.display(highscore_manager.load())
+        
+        input("\nPress Enter to return to the main menu...")
 
 if __name__ == "__main__":
     main()

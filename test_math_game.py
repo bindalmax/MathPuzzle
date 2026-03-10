@@ -1,6 +1,5 @@
 import unittest
 import os
-import time
 from unittest.mock import patch, MagicMock
 from fractions import Fraction
 
@@ -88,43 +87,44 @@ class TestProfitLossQuestion(unittest.TestCase):
         self.assertEqual(answer, 10)
 
 class TestGame(unittest.TestCase):
+    def setUp(self):
+        self.mock_highscore_manager = MagicMock()
+
+    @patch('math_game.threading.Thread')
     @patch('builtins.input', side_effect=['15', 'quit'])
-    def test_run_game_loop_quit(self, mock_input):
+    def test_run_game_loop_quit(self, mock_input, mock_thread):
         mock_factory = MagicMock()
         mock_factory.create_question.side_effect = [("What is 10 + 5? ", 15), ("What is 2 + 2? ", 4)]
-        game = Game("TestPlayer", mock_factory)
+        game = Game("TestPlayer", mock_factory, self.mock_highscore_manager)
         score = game.run()
         self.assertEqual(score, 1)
         self.assertEqual(mock_input.call_count, 2)
         self.assertEqual(mock_factory.create_question.call_count, 2)
 
+    @patch('math_game.os._exit')
     @patch('math_game.threading.Thread')
     @patch('builtins.input')
-    def test_game_ends_after_timer(self, mock_input, mock_thread):
+    def test_game_ends_after_timer(self, mock_input, mock_thread, mock_exit):
         mock_factory = MagicMock()
         mock_factory.create_question.return_value = ("What is 10 + 5? ", 15)
         
-        game = Game("TestPlayer", mock_factory, duration=20)
+        game = Game("TestPlayer", mock_factory, self.mock_highscore_manager, duration=20)
         
-        # Simulate user input behavior
         def input_side_effect(*args):
-            # First call: User answers correctly
             if mock_input.call_count == 1:
                 return '15'
-            # Second call: Timer expires (simulated), loop should break
             elif mock_input.call_count == 2:
                 game.game_over.set()
-                return '15' # Return value doesn't matter as loop breaks
+                return '15'
             return '15'
         
         mock_input.side_effect = input_side_effect
 
         score = game.run()
-
-        # Score should be 1 because the first answer was processed correctly
         self.assertEqual(score, 1)
-        # Input should be called twice: once for the answer, once when timer expires
         self.assertEqual(mock_input.call_count, 2)
+        # Ensure os._exit is not called during the test run
+        mock_exit.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()
