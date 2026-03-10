@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Over</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Game Over!</h1>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% else %}
+        <p>Your final score is: <strong>{{ score }}</strong></p>
+    {% endif %}
+    <br>
+    <a href="{{ url_for('index') }}">Play Again</a>
+</body>
+</html>
