@@ -1,50 +1,8 @@
 [
     {
-        "name": "Mayank",
-        "score": 7
-    },
-    {
-        "name": "Mayank",
-        "score": 7
-    },
-    {
-        "name": "Mayank",
-        "score": 4
-    },
-    {
-        "name": "Max",
-        "score": 2
-    },
-    {
-        "name": "hhh",
-        "score": 4
-    },
-    {
-        "name": "Mayank",
-        "score": 3
-    },
-    {
-        "name": "mayank",
-        "score": 3
-    },
-    {
-        "name": "hh",
-        "score": 7
-    },
-    {
-        "name": "hh",
-        "score": 5
-    },
-    {
-        "name": "hh",
-        "score": 5
-    },
-    {
-        "name": "MB",
-        "score": 1
-    },
-    {
-        "name": "MB",
-        "score": 6
+        "name": "Thundrblade",
+        "score": 3,
+        "category": "basic",
+        "difficulty": "easy"
     }
 ]

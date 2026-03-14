@@ -1,34 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from questions import QuestionFactory
+from highscore_manager import HighscoreManager
 import time
 import os
-import json
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-
-# --- Highscore Management (copied from math_game.py) ---
-class HighscoreManager:
-    def __init__(self, filename="highscores.json"):
-        self.filename = filename
-
-    def load(self):
-        if not os.path.exists(self.filename):
-            return []
-        with open(self.filename, 'r') as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return []
-
-    def save(self, highscores):
-        with open(self.filename, 'w') as f:
-            json.dump(highscores, f, indent=4)
-
-    def add_score(self, name, score):
-        highscores = self.load()
-        highscores.append({'name': name, 'score': score})
-        self.save(highscores)
 
 highscore_manager = HighscoreManager()
 
@@ -38,7 +15,10 @@ def index():
         session['player_name'] = request.form['player_name']
         session['category'] = request.form['category']
         session['difficulty'] = request.form['difficulty']
+        session['mode'] = request.form.get('mode', 'time')
+        session['mode_value'] = int(request.form.get('mode_value', 20))
         session['score'] = 0
+        session['questions_answered'] = 0
         session['start_time'] = time.time()
         return redirect(url_for('game'))
     
@@ -50,7 +30,14 @@ def game():
         return redirect(url_for('index'))
 
     elapsed_time = time.time() - session['start_time']
-    if elapsed_time > 20:
+    mode = session.get('mode', 'time')
+    mode_value = session.get('mode_value', 20)
+    questions_answered = session.get('questions_answered', 0)
+
+    # Check if game should end based on mode
+    if mode == 'time' and elapsed_time > mode_value:
+        return redirect(url_for('game_over'))
+    elif mode == 'questions' and questions_answered >= mode_value:
         return redirect(url_for('game_over'))
 
     factory = QuestionFactory(session['category'], session['difficulty'])
@@ -60,10 +47,20 @@ def game():
     except NotImplementedError:
         return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented for the '{session['difficulty']}' difficulty yet!")
 
-    return render_template('game.html', 
-                           question=question, 
-                           score=session['score'],
-                           time_left=int(20 - elapsed_time))
+    if mode == 'time':
+        time_left = int(mode_value - elapsed_time)
+        return render_template('game.html',
+                               question=question,
+                               score=session['score'],
+                               time_left=time_left,
+                               mode=mode)
+    else:
+        questions_left = mode_value - questions_answered
+        return render_template('game.html',
+                               question=question,
+                               score=session['score'],
+                               questions_left=questions_left,
+                               mode=mode)
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
@@ -79,6 +76,7 @@ def submit_answer():
     except (ValueError, TypeError):
         pass
     
+    session['questions_answered'] = session.get('questions_answered', 0) + 1
     return redirect(url_for('game'))
 
 @app.route('/game_over')
@@ -88,7 +86,9 @@ def game_over():
     
     # Save the score
     if 'start_time' in session: # Ensure it's a real game over
-        highscore_manager.add_score(player_name, score)
+        category = session.get('category', 'unknown')
+        difficulty = session.get('difficulty', 'unknown')
+        highscore_manager.add_score(player_name, score, category, difficulty)
 
     # Clean up session for the next game
     session.pop('start_time', None)

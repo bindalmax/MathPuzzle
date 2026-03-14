@@ -26,11 +26,13 @@ class TestHighscoreManager(unittest.TestCase):
         self.manager.save(scores)
         self.assertEqual(self.manager.load(), scores)
     def test_add_score(self):
-        self.manager.add_score('Player1', 10)
+        self.manager.add_score('Player1', 10, 'basic', 'easy')
         scores = self.manager.load()
         self.assertEqual(len(scores), 1)
         self.assertEqual(scores[0]['name'], 'Player1')
         self.assertEqual(scores[0]['score'], 10)
+        self.assertEqual(scores[0]['category'], 'basic')
+        self.assertEqual(scores[0]['difficulty'], 'easy')
 
 class TestQuestionFactory(unittest.TestCase):
     def test_creates_basic_arithmetic_question(self):
@@ -58,6 +60,13 @@ class TestDecimalFractionQuestion(unittest.TestCase):
         self.assertEqual(question, "What is 2.5 + 3.5? ")
         self.assertEqual(answer, 6.0)
 
+    @patch('questions.decimal_fraction.random.choice', side_effect=['decimal', '*'])
+    @patch('questions.decimal_fraction.random.uniform', side_effect=[10.0, 5.0])
+    def test_medium_decimal_multiplication(self, mock_uniform, mock_choice):
+        question, answer = DecimalFractionQuestion().generate('medium')
+        self.assertIn("What is 10.0 * 5.0?", question)
+        self.assertEqual(answer, 50.0)
+
 class TestPercentageQuestion(unittest.TestCase):
     @patch('questions.percentage.random.choice', return_value=25)
     @patch('questions.percentage.random.randint', return_value=4)
@@ -66,6 +75,20 @@ class TestPercentageQuestion(unittest.TestCase):
         self.assertEqual(question, "What is 25% of 40? ")
         self.assertEqual(answer, 10.0)
 
+    @patch('questions.percentage.random.choice', side_effect=['percentage_of', 25])
+    @patch('questions.percentage.random.randint', return_value=10)
+    def test_medium_percentage_of(self, mock_randint, mock_choice):
+        question, answer = PercentageQuestion().generate('medium')
+        self.assertIn("What is 25% of", question)
+        self.assertIsInstance(answer, int)
+
+    @patch('questions.percentage.random.choice', side_effect=['increase_decrease', 20, True])
+    @patch('questions.percentage.random.randint', return_value=100)
+    def test_hard_percentage_increase(self, mock_randint, mock_choice):
+        question, answer = PercentageQuestion().generate('hard')
+        self.assertIn("increased by 20%", question)
+        self.assertEqual(answer, 120.0)
+
 class TestAlgebraQuestion(unittest.TestCase):
     @patch('questions.algebra.random.randint', side_effect=[5, 8])
     def test_easy_algebra(self, mock_randint):
@@ -73,18 +96,12 @@ class TestAlgebraQuestion(unittest.TestCase):
         self.assertEqual(question, "Solve for x: x + 8 = 13")
         self.assertEqual(answer, 5)
 
-class TestProfitLossQuestion(unittest.TestCase):
-    @patch('questions.profit_loss.random.randint', side_effect=[50, 60])
-    def test_profit_question(self, mock_randint):
-        question, answer = ProfitLossQuestion().generate('easy')
-        self.assertEqual(question, "A toy is bought for $50 and sold for $60. What is the profit? ")
-        self.assertEqual(answer, 10)
-
-    @patch('questions.profit_loss.random.randint', side_effect=[50, 40])
-    def test_loss_question(self, mock_randint):
-        question, answer = ProfitLossQuestion().generate('easy')
-        self.assertEqual(question, "A toy is bought for $50 and sold for $40. What is the loss? ")
-        self.assertEqual(answer, 10)
+    @patch('questions.algebra.random.choice', return_value='multiplication')
+    @patch('questions.algebra.random.randint', side_effect=[3, 4])
+    def test_medium_algebra_multiplication(self, mock_randint, mock_choice):
+        question, answer = AlgebraQuestion().generate('medium')
+        self.assertEqual(question, "Solve for x: 4x = 12")
+        self.assertEqual(answer, 3)
 
 class TestGame(unittest.TestCase):
     def setUp(self):
@@ -95,7 +112,7 @@ class TestGame(unittest.TestCase):
     def test_run_game_loop_quit(self, mock_input, mock_thread):
         mock_factory = MagicMock()
         mock_factory.create_question.side_effect = [("What is 10 + 5? ", 15), ("What is 2 + 2? ", 4)]
-        game = Game("TestPlayer", mock_factory)
+        game = Game("TestPlayer", mock_factory, mode='time', value=20)
         score = game.run()
         self.assertEqual(score, 1)
         self.assertEqual(mock_input.call_count, 2)
@@ -108,7 +125,7 @@ class TestGame(unittest.TestCase):
         mock_factory = MagicMock()
         mock_factory.create_question.return_value = ("What is 10 + 5? ", 15)
         
-        game = Game("TestPlayer", mock_factory, duration=20)
+        game = Game("TestPlayer", mock_factory, mode='time', value=20)
 
         def input_side_effect(*args):
             if mock_input.call_count == 1:
@@ -125,6 +142,46 @@ class TestGame(unittest.TestCase):
         self.assertEqual(mock_input.call_count, 2)
         # Ensure os._exit is not called during the test run
         mock_exit.assert_not_called()
+
+    @patch('math_game.threading.Thread')
+    @patch('builtins.input', side_effect=['15', '10', '10'])
+    def test_game_question_count_mode(self, mock_input, mock_thread):
+        mock_factory = MagicMock()
+        mock_factory.create_question.side_effect = [
+            ("What is 10 + 5? ", 15),
+            ("What is 20 - 10? ", 10),
+            ("What is 2 * 5? ", 10)
+        ]
+        game = Game("TestPlayer", mock_factory, mode='questions', value=3)
+        score = game.run()
+        self.assertEqual(score, 3)
+        self.assertEqual(mock_factory.create_question.call_count, 3)
+
+class TestProfitLossQuestion(unittest.TestCase):
+    @patch('questions.profit_loss.random.randint', side_effect=[50, 60])
+    def test_profit_question(self, mock_randint):
+        question, answer = ProfitLossQuestion().generate('easy')
+        self.assertEqual(question, "A toy is bought for $50 and sold for $60. What is the profit? ")
+        self.assertEqual(answer, 10)
+
+    @patch('questions.profit_loss.random.randint', side_effect=[50, 40])
+    def test_loss_question(self, mock_randint):
+        question, answer = ProfitLossQuestion().generate('easy')
+        self.assertEqual(question, "A toy is bought for $50 and sold for $40. What is the loss? ")
+        self.assertEqual(answer, 10)
+
+    @patch('questions.profit_loss.random.randint', side_effect=[200, 300])
+    def test_medium_profit_percentage(self, mock_randint):
+        question, answer = ProfitLossQuestion().generate('medium')
+        self.assertIn("What is the profit percentage?", question)
+        self.assertIsInstance(answer, int)
+
+    @patch('questions.profit_loss.random.choice', side_effect=['discount', 20])
+    @patch('questions.profit_loss.random.randint', return_value=1000)
+    def test_hard_discount(self, mock_randint, mock_choice):
+        question, answer = ProfitLossQuestion().generate('hard')
+        self.assertIn("After a 20% discount", question)
+        self.assertIsInstance(answer, float)
 
 if __name__ == '__main__':
     unittest.main()
