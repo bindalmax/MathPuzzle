@@ -1,0 +1,296 @@
+# Quick Reference: Testing Checklist
+
+## Before Committing Code ✅
+
+```
+□ Code Change Complete
+  □ Feature implemented
+  □ No syntax errors
+
+□ Grep for Method Usage
+  grep -r "method_name" --include="*.py" .
+
+□ Update All Callers
+  □ Console game (math_game.py)
+  □ Web app (app.py)
+  □ Console tests (test_math_game.py)
+  □ Web tests (test_app.py)
+  □ Templates (if accessing fields)
+
+□ Run Tests
+  python -m unittest test_math_game.py test_app.py -v
+
+□ Run CI Validator
+  python ci_validator.py
+  Expected: ✅ ALL CHECKS PASSED!
+
+□ Commit with Clear Message
+  git commit -m "Feature: [name]
+    - [specific change 1]
+    - [specific change 2]
+    - [what tests validate]
+    - All [X] tests passing"
+
+□ Push
+  git push
+```
+
+---
+
+## When Something Breaks 🔧
+
+### TypeError: takes N positional arguments but M were given
+
+**Step 1:** Read the error carefully
+- Which method? (e.g., add_score)
+- Expected vs actual argument count?
+
+**Step 2:** Find the method signature
+```bash
+grep -n "def method_name" --include="*.py" .
+```
+
+**Step 3:** Find all callers
+```bash
+grep -rn "method_name(" --include="*.py" .
+```
+
+**Step 4:** Check which caller is wrong
+```bash
+# Look at line numbers from grep output
+# Check if parameters match
+```
+
+**Step 5:** Fix the caller
+```python
+# Update call to match signature
+mgr.add_score('Player', 100, 'basic', 'easy')  # ✅ Correct
+```
+
+**Step 6:** Run tests
+```bash
+python ci_validator.py
+```
+
+---
+
+## Test Commands Quick Reference
+
+```bash
+# Run all tests
+python -m unittest discover -s . -p "test_*.py" -v
+
+# Run specific file
+python -m unittest test_math_game.py -v
+
+# Run specific class
+python -m unittest test_app.TestWebApp -v
+
+# Run specific method
+python -m unittest test_app.TestWebApp.test_leaderboard -v
+
+# Run CI validation
+python ci_validator.py
+
+# Run pre-commit validation
+bash pre-commit-validation.sh
+```
+
+---
+
+## File Update Checklist Template
+
+**When changing: `add_score(name, score)` → `add_score(name, score, category, difficulty)`**
+
+**Files to check:**
+- [ ] math_game.py - main() function (line ~184)
+- [ ] app.py - game_over() route (line ~112)
+- [ ] test_math_game.py - TestHighscoreManager.test_add_score() (line ~29)
+- [ ] test_app.py - TestWebApp.test_leaderboard() (line ~94-95)
+- [ ] templates/leaderboard.html - template display
+- [ ] METHOD_DEPENDENCIES.md - update tracking doc
+
+---
+
+## Test Coverage by Component
+
+```
+Math Game
+├── Questions (5 categories × 3 difficulties)
+│   ├── BasicArithmetic ✓
+│   ├── Decimal ✓
+│   ├── Percentage ✓
+│   ├── Algebra ✓
+│   └── ProfitLoss ✓
+├── Game Logic
+│   ├── Timer Mode ✓
+│   ├── Question Count Mode ✓
+│   └── Scoring ✓
+└── Highscores
+    ├── Save/Load ✓
+    ├── Display ✓
+    └── Category/Difficulty ✓
+
+Web App
+├── Routes
+│   ├── Index ✓
+│   ├── Game ✓
+│   ├── Game Over ✓
+│   ├── Leaderboard ✓
+│   └── Quit ✓
+└── Session Management ✓
+
+Total: 28 Tests ✅
+```
+
+---
+
+## Documentation to Update
+
+When making changes, update these:
+
+```
+Code Change → Updates Required:
+├── Source Code (*.py)
+├── Tests (test_*.py)
+├── Templates (*.html)
+├── METHOD_DEPENDENCIES.md
+├── Commit Message
+└── CHANGELOG (if applicable)
+```
+
+---
+
+## Common Patterns
+
+### Pattern 1: Adding a Parameter to a Method
+
+```
+1. Add parameter with default: def method(self, ..., new_param="default")
+2. Grep for all calls: grep -r "method(" --include="*.py" .
+3. Update all calls with new parameter
+4. Update all tests
+5. Run full test suite
+6. Clear commit message
+```
+
+### Pattern 2: Changing Return Type
+
+```
+1. Update method
+2. Update all callers that use the return value
+3. Update tests checking return value
+4. Run full test suite
+5. Review templates if they use the value
+```
+
+### Pattern 3: Refactoring Internal Logic
+
+```
+1. Change internal logic
+2. Keep method signature same
+3. Run tests (should still pass)
+4. If tests fail, you broke the interface
+5. Revert and try again
+```
+
+---
+
+## Red Flags 🚩
+
+If you see these, something's wrong:
+
+```
+❌ grep finds the method, but no callers
+   → Did you remove all usage? Check tests!
+
+❌ Test file imports method but doesn't test it
+   → Write a test for it
+
+❌ Commit message says "fixed tests"
+   → Too vague! Be specific.
+
+❌ "All tests pass" but CI validator fails
+   → Run: python ci_validator.py
+
+❌ Method signature in doc doesn't match code
+   → Update METHOD_DEPENDENCIES.md
+```
+
+---
+
+## Success Checklist ✅
+
+Before declaring a change "done":
+
+```
+□ Code compiles/runs without error
+□ grep shows all usages found
+□ All callers updated
+□ All tests updated
+□ Full test suite passes (28/28)
+□ CI validator passes
+□ Commit message is clear
+□ Documentation updated
+□ No regressions in other tests
+□ Ready for code review
+```
+
+---
+
+## Emergency Quick-Fix
+
+If you're in a rush and hit an error:
+
+```bash
+# 1. Identify the error
+# e.g., "TypeError: add_score() takes 3 positional arguments but 5 were given"
+
+# 2. Find the method
+grep -n "def add_score" *.py
+
+# 3. Find the bad call
+grep -n "add_score(" *.py
+
+# 4. Count parameters in definition
+# def add_score(self, name, score, category="unknown", difficulty="unknown"):
+# Needs: name, score, category, difficulty
+
+# 5. Count parameters in bad call
+# add_score('Player', 10)
+# Has: 'Player', 10 → MISSING category, difficulty
+
+# 6. Fix it
+# add_score('Player', 10, 'basic', 'easy')
+
+# 7. Run tests
+python -m unittest test_*.py
+
+# 8. Commit
+git add .
+git commit -m "Fix [method] calls - add missing parameters"
+```
+
+---
+
+## Remember
+
+> **"Grep before you change, test after you code."**
+
+This single habit prevents 90% of integration errors.
+
+---
+
+## Need Help?
+
+1. **Understanding a test failure?** → TESTING_GUIDELINES.md
+2. **What depends on what?** → METHOD_DEPENDENCIES.md
+3. **How did we fix the bug?** → BUGFIX_REPORT.md
+4. **General testing approach?** → TESTING_STRATEGY.md
+5. **Quick syntax question?** → This file!
+
+---
+
+Generated: March 10, 2026
+Keep this file handy! 📌
+

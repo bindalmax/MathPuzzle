@@ -17,18 +17,22 @@ class ProfitLossQuestion(Question):
                 return question, loss
         elif difficulty == 'medium':
             cost_price = random.randint(100, 1000)
-            sell_price = random.randint(int(cost_price * 0.8), int(cost_price * 1.5))
+            # Choose profit/loss percentage that results in integer amounts
+            profit_loss_percent = random.randint(5, 50)  # 5% to 50%
+            is_profit = random.choice([True, False])
 
-            if sell_price > cost_price:
-                profit = sell_price - cost_price
-                profit_percent = (profit / cost_price) * 100
+            if is_profit:
+                # Calculate profit amount that gives exact percentage
+                profit = (profit_loss_percent * cost_price) // 100
+                sell_price = cost_price + profit
                 question = f"A gadget costs ${cost_price} and is sold for ${sell_price}. What is the profit percentage? "
-                return question, round(profit_percent, 2)
+                return question, profit_loss_percent
             else:
-                loss = cost_price - sell_price
-                loss_percent = (loss / cost_price) * 100
+                # Calculate loss amount that gives exact percentage
+                loss = (profit_loss_percent * cost_price) // 100
+                sell_price = cost_price - loss
                 question = f"A gadget costs ${cost_price} and is sold for ${sell_price}. What is the loss percentage? "
-                return question, round(loss_percent, 2)
+                return question, profit_loss_percent
         elif difficulty == 'hard':
             q_type = random.choice(['discount', 'multiple'])
 

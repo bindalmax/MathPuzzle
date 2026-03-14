@@ -25,9 +25,13 @@ Run: `python math_game.py`
    - 1: Easy
    - 2: Medium
    - 3: Hard
-4. Answer questions as they appear (you have 20 seconds total).
-5. Type 'quit' to end early.
-6. View your score and high scores.
+4. Choose game mode:
+   - 1: Time Mode - Answer as many questions as you can in X seconds (5-300 seconds)
+   - 2: Question Count Mode - Answer exactly X questions (1-100 questions)
+5. Enter your custom time or question count.
+6. Answer questions as they appear.
+7. Type 'quit' to end early.
+8. View your score and high scores.
 
 ### Tips
 - Answers are checked with a small tolerance for decimals.
@@ -43,11 +47,15 @@ Open your browser to: `http://127.0.0.1:5000/`
 ### Gameplay Steps
 1. Enter your name.
 2. Select a category and difficulty from the dropdowns.
-3. Click "Start Game".
-4. Answer the questions shown (20-second timer).
-5. Submit each answer.
-6. View your final score.
-7. Click "Play Again" or "View Leaderboard".
+3. Choose a game mode:
+   - **Time Mode**: Answer as many as you can in X seconds (5-300 seconds, default 20)
+   - **Question Count Mode**: Answer exactly X questions (1-100 questions, default 10)
+4. Enter your custom time or question count value.
+5. Click "Start Game".
+6. Answer the questions shown.
+7. Submit each answer.
+8. View your final score.
+9. Click "Play Again" or "View Leaderboard".
 
 ### Navigation
 - **Leaderboard**: Click the link on the main page or game over page.

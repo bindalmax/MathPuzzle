@@ -26,11 +26,13 @@ class TestHighscoreManager(unittest.TestCase):
         self.manager.save(scores)
         self.assertEqual(self.manager.load(), scores)
     def test_add_score(self):
-        self.manager.add_score('Player1', 10)
+        self.manager.add_score('Player1', 10, 'basic', 'easy')
         scores = self.manager.load()
         self.assertEqual(len(scores), 1)
         self.assertEqual(scores[0]['name'], 'Player1')
         self.assertEqual(scores[0]['score'], 10)
+        self.assertEqual(scores[0]['category'], 'basic')
+        self.assertEqual(scores[0]['difficulty'], 'easy')
 
 class TestQuestionFactory(unittest.TestCase):
     def test_creates_basic_arithmetic_question(self):
@@ -78,7 +80,7 @@ class TestPercentageQuestion(unittest.TestCase):
     def test_medium_percentage_of(self, mock_randint, mock_choice):
         question, answer = PercentageQuestion().generate('medium')
         self.assertIn("What is 25% of", question)
-        self.assertIsInstance(answer, float)
+        self.assertIsInstance(answer, int)
 
     @patch('questions.percentage.random.choice', side_effect=['increase_decrease', 20, True])
     @patch('questions.percentage.random.randint', return_value=100)
@@ -110,7 +112,7 @@ class TestGame(unittest.TestCase):
     def test_run_game_loop_quit(self, mock_input, mock_thread):
         mock_factory = MagicMock()
         mock_factory.create_question.side_effect = [("What is 10 + 5? ", 15), ("What is 2 + 2? ", 4)]
-        game = Game("TestPlayer", mock_factory)
+        game = Game("TestPlayer", mock_factory, mode='time', value=20)
         score = game.run()
         self.assertEqual(score, 1)
         self.assertEqual(mock_input.call_count, 2)
@@ -123,7 +125,7 @@ class TestGame(unittest.TestCase):
         mock_factory = MagicMock()
         mock_factory.create_question.return_value = ("What is 10 + 5? ", 15)
         
-        game = Game("TestPlayer", mock_factory, duration=20)
+        game = Game("TestPlayer", mock_factory, mode='time', value=20)
 
         def input_side_effect(*args):
             if mock_input.call_count == 1:
@@ -140,6 +142,20 @@ class TestGame(unittest.TestCase):
         self.assertEqual(mock_input.call_count, 2)
         # Ensure os._exit is not called during the test run
         mock_exit.assert_not_called()
+
+    @patch('math_game.threading.Thread')
+    @patch('builtins.input', side_effect=['15', '10', '10'])
+    def test_game_question_count_mode(self, mock_input, mock_thread):
+        mock_factory = MagicMock()
+        mock_factory.create_question.side_effect = [
+            ("What is 10 + 5? ", 15),
+            ("What is 20 - 10? ", 10),
+            ("What is 2 * 5? ", 10)
+        ]
+        game = Game("TestPlayer", mock_factory, mode='questions', value=3)
+        score = game.run()
+        self.assertEqual(score, 3)
+        self.assertEqual(mock_factory.create_question.call_count, 3)
 
 class TestProfitLossQuestion(unittest.TestCase):
     @patch('questions.profit_loss.random.randint', side_effect=[50, 60])
@@ -158,7 +174,7 @@ class TestProfitLossQuestion(unittest.TestCase):
     def test_medium_profit_percentage(self, mock_randint):
         question, answer = ProfitLossQuestion().generate('medium')
         self.assertIn("What is the profit percentage?", question)
-        self.assertIsInstance(answer, float)
+        self.assertIsInstance(answer, int)
 
     @patch('questions.profit_loss.random.choice', side_effect=['discount', 20])
     @patch('questions.profit_loss.random.randint', return_value=1000)

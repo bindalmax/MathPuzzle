@@ -3,6 +3,8 @@
 A fun and educational math quiz game available in both console and web interfaces. Test your math skills across various categories and difficulty levels within a time limit!
 
 📖 **[Quick User Guide](USER_GUIDE.md)** - Step-by-step instructions for getting started.
+🎮 **[Game Mode Feature](GAME_MODE_FEATURE.md)** - Learn about Time Mode and Question Count Mode options.
+📊 **[Medium Mode Logic](MEDIUM_MODE_EXPLANATION.md)** - Deep dive into how medium difficulty works for Percentage and Profit questions.
 
 ## Features
 
@@ -23,7 +25,8 @@ A fun and educational math quiz game available in both console and web interface
 - **Hard**: Larger numbers and more challenging problems.
 
 ### Gameplay
-- **Timed Challenges**: Answer as many questions as possible in 20 seconds.
+- **Timed Challenges**: Answer as many questions as you can in a custom time limit (5-300 seconds, default 20 seconds).
+- **Question Count Mode**: Answer a specific number of questions (1-100, default 10 questions).
 - **Scoring**: Earn points for each correct answer.
 - **Leaderboard**: View top 10 high scores.
 - **Session Management**: Web version supports user sessions for seamless gameplay.
@@ -57,6 +60,8 @@ Run the game from the command line:
 python math_game.py
 ```
 - Follow the menu prompts to select category and difficulty.
+- Choose between **Time Mode** (answer as many as you can in X seconds) or **Question Count Mode** (answer exactly X questions).
+- Enter your custom time limit (5-300 seconds) or question count (1-100).
 - Answer questions as they appear.
 - View high scores after each round.
 
@@ -67,6 +72,7 @@ python app.py
 ```
 - Open a web browser and go to `http://127.0.0.1:5000/`.
 - Enter your name, select category and difficulty.
+- Choose between **Time Mode** (custom time limit 5-300 seconds) or **Question Count Mode** (custom question count 1-100).
 - Play the game and view your score.
 - Check the leaderboard at `/leaderboard`.
 

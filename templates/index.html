@@ -8,6 +8,25 @@
         form { display: inline-block; text-align: left; }
         select, input, button { margin: 5px; padding: 5px; }
     </style>
+    <script>
+        function toggleModeInput() {
+            const modeSelect = document.getElementById('mode');
+            const modeLabel = document.getElementById('mode_label');
+            const modeValue = document.getElementById('mode_value');
+
+            if (modeSelect.value === 'time') {
+                modeLabel.textContent = 'Time in seconds (5-300):';
+                modeValue.min = 5;
+                modeValue.max = 300;
+                modeValue.value = 20;
+            } else {
+                modeLabel.textContent = 'Number of questions (1-100):';
+                modeValue.min = 1;
+                modeValue.max = 100;
+                modeValue.value = 10;
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>Welcome to the Math Game!</h1>
@@ -30,6 +49,15 @@
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
         </select><br><br>
+
+        <label for="mode">Choose game mode:</label><br>
+        <select id="mode" name="mode" onchange="toggleModeInput()">
+            <option value="time">Time Mode (answer as many as you can)</option>
+            <option value="questions">Question Count Mode (answer exactly X questions)</option>
+        </select><br><br>
+
+        <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
+        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required><br><br>
 
         <button type="submit">Start Game</button>
     </form>

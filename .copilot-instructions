@@ -1,31 +1,51 @@
 # GitHub Copilot Instructions for MathPuzzle Project
 
 ## General Rules
-- Always maintain up-to-date documentation when making code changes.
+- Always maintain up-to-date documentation when making **code changes only**.
 - Update tests to reflect new functionality or bug fixes.
 - Ensure all changes are tested before committing.
+- When providing **code explanations**, no testing or documentation updates are required.
 
-## Documentation Updates
+## Documentation Updates (Code Changes Only)
 - **README.md**: Update features, installation, usage, and project structure as needed.
 - **USER_GUIDE.md**: Keep step-by-step instructions current with any UI or gameplay changes.
 - Add new sections or modify existing ones when introducing new features.
+- Only update when code functionality changes, not for explanations.
 
-## Testing Requirements
+## Testing Requirements (Code Changes Only)
 - **Unit Tests**: Update `test_math_game.py` for console logic changes.
 - **Web App Tests**: Update `test_app.py` for Flask app changes.
+- **UI Automation Tests**: Update `test_ui_automation.py` for any changes to the web UI.
 - Add new test cases for new features.
 - Ensure all tests pass before finalizing changes.
+- Target: 28+ tests (20 console + 8 web app) + UI tests.
+- Run tests only after code modifications, not for explanations.
+
+## Code Explanation
+- When explaining existing code, provide clear descriptions without making changes.
+- Do not update tests or documentation for explanations.
+- Focus on logic, formulas, and flow without creating new files.
 
 ## Code Changes
 - When adding new question categories or difficulties, update both console and web implementations.
 - Maintain consistency between console and web versions.
 - Update highscore handling if data structure changes.
+- When modifying Game class or routes, ensure backward compatibility.
+
+## Game Mode Feature
+- Both time mode and question count mode should be supported in console and web versions.
+- Time mode: 5-300 seconds (default 20), Question count mode: 1-100 questions (default 10).
+- Always validate user input for custom values within acceptable ranges.
+- Web forms should use dropdown/input fields to select mode and value.
 
 ## File Management
 - Keep project structure organized as documented in README.md.
 - Update file lists in documentation when adding/removing files.
+- Only create new files for code changes, not for explanations.
 
 ## Quality Assurance
-- Run full test suite after any changes: `python -m unittest test_math_game.py test_app.py`
+- Run full test suite after any code changes: `python -m unittest test_math_game.py test_app.py test_ui_automation.py`
 - Verify web app functionality by starting server and testing manually.
 - Check for any broken links or outdated information in docs.
+- Ensure all 28+ tests pass.
+- Skip testing and documentation for code explanation requests.

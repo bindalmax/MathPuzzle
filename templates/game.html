@@ -11,8 +11,11 @@
         input, button { margin: 5px; padding: 5px; }
     </style>
     <script>
-        // Simple client-side timer display (optional, but good for UX)
+        // Simple client-side timer display (only for time mode)
         window.onload = function() {
+            const mode = "{{ mode }}";
+            if (mode !== 'time') return;
+
             let timeLeft = parseInt(document.getElementById('time-left').innerText);
             const timerDisplay = document.getElementById('time-left');
 
@@ -21,8 +24,6 @@
                 timerDisplay.innerText = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(interval);
-                    // Optionally submit the form or redirect when time is up
-                    // document.getElementById('answer-form').submit();
                 }
             }, 1000);
         };
@@ -31,7 +32,13 @@
 <body>
     <h1>Math Game</h1>
     <div class="game-info">
-        <p>Score: {{ score }} | Time Left: <span id="time-left">{{ time_left }}</span> seconds</p>
+        <p>Score: {{ score }} |
+        {% if mode == 'time' %}
+            Time Left: <span id="time-left">{{ time_left }}</span> seconds
+        {% else %}
+            Questions Left: {{ questions_left }}
+        {% endif %}
+        </p>
     </div>
     <div class="question">
         <p>{{ question }}</p>

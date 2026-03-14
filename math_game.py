@@ -1,59 +1,36 @@
-import json
-import os
 import time
 import threading
 from questions import QuestionFactory
-
-# --- Highscore Management ---
-class HighscoreManager:
-    def __init__(self, filename="highscores.json"):
-        self.filename = filename
-    def load(self):
-        if not os.path.exists(self.filename): return []
-        with open(self.filename, 'r') as f:
-            try: return json.load(f)
-            except json.JSONDecodeError: return []
-    def save(self, highscores):
-        with open(self.filename, 'w') as f: json.dump(highscores, f, indent=4)
-    def add_score(self, name, score):
-        highscores = self.load()
-        highscores.append({'name': name, 'score': score})
-        self.save(highscores)
-        return highscores
-    def display(self, highscores):
-        print("\n--- High Scores ---")
-        if not highscores:
-            print("No high scores yet.")
-            return
-        sorted_highscores = sorted(highscores, key=lambda x: x['score'], reverse=True)
-        for i, entry in enumerate(sorted_highscores[:5]):
-            print(f"{i+1}. {entry['name']}: {entry['score']}")
-        print("-------------------\n")
+from highscore_manager import HighscoreManager
 
 # --- Game Logic ---
 class Game:
-    def __init__(self, player_name, question_factory, duration=20):
+    def __init__(self, player_name, question_factory, mode='time', value=20):
         self.player_name = player_name
         self.question_factory = question_factory
         self.score = 0
-        self.duration = duration
+        self.mode = mode  # 'time' or 'questions'
+        self.value = value  # duration in seconds or number of questions
         self.game_over = threading.Event()
         self.timer_expired = False
 
     def timer_thread(self):
-        time.sleep(self.duration)
+        time.sleep(self.value)
         if not self.game_over.is_set():
             self.timer_expired = True
             self.game_over.set()
             print("\nTime's up! Press Enter to see your score.")
 
     def run(self):
-        print(f"\nStarting game for {self.player_name}! You have {self.duration} seconds.")
-        
-        timer = threading.Thread(target=self.timer_thread)
-        timer.daemon = True
-        timer.start()
+        if self.mode == 'time':
+            print(f"\nStarting game for {self.player_name}! You have {self.value} seconds.")
+            timer = threading.Thread(target=self.timer_thread)
+            timer.daemon = True
+            timer.start()
+        else:
+            print(f"\nStarting game for {self.player_name}! Answer {self.value} questions.")
 
+        questions_answered = 0
         while not self.game_over.is_set():
             try:
                 question, answer = self.question_factory.create_question()
@@ -73,6 +50,14 @@ class Game:
                     self.score += 1
                 else:
                     print(f"Wrong! The correct answer is {answer}")
+
+                questions_answered += 1
+
+                # Check if question count reached
+                if self.mode == 'questions' and questions_answered >= self.value:
+                    self.game_over.set()
+                    print(f"\nYou've answered {self.value} questions! Game over.")
+
             except NotImplementedError as e:
                 print(e)
                 break
@@ -122,12 +107,46 @@ def main():
             else:
                 print("Invalid choice.")
 
+        print("\nChoose game mode:")
+        print("1. Time Mode (answer as many as you can in X seconds)")
+        print("2. Question Count Mode (answer exactly X questions)")
+        mode_choice = input("Enter your choice (1-2): ")
+
+        if mode_choice == '1':
+            mode = 'time'
+            while True:
+                try:
+                    time_value = int(input("Enter time in seconds (min: 5, max: 300): "))
+                    if 5 <= time_value <= 300:
+                        break
+                    else:
+                        print("Please enter a value between 5 and 300.")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            value = time_value
+        elif mode_choice == '2':
+            mode = 'questions'
+            while True:
+                try:
+                    question_count = int(input("Enter number of questions (min: 1, max: 100): "))
+                    if 1 <= question_count <= 100:
+                        break
+                    else:
+                        print("Please enter a value between 1 and 100.")
+                except ValueError:
+                    print("Invalid input. Please enter a number.")
+            value = question_count
+        else:
+            print("Invalid choice. Defaulting to time mode with 20 seconds.")
+            mode = 'time'
+            value = 20
+
         factory = QuestionFactory(category, level)
-        game = Game(player_name, factory)
+        game = Game(player_name, factory, mode=mode, value=value)
         final_score = game.run()
 
         print(f"\nRound over, {player_name}! Your score for this round is {final_score}")
-        highscore_manager.add_score(player_name, final_score)
+        highscore_manager.add_score(player_name, final_score, category, level)
         highscore_manager.display(highscore_manager.load())
         
         input("\nPress Enter to return to the main menu...")

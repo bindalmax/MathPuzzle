@@ -82,6 +82,8 @@ class TestWebApp(unittest.TestCase):
                 sess['player_name'] = 'TestPlayer'
                 sess['score'] = 5
                 sess['start_time'] = 1234567890
+                sess['category'] = 'basic'
+                sess['difficulty'] = 'easy'
 
             response = self.client.get('/game_over')
             self.assertEqual(response.status_code, 200)
@@ -89,8 +91,8 @@ class TestWebApp(unittest.TestCase):
 
     def test_leaderboard(self):
         # Add some test scores
-        self.manager.add_score('Player1', 10)
-        self.manager.add_score('Player2', 8)
+        self.manager.add_score('Player1', 10, category, difficulty)
+        self.manager.add_score('Player2', 8, category, difficulty)
 
         response = self.client.get('/leaderboard')
         self.assertEqual(response.status_code, 200)
