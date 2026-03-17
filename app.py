@@ -42,7 +42,8 @@ def game():
 
     factory = QuestionFactory(session['category'], session['difficulty'])
     try:
-        question, answer = factory.create_question()
+        # Update: create_question now returns 3 values
+        question, answer, choices = factory.create_question()
         session['current_answer'] = answer
     except NotImplementedError:
         return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented for the '{session['difficulty']}' difficulty yet!")
@@ -53,14 +54,16 @@ def game():
                                question=question,
                                score=session['score'],
                                time_left=time_left,
-                               mode=mode)
+                               mode=mode,
+                               choices=choices) # Pass choices
     else:
         questions_left = mode_value - questions_answered
         return render_template('game.html',
                                question=question,
                                score=session['score'],
                                questions_left=questions_left,
-                               mode=mode)
+                               mode=mode,
+                               choices=choices) # Pass choices
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():

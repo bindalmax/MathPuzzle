@@ -45,8 +45,8 @@ class TestWebApp(unittest.TestCase):
     @patch('app.QuestionFactory')
     def test_game_with_session(self, mock_factory):
         mock_question = MagicMock()
-        mock_question.generate.return_value = ("What is 2 + 2? ", 4)
-        mock_factory.return_value.create_question.return_value = ("What is 2 + 2? ", 4)
+        mock_question.generate.return_value = ("What is 2 + 2? ", 4, None)
+        mock_factory.return_value.create_question.return_value = ("What is 2 + 2? ", 4, None)
 
         with self.client:
             # Simulate session
@@ -91,8 +91,8 @@ class TestWebApp(unittest.TestCase):
 
     def test_leaderboard(self):
         # Add some test scores
-        self.manager.add_score('Player1', 10, category, difficulty)
-        self.manager.add_score('Player2', 8, category, difficulty)
+        self.manager.add_score('Player1', 10, 'basic', 'easy')
+        self.manager.add_score('Player2', 8, 'basic', 'medium')
 
         response = self.client.get('/leaderboard')
         self.assertEqual(response.status_code, 200)

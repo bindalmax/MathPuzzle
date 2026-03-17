@@ -35,6 +35,7 @@ def run_all_tests():
             TestGame
         )
         from test_app import TestWebApp
+        from test_ui_automation import TestUIAutomation
 
         print("\n✓ Successfully imported all test classes\n")
 
@@ -48,7 +49,8 @@ def run_all_tests():
             TestAlgebraQuestion,
             TestProfitLossQuestion,
             TestGame,
-            TestWebApp
+            TestWebApp,
+            TestUIAutomation
         ]
 
         for test_class in test_classes:
@@ -104,4 +106,3 @@ def run_all_tests():
 if __name__ == '__main__':
     exit_code = run_all_tests()
     sys.exit(exit_code)
-

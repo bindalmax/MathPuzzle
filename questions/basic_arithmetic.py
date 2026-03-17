@@ -14,13 +14,26 @@ class BasicArithmeticQuestion(Question):
         low, high = ranges[difficulty]
         num1, num2 = random.randint(low, high), random.randint(low, high)
 
+        question = ""
+        answer = 0
+
         if operator == '+':
-            return f"What is {num1} + {num2}? ", num1 + num2
+            question = f"What is {num1} + {num2}? "
+            answer = num1 + num2
         elif operator == '-':
             if num1 < num2: num1, num2 = num2, num1
-            return f"What is {num1} - {num2}? ", num1 - num2
+            question = f"What is {num1} - {num2}? "
+            answer = num1 - num2
         elif operator == '*':
-            return f"What is {num1} * {num2}? ", num1 * num2
+            question = f"What is {num1} * {num2}? "
+            answer = num1 * num2
         else: # '/'
             num1 = num1 * num2
-            return f"What is {num1} / {num2}? ", num1 // num2
+            question = f"What is {num1} / {num2}? "
+            answer = num1 // num2
+
+        if difficulty in ['medium', 'hard']:
+            choices = self.generate_choices(answer, is_integer=True)
+            return question, answer, choices
+        else:
+            return question, answer, None
