@@ -20,9 +20,9 @@ A fun and educational math quiz game available in both console and web interface
 - **Algebra**: Simple algebraic equations.
 
 ### Difficulty Levels
-- **Easy**: Smaller numbers and simpler operations.
-- **Medium**: Moderate complexity.
-- **Hard**: Larger numbers and more challenging problems.
+- **Easy**: Smaller numbers and simpler operations. Open-ended questions.
+- **Medium**: Moderate complexity. Multiple-choice questions (4 options).
+- **Hard**: Larger numbers and more challenging problems. Multiple-choice questions (4 options).
 
 ### Gameplay
 - **Timed Challenges**: Answer as many questions as you can in a custom time limit (5-300 seconds, default 20 seconds).
@@ -34,6 +34,7 @@ A fun and educational math quiz game available in both console and web interface
 ### Web Application Features
 - **Responsive Design**: Simple HTML/CSS interface.
 - **Real-time Timer**: Client-side countdown during gameplay.
+- **Multiple Choice UI**: Buttons for easy selection in Medium/Hard modes.
 - **Form Validation**: Ensures proper input for names and answers.
 - **Error Handling**: Displays messages for unimplemented categories/difficulties.
 - **Navigation**: Easy access to leaderboard and game restart.
@@ -43,12 +44,13 @@ A fun and educational math quiz game available in both console and web interface
 ### Prerequisites
 - Python 3.7+
 - Flask (for web version)
+- Selenium (for UI tests)
 
 ### Setup
 1. Clone or download the repository.
 2. Install dependencies (if using virtual environment):
    ```bash
-   pip install flask
+   pip install flask selenium
    ```
 3. Ensure all files are in the same directory.
 
@@ -85,8 +87,11 @@ python -m unittest test_math_game.py
 # Test web version
 python -m unittest test_app.py
 
+# Test UI automation
+python test_ui_automation.py
+
 # Run all tests
-python -m unittest test_math_game.py test_app.py
+python run_all_tests.py
 ```
 
 ## Project Structure
@@ -99,6 +104,8 @@ AIHandsOn/
 ├── math_game.py                 # Console game logic
 ├── test_math_game.py            # Tests for console version
 ├── test_app.py                  # Tests for web version
+├── test_ui_automation.py        # UI automation tests
+├── highscore_manager.py         # Highscore logic
 ├── highscores.json              # Persistent high scores
 ├── questions/                   # Question generation modules
 │   ├── __init__.py

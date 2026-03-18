@@ -22,14 +22,14 @@ Run: `python math_game.py`
    - 4: Profit and Loss
    - 5: Algebra
 3. Select difficulty:
-   - 1: Easy
-   - 2: Medium
-   - 3: Hard
+   - 1: Easy (open-ended questions)
+   - 2: Medium (multiple-choice)
+   - 3: Hard (multiple-choice)
 4. Choose game mode:
    - 1: Time Mode - Answer as many questions as you can in X seconds (5-300 seconds)
    - 2: Question Count Mode - Answer exactly X questions (1-100 questions)
 5. Enter your custom time or question count.
-6. Answer questions as they appear.
+6. Answer questions as they appear. For multiple-choice, enter the letter of your choice (A, B, C, D).
 7. Type 'quit' to end early.
 8. View your score and high scores.
 
@@ -52,10 +52,9 @@ Open your browser to: `http://127.0.0.1:5000/`
    - **Question Count Mode**: Answer exactly X questions (1-100 questions, default 10)
 4. Enter your custom time or question count value.
 5. Click "Start Game".
-6. Answer the questions shown.
-7. Submit each answer.
-8. View your final score.
-9. Click "Play Again" or "View Leaderboard".
+6. Answer the questions shown. For Medium and Hard difficulties, click the button with your chosen answer. For Easy, type your answer and click Submit.
+7. View your final score.
+8. Click "Play Again" or "View Leaderboard".
 
 ### Navigation
 - **Leaderboard**: Click the link on the main page or game over page.
@@ -72,5 +71,4 @@ Open your browser to: `http://127.0.0.1:5000/`
 - **Questions not loading?** Check if all question files are present.
 - **High scores not saving?** Ensure write permissions for `highscores.json`.
 
-For more details, see the full README.md.</content>
-<parameter name="filePath">/Users/keshavbindal/IdeaProjects/AIHandsOn/USER_GUIDE.md
+For more details, see the full README.md.

@@ -9,6 +9,14 @@
         .question { font-size: 1.5em; margin-bottom: 20px; }
         form { display: inline-block; }
         input, button { margin: 5px; padding: 5px; }
+        .choice-btn {
+            display: block;
+            width: 200px;
+            margin: 10px auto;
+            padding: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
     </style>
     <script>
         // Simple client-side timer display (only for time mode)
@@ -44,8 +52,16 @@
         <p>{{ question }}</p>
     </div>
     <form id="answer-form" action="{{ url_for('submit_answer') }}" method="post">
-        <input type="number" name="answer" placeholder="Your answer" required autofocus>
-        <button type="submit">Submit</button>
+        {% if choices %}
+            <div class="choices">
+                {% for choice in choices %}
+                    <button type="submit" name="answer" value="{{ choice }}" class="choice-btn">{{ choice }}</button>
+                {% endfor %}
+            </div>
+        {% else %}
+            <input type="number" name="answer" placeholder="Your answer" step="any" required autofocus>
+            <button type="submit">Submit</button>
+        {% endif %}
     </form>
     <p><a href="{{ url_for('game_over') }}">End Game</a></p>
 </body>

@@ -3,6 +3,9 @@ from .base import Question
 
 class ProfitLossQuestion(Question):
     def generate(self, difficulty):
+        question = ""
+        answer = 0
+
         if difficulty == 'easy':
             cost_price = random.randint(10, 100)
             sell_price = random.randint(cost_price - 20, cost_price + 20)
@@ -10,29 +13,32 @@ class ProfitLossQuestion(Question):
             if sell_price > cost_price:
                 profit = sell_price - cost_price
                 question = f"A toy is bought for ${cost_price} and sold for ${sell_price}. What is the profit? "
-                return question, profit
+                answer = profit
             else:
                 loss = cost_price - sell_price
                 question = f"A toy is bought for ${cost_price} and sold for ${sell_price}. What is the loss? "
-                return question, loss
+                answer = loss
+            return question, answer, None
+
         elif difficulty == 'medium':
             cost_price = random.randint(100, 1000)
-            # Choose profit/loss percentage that results in integer amounts
-            profit_loss_percent = random.randint(5, 50)  # 5% to 50%
+            profit_loss_percent = random.randint(5, 50)
             is_profit = random.choice([True, False])
 
             if is_profit:
-                # Calculate profit amount that gives exact percentage
                 profit = (profit_loss_percent * cost_price) // 100
                 sell_price = cost_price + profit
                 question = f"A gadget costs ${cost_price} and is sold for ${sell_price}. What is the profit percentage? "
-                return question, profit_loss_percent
+                answer = profit_loss_percent
             else:
-                # Calculate loss amount that gives exact percentage
                 loss = (profit_loss_percent * cost_price) // 100
                 sell_price = cost_price - loss
                 question = f"A gadget costs ${cost_price} and is sold for ${sell_price}. What is the loss percentage? "
-                return question, profit_loss_percent
+                answer = profit_loss_percent
+            
+            choices = self.generate_choices(answer, is_integer=True)
+            return question, answer, choices
+
         elif difficulty == 'hard':
             q_type = random.choice(['discount', 'multiple'])
 
@@ -42,7 +48,9 @@ class ProfitLossQuestion(Question):
                 discount_amount = (discount_percent / 100) * original_price
                 final_price = original_price - discount_amount
                 question = f"An item originally costs ${original_price}. After a {discount_percent}% discount, what is the final price? "
-                return question, round(final_price, 2)
+                answer = round(final_price, 2)
+                choices = self.generate_choices(answer, is_integer=False)
+                return question, answer, choices
             else: # multiple transactions
                 cost1 = random.randint(100, 500)
                 sell1 = random.randint(int(cost1 * 0.9), int(cost1 * 1.3))
@@ -55,10 +63,13 @@ class ProfitLossQuestion(Question):
                 if total_sell > total_cost:
                     profit = total_sell - total_cost
                     question = f"Item 1: bought ${cost1}, sold ${sell1}. Item 2: bought ${cost2}, sold ${sell2}. What is the total profit? "
-                    return question, profit
+                    answer = profit
                 else:
                     loss = total_cost - total_sell
                     question = f"Item 1: bought ${cost1}, sold ${sell1}. Item 2: bought ${cost2}, sold ${sell2}. What is the total loss? "
-                    return question, loss
+                    answer = loss
+                
+                choices = self.generate_choices(answer, is_integer=True)
+                return question, answer, choices
         else:
             raise NotImplementedError(f"Profit and Loss questions for {difficulty} difficulty are not yet implemented.")

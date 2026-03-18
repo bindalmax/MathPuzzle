@@ -1,11 +1,37 @@
+import random
 from abc import ABC, abstractmethod
 
 class Question(ABC):
     """Abstract base class for a question."""
     @abstractmethod
     def generate(self, difficulty):
-        """Generates a question string and its corresponding answer."""
+        """
+        Generates a question string, its corresponding answer, and optional choices.
+        Returns:
+            (question_text, answer, choices)
+            - choices: List of 4 options if MCQ, else None.
+        """
         pass
+
+    def generate_choices(self, correct_answer, is_integer=True):
+        """Generates 3 distractors and returns a shuffled list of 4 choices."""
+        choices = {correct_answer}
+        
+        while len(choices) < 4:
+            if is_integer:
+                # Generate a close number
+                offset = random.choice([-1, 1]) * random.randint(1, 10)
+                distractor = correct_answer + offset
+            else:
+                # Float logic
+                offset = random.choice([-1, 1]) * random.uniform(0.1, 5.0)
+                distractor = round(correct_answer + offset, 2)
+            
+            choices.add(distractor)
+            
+        choices_list = list(choices)
+        random.shuffle(choices_list)
+        return choices_list
 
 class QuestionFactory:
     """Factory to create question objects based on category."""

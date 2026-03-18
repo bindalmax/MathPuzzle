@@ -4,6 +4,9 @@ from .base import Question
 
 class DecimalFractionQuestion(Question):
     def generate(self, difficulty):
+        question = ""
+        answer = 0.0
+
         if difficulty == 'easy':
             q_type = random.choice(['decimal', 'fraction'])
             operator = random.choice(['+', '-'])
@@ -19,7 +22,7 @@ class DecimalFractionQuestion(Question):
                     if num1 < num2: num1, num2 = num2, num1
                     answer = num1 - num2
                     question = f"What is {num1} - {num2}? "
-                return question, round(answer, 2)
+                answer = round(answer, 2)
 
             else: # fraction
                 fractions_pool = [Fraction(1, 2), Fraction(1, 4), Fraction(3, 4), Fraction(1, 3), Fraction(2, 3)]
@@ -34,7 +37,10 @@ class DecimalFractionQuestion(Question):
                     result_fraction = f1 - f2
                     question = f"What is {f1} - {f2}? (Answer as decimal, round to 2 places) "
                 
-                return question, round(float(result_fraction), 2)
+                answer = round(float(result_fraction), 2)
+            
+            return question, answer, None
+
         elif difficulty == 'medium':
             q_type = random.choice(['decimal', 'fraction', 'mixed'])
             operator = random.choice(['+', '-', '*', '/'])
@@ -56,7 +62,7 @@ class DecimalFractionQuestion(Question):
                 else: # '/'
                     answer = num1 / num2
                     question = f"What is {num1} / {num2}? (Round to 2 decimal places) "
-                return question, round(answer, 2)
+                answer = round(answer, 2)
 
             elif q_type == 'fraction':
                 fractions_pool = [Fraction(1, 2), Fraction(1, 3), Fraction(2, 3), Fraction(1, 4), Fraction(3, 4), Fraction(1, 5), Fraction(2, 5), Fraction(3, 5), Fraction(4, 5)]
@@ -76,8 +82,7 @@ class DecimalFractionQuestion(Question):
                 else: # '/'
                     result_fraction = f1 / f2
                     question = f"What is {f1} / {f2}? (Answer as decimal, round to 2 places) "
-
-                return question, round(float(result_fraction), 2)
+                answer = round(float(result_fraction), 2)
 
             else: # mixed
                 whole1 = random.randint(1, 10)
@@ -101,8 +106,7 @@ class DecimalFractionQuestion(Question):
                 else: # '/'
                     result = mixed1 / mixed2
                     question = f"What is {whole1} {frac1} / {whole2} {frac2}? (Answer as decimal, round to 2 places) "
-
-                return question, round(float(result), 2)
+                answer = round(float(result), 2)
 
         elif difficulty == 'hard':
             q_type = random.choice(['decimal', 'fraction', 'mixed'])
@@ -125,10 +129,10 @@ class DecimalFractionQuestion(Question):
                 else: # '/'
                     answer = num1 / num2
                     question = f"What is {num1} / {num2}? (Round to 2 decimal places) "
-                return question, round(answer, 2)
+                answer = round(answer, 2)
 
             elif q_type == 'fraction':
-                fractions_pool = [Fraction(i, j) for i in range(1, 10) for j in range(2, 11) if i < j]
+                fractions_pool = [Fraction(i, j) for j in range(2, 11) for i in range(1, j)]
                 f1 = random.choice(fractions_pool)
                 f2 = random.choice(fractions_pool)
 
@@ -145,16 +149,15 @@ class DecimalFractionQuestion(Question):
                 else: # '/'
                     result_fraction = f1 / f2
                     question = f"What is {f1} / {f2}? (Answer as decimal, round to 2 places) "
-
-                return question, round(float(result_fraction), 2)
+                answer = round(float(result_fraction), 2)
 
             else: # mixed
                 whole1 = random.randint(10, 50)
-                frac1 = random.choice([Fraction(i, j) for i in range(1, j) for j in range(2, 11)])
+                frac1 = random.choice([Fraction(i, j) for j in range(2, 11) for i in range(1, j)])
                 mixed1 = whole1 + frac1
 
                 whole2 = random.randint(10, 50)
-                frac2 = random.choice([Fraction(i, j) for i in range(1, j) for j in range(2, 11)])
+                frac2 = random.choice([Fraction(i, j) for j in range(2, 11) for i in range(1, j)])
                 mixed2 = whole2 + frac2
 
                 if operator == '+':
@@ -170,8 +173,10 @@ class DecimalFractionQuestion(Question):
                 else: # '/'
                     result = mixed1 / mixed2
                     question = f"What is {whole1} {frac1} / {whole2} {frac2}? (Answer as decimal, round to 2 places) "
-
-                return question, round(float(result), 2)
-
+                answer = round(float(result), 2)
         else:
             raise NotImplementedError(f"Decimal and Fraction questions for {difficulty} difficulty are not yet implemented.")
+
+        # If difficulty is medium or hard, generate choices
+        choices = self.generate_choices(answer, is_integer=False)
+        return question, answer, choices

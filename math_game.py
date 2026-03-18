@@ -33,19 +33,39 @@ class Game:
         questions_answered = 0
         while not self.game_over.is_set():
             try:
-                question, answer = self.question_factory.create_question()
-                user_input = input(question)
+                question, answer, choices = self.question_factory.create_question()
                 
+                print(question)
+                
+                user_answer = None
+                if choices:
+                    # Multiple choice question
+                    choice_map = {chr(65 + i): choice for i, choice in enumerate(choices)}
+                    for label, choice in choice_map.items():
+                        print(f"{label}) {choice}")
+                    
+                    user_input = input("Your choice (A, B, C, D): ").upper()
+                    if user_input in choice_map:
+                        user_answer = choice_map[user_input]
+                    else:
+                        print("Invalid choice.")
+                        # Let it be handled by the answer check as wrong
+                else:
+                    # Open-ended question
+                    user_input = input("Your answer: ")
+                    if user_input.lower() == 'quit':
+                        self.game_over.set()
+                        break
+                    try:
+                        user_answer = float(user_input)
+                    except ValueError:
+                        print("Invalid input. Please enter a number.")
+                        continue # Skip to next question
+
                 if self.game_over.is_set():
                     break
-
-                if user_input.lower() == 'quit':
-                    self.game_over.set()
-                    break
                 
-                user_answer = float(user_input)
-                
-                if abs(user_answer - answer) < 0.01:
+                if user_answer is not None and abs(user_answer - answer) < 0.01:
                     print("Correct!")
                     self.score += 1
                 else:
