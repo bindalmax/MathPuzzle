@@ -91,7 +91,11 @@ def game_over():
     if 'start_time' in session: # Ensure it's a real game over
         category = session.get('category', 'unknown')
         difficulty = session.get('difficulty', 'unknown')
-        highscore_manager.add_score(player_name, score, category, difficulty)
+        
+        time_taken = time.time() - session['start_time']
+        questions_answered = session.get('questions_answered', 0)
+        
+        highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
 
     # Clean up session for the next game
     session.pop('start_time', None)

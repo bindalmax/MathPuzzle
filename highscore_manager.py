@@ -19,13 +19,15 @@ class HighscoreManager:
         with open(self.filename, 'w') as f:
             json.dump(highscores, f, indent=4)
 
-    def add_score(self, name, score, category="unknown", difficulty="unknown"):
+    def add_score(self, name, score, category="unknown", difficulty="unknown", time_taken=0, questions_attempted=0):
         highscores = self.load()
         highscores.append({
             'name': name,
             'score': score,
             'category': category,
             'difficulty': difficulty,
+            'time_taken': time_taken,
+            'questions_attempted': questions_attempted,
             'timestamp': time.time()
         })
         self.save(highscores)

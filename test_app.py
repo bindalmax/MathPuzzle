@@ -81,23 +81,31 @@ class TestWebApp(unittest.TestCase):
             with self.client.session_transaction() as sess:
                 sess['player_name'] = 'TestPlayer'
                 sess['score'] = 5
-                sess['start_time'] = 1234567890
+                sess['start_time'] = time.time() - 10
+                sess['questions_answered'] = 5
                 sess['category'] = 'basic'
                 sess['difficulty'] = 'easy'
 
             response = self.client.get('/game_over')
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'Your final score is: <strong>5</strong>', response.data)
+            
+            # Check if score is saved with details
+            scores = self.manager.load()
+            self.assertEqual(len(scores), 1)
+            self.assertEqual(scores[0]['score'], 5)
+            self.assertAlmostEqual(scores[0]['time_taken'], 10, delta=1)
+            self.assertEqual(scores[0]['questions_attempted'], 5)
 
     def test_leaderboard(self):
-        # Add some test scores
-        self.manager.add_score('Player1', 10, 'basic', 'easy')
-        self.manager.add_score('Player2', 8, 'basic', 'medium')
-
+        # Add some test scores with details
+        self.manager.add_score('Player1', 10, 'basic', 'easy', time_taken=20.5, questions_attempted=10)
+        
         response = self.client.get('/leaderboard')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Player1', response.data)
-        self.assertIn(b'10', response.data)
+        self.assertIn(b'100.0%', response.data) # 10/10 = 100%
+        self.assertIn(b'20.5 s', response.data)
 
     def test_quit(self):
         response = self.client.get('/quit')
