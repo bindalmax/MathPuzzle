@@ -46,5 +46,39 @@
         "category": "basic",
         "difficulty": "hard",
         "timestamp": 1773776807.120959
+    },
+    {
+        "name": "Mayank",
+        "score": 22,
+        "category": "percentage",
+        "difficulty": "medium",
+        "timestamp": 1773874807.8714502
+    },
+    {
+        "name": "Mayank",
+        "score": 5,
+        "category": "basic",
+        "difficulty": "medium",
+        "time_taken": 20.078276872634888,
+        "questions_attempted": 5,
+        "timestamp": 1773875279.899885
+    },
+    {
+        "name": "Mayank",
+        "score": 1,
+        "category": "profit_loss",
+        "difficulty": "medium",
+        "time_taken": 21.078532934188843,
+        "questions_attempted": 2,
+        "timestamp": 1773876629.415473
+    },
+    {
+        "name": "Mayank",
+        "score": 4,
+        "category": "decimal",
+        "difficulty": "medium",
+        "time_taken": 25.61298108100891,
+        "questions_attempted": 4,
+        "timestamp": 1773878033.579215
     }
 ]
