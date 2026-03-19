@@ -11,8 +11,29 @@
             padding: 20px;
         }
         h1 { color: #333; }
+        .controls {
+            margin: 20px auto;
+            max_width: 800px;
+            display: flex;
+            justify_content: center;
+            gap: 15px;
+            align-items: center;
+        }
+        select, button {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background-color: #45a049; }
         table {
-            width: 90%;
+            width: 95%;
             max-width: 1200px;
             margin: 20px auto;
             border-collapse: collapse;
@@ -26,6 +47,14 @@
             text-align: left;
             font-weight: bold;
         }
+        th a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        th a:hover { text-decoration: underline; }
         td {
             padding: 12px;
             border-bottom: 1px solid #ddd;
@@ -47,7 +76,7 @@
         .difficulty.medium { background-color: #fff3cd; color: #856404; }
         .difficulty.hard { background-color: #f8d7da; color: #721c24; }
         .no-scores { padding: 20px; color: #666; }
-        a {
+        a.back-link {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
@@ -56,19 +85,65 @@
             text-decoration: none;
             border-radius: 4px;
         }
-        a:hover { background-color: #45a049; }
+        a.back-link:hover { background-color: #45a049; }
+        .sort-icon::after {
+            content: ' ↕';
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
     <h1>🏆 Leaderboard</h1>
+
+    <div class="controls">
+        <form action="{{ url_for('leaderboard') }}" method="get">
+            <label for="filter_category">Category:</label>
+            <select name="filter_category" id="filter_category">
+                <option value="all" {% if filter_category == 'all' %}selected{% endif %}>All Categories</option>
+                <option value="basic" {% if filter_category == 'basic' %}selected{% endif %}>Basic Arithmetic</option>
+                <option value="decimal" {% if filter_category == 'decimal' %}selected{% endif %}>Decimals & Fractions</option>
+                <option value="percentage" {% if filter_category == 'percentage' %}selected{% endif %}>Percentages</option>
+                <option value="profit_loss" {% if filter_category == 'profit_loss' %}selected{% endif %}>Profit & Loss</option>
+                <option value="algebra" {% if filter_category == 'algebra' %}selected{% endif %}>Algebra</option>
+            </select>
+
+            <label for="filter_difficulty">Difficulty:</label>
+            <select name="filter_difficulty" id="filter_difficulty">
+                <option value="all" {% if filter_difficulty == 'all' %}selected{% endif %}>All Difficulties</option>
+                <option value="easy" {% if filter_difficulty == 'easy' %}selected{% endif %}>Easy</option>
+                <option value="medium" {% if filter_difficulty == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="hard" {% if filter_difficulty == 'hard' %}selected{% endif %}>Hard</option>
+            </select>
+
+            <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            <input type="hidden" name="sort_order" value="{{ sort_order }}">
+
+            <button type="submit">Filter</button>
+            <a href="{{ url_for('leaderboard') }}" style="margin-left: 10px; color: #666; text-decoration: underline; background: none; padding: 0;">Reset</a>
+        </form>
+    </div>
+
     {% if scores %}
         <table>
             <thead>
                 <tr>
                     <th>Rank</th>
-                    <th>Name</th>
-                    <th>Score % (Correct/Attempted)</th>
-                    <th>Time Taken</th>
+                    <th>
+                        <a href="{{ url_for('leaderboard', sort_by='name', sort_order='asc' if sort_by == 'name' and sort_order == 'desc' else 'desc', filter_category=filter_category, filter_difficulty=filter_difficulty) }}">
+                            Name <span class="sort-icon"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('leaderboard', sort_by='score', sort_order='asc' if sort_by == 'score' and sort_order == 'desc' else 'desc', filter_category=filter_category, filter_difficulty=filter_difficulty) }}">
+                            Score % (Correct/Attempted) <span class="sort-icon"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('leaderboard', sort_by='time', sort_order='asc' if sort_by == 'time' and sort_order == 'desc' else 'desc', filter_category=filter_category, filter_difficulty=filter_difficulty) }}">
+                            Time Taken <span class="sort-icon"></span>
+                        </a>
+                    </th>
                     <th>Category</th>
                     <th>Difficulty</th>
                 </tr>
@@ -107,8 +182,8 @@
             </tbody>
         </table>
     {% else %}
-        <p class="no-scores">No scores yet. Play a game to get on the leaderboard!</p>
+        <p class="no-scores">No scores found matching the criteria.</p>
     {% endif %}
-    <a href="{{ url_for('index') }}">Back to Game</a>
+    <a href="{{ url_for('index') }}" class="back-link">Back to Game</a>
 </body>
 </html>

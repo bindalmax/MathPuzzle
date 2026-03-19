@@ -2,13 +2,14 @@
 
 ## Overview
 The leaderboard has been successfully enhanced to display the **category**, **difficulty level**, **time taken**, and **score percentage** for each score, providing players with comprehensive context about their achievements.
+**New functionality includes sorting and filtering options** to allow users to customize their view of the high scores.
 
 ## What Was Added
 
 ### 1. **Data Storage Enhancement**
 Each score now includes:
 - `name` - Player name
-- `score` - Points earned
+- `score` - Points earned (correct answers)
 - `category` - Question category (basic, decimal, percentage, profit_loss, algebra)
 - `difficulty` - Difficulty level (easy, medium, hard)
 - `time_taken` - Time taken to complete the game in seconds
@@ -17,24 +18,14 @@ Each score now includes:
 
 ### 2. **Console Leaderboard Display**
 
-**Before:**
-```
-1. Alice: 50
-2. Bob: 35
-```
-
-**After:**
-```
-1. Alice: 50 (Basic Arithmetic, Hard)
-2. Bob: 35 (Percentage, Medium)
-3. Charlie: 45 (Profit And Loss, Easy)
-```
-*(Console display does not yet show time/percentage)*
+*(Console display does not yet show time/percentage, sorting, or filtering)*
 
 ### 3. **Web Leaderboard Display**
 
 Enhanced HTML table with:
 - 6 columns: Rank, Name, Score % (Correct/Attempted), Time Taken, Category, Difficulty
+- **Sorting**: Clickable table headers for Name, Score %, and Time Taken to sort ascending/descending.
+- **Filtering**: Dropdown menus for Category and Difficulty to filter displayed scores.
 - **Visual Styling:**
   - Gold background for 1st place (🥇)
   - Silver background for 2nd place (🥈)
@@ -45,7 +36,7 @@ Enhanced HTML table with:
     - Hard: Red (#f8d7da)
   - Hover effects for better interactivity
   - Trophy emoji (🏆) in heading
-  - Responsive layout (90% width, max 1200px)
+  - Responsive layout (95% width, max 1200px)
 
 ### 4. **Code Changes**
 
@@ -67,12 +58,23 @@ def game_over():
   questions_answered = session.get('questions_answered', 0)
   # Pass to add_score
   highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
+
+@app.route('/leaderboard')
+def leaderboard():
+    scores = highscore_manager.load()
+    # Filtering logic based on request.args
+    # Sorting logic based on request.args
+    # ...
+    return render_template('leaderboard.html', scores=scores, ...)
 ```
 
 #### templates/leaderboard.html
 - Added "Score %" and "Time Taken" table columns
 - Implemented Jinja2 templating for dynamic data display and percentage calculation
 - Added CSS styling for difficulty badges and rankings
+- **Added filter form with category and difficulty dropdowns.**
+- **Updated table headers with links for sorting.**
+- **Added CSS for sort icons.**
 
 ### 5. **Test Updates**
 
@@ -97,6 +99,7 @@ def test_leaderboard(self):
     # ...
     self.assertIn(b'100.0%', response.data) # 10/10 = 100%
     self.assertIn(b'20.5 s', response.data)
+# NEW: Added tests for filtering and sorting functionality
 ```
 
 ## Features
@@ -105,6 +108,8 @@ def test_leaderboard(self):
 ✅ **Difficulty Tracking**: Displays the challenge level (Easy/Medium/Hard)
 ✅ **Time Taken Display**: Shows time taken to complete the game
 ✅ **Score Percentage Display**: Shows percentage of correct answers
+✅ **Leaderboard Sorting**: Sort scores by Name, Score %, or Time Taken (asc/desc)
+✅ **Leaderboard Filtering**: Filter scores by Category and Difficulty
 ✅ **Visual Hierarchy**: Top 3 scores highlighted with medals
 ✅ **Color-Coded Badges**: Quick visual identification of difficulty
 ✅ **Backward Compatibility**: Handles old scores gracefully with defaults
@@ -129,20 +134,22 @@ Scores are saved in `highscores.json`:
 ]
 ```
 
-## Web Leaderboard Display
+## Web Leaderboard Display (Example with Filters/Sorting)
 
 | Rank | Name | Score % (Correct/Attempted) | Time Taken | Category | Difficulty |
 |------|------|-----------------------------|------------|----------|-----------|
 | 🥇 1 | Diana | 100.0% (10/10) | 20.5 s | Decimal | Easy |
 | 🥈 2 | Alice | 80.0% (40/50) | 120.5 s | Basic Arithmetic | Hard |
 
+*(Note: Actual display will vary based on applied filters and sorting)*
+
 ## Files Modified
 
 1. ✅ `/highscore_manager.py` - HighscoreManager with time/attempt support
-2. ✅ `/app.py` - Flask game_over route with enhanced scoring
-3. ✅ `/templates/leaderboard.html` - Enhanced UI with styling
+2. ✅ `/app.py` - Flask game_over route with enhanced scoring, **and leaderboard route with sorting/filtering logic**
+3. ✅ `/templates/leaderboard.html` - Enhanced UI with styling, **and sorting/filtering controls**
 4. ✅ `/test_math_game.py` - Updated highscore tests
-5. ✅ `/test_app.py` - Updated game_over and leaderboard tests
+5. ✅ `/test_app.py` - Updated game_over tests, **and new tests for leaderboard sorting/filtering**
 
 ## Documentation Added
 
@@ -164,3 +171,5 @@ The enhanced leaderboard is fully integrated into the game. Players can now:
 3. Track their progress on specific difficulty levels
 4. View beautiful ranked leaderboard with visual indicators
 5. See their score as a percentage and time taken
+6. **Sort the leaderboard by various criteria (Name, Score %, Time Taken)**
+7. **Filter the leaderboard by Category and Difficulty**
