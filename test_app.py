@@ -112,5 +112,78 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Game Quit', response.data)
 
+class TestLeaderboardFeatures(unittest.TestCase):
+    def setUp(self):
+        self.app = app
+        self.app.config['TESTING'] = True
+        self.client = self.app.test_client()
+        self.test_highscores = "test_highscores_features.json"
+        self.manager = HighscoreManager(self.test_highscores)
+        self.patcher = patch('app.highscore_manager', self.manager)
+        self.patcher.start()
+
+        # Populate with test data
+        self.manager.add_score('Charlie', 8, 'basic', 'hard', 30, 10) # 80%
+        self.manager.add_score('Alice', 10, 'basic', 'easy', 20, 10) # 100%
+        self.manager.add_score('Bob', 9, 'decimal', 'medium', 25, 10) # 90%
+        self.manager.add_score('Dave', 5, 'basic', 'easy', 15, 10) # 50%
+
+    def tearDown(self):
+        self.patcher.stop()
+        if os.path.exists(self.test_highscores):
+            os.remove(self.test_highscores)
+
+    def test_filter_by_category(self):
+        response = self.client.get('/leaderboard?filter_category=decimal')
+        self.assertIn(b'Bob', response.data)
+        self.assertNotIn(b'Alice', response.data)
+        self.assertNotIn(b'Charlie', response.data)
+
+    def test_filter_by_difficulty(self):
+        response = self.client.get('/leaderboard?filter_difficulty=hard')
+        self.assertIn(b'Charlie', response.data)
+        self.assertNotIn(b'Alice', response.data)
+        self.assertNotIn(b'Bob', response.data)
+
+    def test_filter_combined(self):
+        response = self.client.get('/leaderboard?filter_category=basic&filter_difficulty=easy')
+        # Expect Alice and Dave
+        self.assertIn(b'Alice', response.data)
+        self.assertIn(b'Dave', response.data)
+        self.assertNotIn(b'Bob', response.data)
+        self.assertNotIn(b'Charlie', response.data)
+
+    def test_sort_by_name_asc(self):
+        response = self.client.get('/leaderboard?sort_by=name&sort_order=asc')
+        names = [b'Alice', b'Bob', b'Charlie', b'Dave']
+        positions = [response.data.find(n) for n in names]
+        self.assertTrue(all(p != -1 for p in positions))
+        self.assertEqual(positions, sorted(positions))
+
+    def test_sort_by_time_desc(self):
+        response = self.client.get('/leaderboard?sort_by=time&sort_order=desc')
+        # Expected order: Charlie (30s), Bob (25s), Alice (20s), Dave (15s)
+        times = [b'30.0 s', b'25.0 s', b'20.0 s', b'15.0 s']
+        positions = [response.data.find(t) for t in times]
+        self.assertTrue(all(p != -1 for p in positions))
+        self.assertEqual(positions, sorted(positions))
+
+    def test_sort_by_score_default(self):
+        # Default sort should be by score desc (or percentage desc)
+        response = self.client.get('/leaderboard')
+        # Order: Alice (100%), Bob (90%), Charlie (80%), Dave (50%)
+        names = [b'Alice', b'Bob', b'Charlie', b'Dave']
+        positions = [response.data.find(n) for n in names]
+        self.assertTrue(all(p != -1 for p in positions))
+        self.assertEqual(positions, sorted(positions))
+
+    def test_sort_by_score_asc(self):
+        response = self.client.get('/leaderboard?sort_by=score&sort_order=asc')
+        # Order: Dave (50%), Charlie (80%), Bob (90%), Alice (100%)
+        names = [b'Dave', b'Charlie', b'Bob', b'Alice']
+        positions = [response.data.find(n) for n in names]
+        self.assertTrue(all(p != -1 for p in positions))
+        self.assertEqual(positions, sorted(positions))
+
 if __name__ == '__main__':
     unittest.main()

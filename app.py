@@ -106,8 +106,36 @@ def game_over():
 @app.route('/leaderboard')
 def leaderboard():
     scores = highscore_manager.load()
-    sorted_scores = sorted(scores, key=lambda x: x['score'], reverse=True)
-    return render_template('leaderboard.html', scores=sorted_scores[:10]) # Show top 10
+    
+    # Filtering
+    filter_category = request.args.get('filter_category', 'all')
+    filter_difficulty = request.args.get('filter_difficulty', 'all')
+    
+    if filter_category != 'all':
+        scores = [s for s in scores if s.get('category') == filter_category]
+    if filter_difficulty != 'all':
+        scores = [s for s in scores if s.get('difficulty') == filter_difficulty]
+        
+    # Sorting
+    sort_by = request.args.get('sort_by', 'score')
+    sort_order = request.args.get('sort_order', 'desc')
+    
+    reverse = sort_order == 'desc'
+    
+    if sort_by == 'score':
+        # Sort by score percentage if available, otherwise absolute score
+        scores.sort(key=lambda x: (x['score'] / x['questions_attempted']) if x.get('questions_attempted', 0) > 0 else x['score'], reverse=reverse)
+    elif sort_by == 'time':
+        scores.sort(key=lambda x: x.get('time_taken', 0), reverse=reverse)
+    elif sort_by == 'name':
+        scores.sort(key=lambda x: x.get('name', ''), reverse=reverse)
+        
+    return render_template('leaderboard.html', 
+                           scores=scores,
+                           sort_by=sort_by,
+                           sort_order=sort_order,
+                           filter_category=filter_category,
+                           filter_difficulty=filter_difficulty)
 
 @app.route('/quit')
 def quit_game():
