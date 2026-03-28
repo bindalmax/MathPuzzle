@@ -5,7 +5,7 @@ import time
 import os
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
 highscore_manager = HighscoreManager()
 
