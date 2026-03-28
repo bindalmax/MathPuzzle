@@ -5,7 +5,7 @@ Welcome to MathPuzzle! This guide will help you get started with the math quiz g
 ## Quick Start
 
 1. **Install Python 3.7+** if not already installed.
-2. **Install Flask** for the web version: `pip install flask`
+2. **Install dependencies**: `pip install flask flask-socketio eventlet`
 3. **Download** all project files to the same directory.
 
 ## Console Version
@@ -15,66 +15,40 @@ Run: `python math_game.py`
 
 ### Gameplay Steps
 1. Enter your name when prompted.
-2. Choose a category:
-   - 1: Basic Arithmetic
-   - 2: Decimals and Fractions
-   - 3: Percentages
-   - 4: Profit and Loss
-   - 5: Algebra
-3. Select difficulty:
-   - 1: Easy (open-ended questions)
-   - 2: Medium (multiple-choice)
-   - 3: Hard (multiple-choice)
-4. Choose game mode:
-   - 1: Time Mode - Answer as many questions as you can in X seconds (5-300 seconds)
-   - 2: Question Count Mode - Answer exactly X questions (1-100 questions)
-5. Enter your custom time or question count.
-6. Answer questions as they appear. For multiple-choice, enter the letter of your choice (A, B, C, D).
-7. Type 'quit' to end early.
-8. View your score and high scores.
-
-### Tips
-- Answers are checked with a small tolerance for decimals.
-- Press Enter after each round to continue.
+2. Choose a category and difficulty.
+3. Choose game mode: Time Mode or Question Count Mode.
+4. Answer questions as they appear.
+5. View your score and high scores.
 
 ## Web Version
 
 ### Starting the Server
 Run: `python app.py`
-
 Open your browser to: `http://127.0.0.1:5000/`
 
-### Gameplay Steps
-1. Enter your name.
-2. Select a category and difficulty from the dropdowns.
-3. Choose a game mode:
-   - **Time Mode**: Answer as many as you can in X seconds (5-300 seconds, default 20)
-   - **Question Count Mode**: Answer exactly X questions (1-100 questions, default 10)
-4. Enter your custom time or question count value.
-5. Click "Start Game".
-6. Answer the questions shown. For Medium and Hard difficulties, click the button with your chosen answer. For Easy, type your answer and click Submit.
-7. View your final score.
-8. Click "Play Again" or "View Leaderboard".
+### Single Player Gameplay
+1. Enter your name and select a category and difficulty.
+2. Choose a game mode and value.
+3. Click "Start Game".
+4. Answer questions and view your final score.
+
+### Live Multiplayer Mode (Beta)
+1. Check the **"Live Multiplayer Mode"** box before starting.
+2. You will be sent to the **Multiplayer Lobby**.
+3. Share the URL with friends so they can join the same lobby.
+4. Once everyone has joined, anyone can click **"Start Game for Everyone"**.
+5. All players will begin the game at the same time.
+6. A **Live Scoreboard** on the right side will update in real-time as players answer correctly.
 
 ### Leaderboard Features
-The web version now features an enhanced leaderboard:
-- **Filtering**: Use the dropdown menus at the top to filter scores by **Category** (e.g., Algebra, Percentages) and **Difficulty** (Easy, Medium, Hard). Click the "Filter" button to apply changes.
-- **Sorting**: Click the column headers (**Name**, **Score %**, **Time Taken**) to sort the leaderboard. Clicking the same header again will toggle between ascending and descending order.
-- **Reset**: Use the "Reset" link to clear all filters and sorting and see all scores.
-
-### Navigation
-- **Leaderboard**: Click the link on the main page or game over page.
-- **Quit**: Use the "End Game" link during play.
-
-## General Tips
-- Practice with Easy difficulty first.
-- Some categories have limited difficulty support.
-- Scores are saved automatically.
-- Close the terminal or browser tab to exit.
+The web version features an enhanced leaderboard:
+- **Filtering**: Filter scores by **Category** and **Difficulty**.
+- **Sorting**: Click column headers (**Name**, **Score %**, **Time Taken**) to sort.
+- **Reset**: Clear all filters to see all scores.
 
 ## Troubleshooting
-- **Web server not starting?** Ensure Flask is installed and port 5000 is free.
-- **Questions not loading?** Check if all question files are present.
-- **High scores not saving?** Ensure write permissions for `highscores.json`.
+- **Multiplayer not syncing?** Ensure you are running the server with `eventlet` support (done automatically via `app.py`).
+- **Web server not starting?** Check if port 5000 is occupied.
+- **High scores not saving?** Ensure `highscores.json` is writable.
 
 For more details, see the full README.md.

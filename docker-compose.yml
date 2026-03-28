@@ -9,7 +9,7 @@ services:
       - ./data/highscores.json:/app/highscores.json
     environment:
       - FLASK_ENV=production
-      - SECRET_KEY=${SECRET_KEY}
-      - HOST=0.0.0.0
-    command: gunicorn --bind ${HOST}:5000 --workers 2 app:app
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+    # Using 1 worker with eventlet class for SocketIO/Multiplayer support
+    command: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:5000 app:app
     restart: unless-stopped

@@ -7,6 +7,7 @@
         body { font-family: sans-serif; text-align: center; }
         form { display: inline-block; text-align: left; }
         select, input, button { margin: 5px; padding: 5px; }
+        .multiplayer-box { background: #f0f0f0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
     </style>
     <script>
         function toggleModeInput() {
@@ -58,6 +59,12 @@
 
         <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
         <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required><br><br>
+
+        <div class="multiplayer-box">
+            <input type="checkbox" id="multiplayer" name="multiplayer">
+            <label for="multiplayer">Live Multiplayer Mode</label>
+        </div>
+        <br>
 
         <button type="submit">Start Game</button>
     </form>
