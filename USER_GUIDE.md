@@ -56,6 +56,12 @@ Open your browser to: `http://127.0.0.1:5000/`
 7. View your final score.
 8. Click "Play Again" or "View Leaderboard".
 
+### Leaderboard Features
+The web version now features an enhanced leaderboard:
+- **Filtering**: Use the dropdown menus at the top to filter scores by **Category** (e.g., Algebra, Percentages) and **Difficulty** (Easy, Medium, Hard). Click the "Filter" button to apply changes.
+- **Sorting**: Click the column headers (**Name**, **Score %**, **Time Taken**) to sort the leaderboard. Clicking the same header again will toggle between ascending and descending order.
+- **Reset**: Use the "Reset" link to clear all filters and sorting and see all scores.
+
 ### Navigation
 - **Leaderboard**: Click the link on the main page or game over page.
 - **Quit**: Use the "End Game" link during play.

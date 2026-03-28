@@ -189,8 +189,9 @@ class TestProfitLossQuestion(unittest.TestCase):
         self.assertEqual(answer, 10)
         self.assertIsNone(choices)
 
-    @patch('questions.profit_loss.random.randint', side_effect=[200, 300, 1, 2, 3])
-    def test_medium_profit_percentage(self, mock_randint):
+    @patch('questions.profit_loss.random.choice', side_effect=[True, 1, 1, 1])
+    @patch('questions.profit_loss.random.randint', side_effect=[200, 30, 1, 2, 3])
+    def test_medium_profit_percentage(self, mock_randint, mock_choice):
         question, answer, choices = ProfitLossQuestion().generate('medium')
         self.assertIn("What is the profit percentage?", question)
         self.assertIsInstance(answer, int)

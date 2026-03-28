@@ -28,7 +28,7 @@ A fun and educational math quiz game available in both console and web interface
 - **Timed Challenges**: Answer as many questions as you can in a custom time limit (5-300 seconds, default 20 seconds).
 - **Question Count Mode**: Answer a specific number of questions (1-100, default 10 questions).
 - **Scoring**: Earn points for each correct answer.
-- **Leaderboard**: View top 10 high scores.
+- **Leaderboard**: View high scores with details like time taken and score percentage. **Now includes sorting and filtering options.**
 - **Session Management**: Web version supports user sessions for seamless gameplay.
 
 ### Web Application Features
@@ -38,6 +38,7 @@ A fun and educational math quiz game available in both console and web interface
 - **Form Validation**: Ensures proper input for names and answers.
 - **Error Handling**: Displays messages for unimplemented categories/difficulties.
 - **Navigation**: Easy access to leaderboard and game restart.
+- **Enhanced Leaderboard**: Sort by Name, Score, or Time and filter by Category or Difficulty.
 
 ## Installation
 
@@ -76,7 +77,7 @@ python app.py
 - Enter your name, select category and difficulty.
 - Choose between **Time Mode** (custom time limit 5-300 seconds) or **Question Count Mode** (custom question count 1-100).
 - Play the game and view your score.
-- Check the leaderboard at `/leaderboard`.
+- Check the leaderboard at `/leaderboard`. Use the new filtering and sorting options to customize the view.
 
 ### Testing
 Run the test suites:
