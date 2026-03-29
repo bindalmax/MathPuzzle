@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Math Game - Play</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         body { font-family: sans-serif; text-align: center; }
         .game-info { margin-bottom: 20px; }
@@ -17,8 +18,28 @@
             font-size: 1.1em;
             cursor: pointer;
         }
+        .live-scores {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            min-width: 150px;
+        }
+        .live-scores h3 { margin-top: 0; }
+        .live-scores ul { list-style: none; padding: 0; }
+        .live-scores li { padding: 5px 0; border-bottom: 1px solid #ddd; }
     </style>
     <script>
+        // Security: Use tojson to safely inject session data
+        const playerName = {{ session.get('player_name', 'Player') | tojson }};
+        const roomId = {{ session.get('room_id', '') | tojson }};
+        const isMultiplayer = {{ session.get('multiplayer', False) | tojson }};
+
+        const socket = io();
+
         // Simple client-side timer display (only for time mode)
         window.onload = function() {
             const mode = "{{ mode }}";
@@ -29,15 +50,45 @@
 
             const interval = setInterval(() => {
                 timeLeft--;
-                timerDisplay.innerText = timeLeft;
+                if (timerDisplay) timerDisplay.innerText = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(interval);
+                    window.location.href = "{{ url_for('game_over') }}";
                 }
             }, 1000);
         };
+
+        // SocketIO for multiplayer
+        if (isMultiplayer) {
+            socket.on('connect', () => {
+                socket.emit('join', { name: playerName, room: roomId });
+            });
+
+            socket.on('score_update', (data) => {
+                const scoreList = document.getElementById('score-list');
+                if (scoreList) {
+                    scoreList.innerHTML = '';
+                    const players = data.players;
+                    const sortedPlayers = Object.entries(players).sort((a, b) => b[1] - a[1]);
+                    sortedPlayers.forEach(([name, score]) => {
+                        const li = document.createElement('li');
+                        li.textContent = name + ': ' + score + ' pts';
+                        scoreList.appendChild(li);
+                    });
+                }
+            });
+        }
     </script>
 </head>
 <body>
+    {% if session.get('multiplayer') %}
+    <div class="live-scores">
+        <h3>Live Scores</h3>
+        <ul id="score-list">
+            <li>{{ session.get('player_name', 'Player') }}: {{ score }} pts</li>
+        </ul>
+    </div>
+    {% endif %}
     <h1>Math Game</h1>
     <div class="game-info">
         <p>Score: {{ score }} |

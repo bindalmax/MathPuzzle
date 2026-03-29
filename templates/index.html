@@ -2,65 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Math Game</title>
+    <title>Math Game - Setup</title>
     <style>
         body { font-family: sans-serif; text-align: center; }
-        form { display: inline-block; text-align: left; }
-        select, input, button { margin: 5px; padding: 5px; }
+        .container { display: flex; justify-content: space-around; padding: 20px; }
+        .setup-box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; min-width: 300px; }
+        .error { color: red; }
+        .room-list { list-style: none; padding: 0; }
+        .room-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
     </style>
-    <script>
-        function toggleModeInput() {
-            const modeSelect = document.getElementById('mode');
-            const modeLabel = document.getElementById('mode_label');
-            const modeValue = document.getElementById('mode_value');
-
-            if (modeSelect.value === 'time') {
-                modeLabel.textContent = 'Time in seconds (5-300):';
-                modeValue.min = 5;
-                modeValue.max = 300;
-                modeValue.value = 20;
-            } else {
-                modeLabel.textContent = 'Number of questions (1-100):';
-                modeValue.min = 1;
-                modeValue.max = 100;
-                modeValue.value = 10;
-            }
-        }
-    </script>
 </head>
 <body>
     <h1>Welcome to the Math Game!</h1>
-    <form method="post">
-        <label for="player_name">Enter your name:</label><br>
-        <input type="text" id="player_name" name="player_name" required><br><br>
 
-        <label for="category">Choose a category:</label><br>
-        <select id="category" name="category">
-            <option value="basic">Basic Arithmetic</option>
-            <option value="decimal">Decimals and Fractions</option>
-            <option value="percentage">Percentages</option>
-            <option value="profit_loss">Profit and Loss</option>
-            <option value="algebra">Algebra</option>
-        </select><br><br>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
 
-        <label for="difficulty">Choose a difficulty:</label><br>
-        <select id="difficulty" name="difficulty">
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-        </select><br><br>
+    <div class="container">
+        <!-- Setup Game -->
+        <div class="setup-box">
+            <h2>Start New Game</h2>
+            <form action="{{ url_for('index') }}" method="post">
+                <label for="player_name">Enter your name:</label><br>
+                <input type="text" id="player_name" name="player_name" required><br><br>
 
-        <label for="mode">Choose game mode:</label><br>
-        <select id="mode" name="mode" onchange="toggleModeInput()">
-            <option value="time">Time Mode (answer as many as you can)</option>
-            <option value="questions">Question Count Mode (answer exactly X questions)</option>
-        </select><br><br>
+                <label>Game Type:</label><br>
+                <input type="radio" id="single" name="game_type" value="single" checked onchange="toggleGameType()">
+                <label for="single">Single Player</label>
+                <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="toggleGameType()">
+                <label for="multiplayer">Multiplayer</label>
+                <br><br>
 
-        <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
-        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required><br><br>
+                <div id="game-options">
+                    <label for="category">Choose a category:</label><br>
+                    <select id="category" name="category">
+                        <option value="basic">Basic Arithmetic</option>
+                        <option value="decimal">Decimals and Fractions</option>
+                        <option value="percentage">Percentages</option>
+                        <option value="profit">Profit and Loss</option>
+                        <option value="algebra">Algebra</option>
+                    </select><br><br>
 
-        <button type="submit">Start Game</button>
-    </form>
+                    <label for="difficulty">Choose a difficulty:</label><br>
+                    <select id="difficulty" name="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select><br><br>
+
+                    <label for="mode">Choose a game mode:</label><br>
+                    <select id="mode" name="mode" onchange="updateModeLabel()">
+                        <option value="time">Time Mode</option>
+                        <option value="questions">Question Count Mode</option>
+                    </select><br><br>
+
+                    <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
+                    <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required><br><br>
+                </div>
+
+                <button type="submit" id="start_btn">Start Game / Create Lobby</button>
+            </form>
+        </div>
+
+        <!-- Join Existing Lobby (Multiplayer only) -->
+        <div class="setup-box">
+            <h2>Join Active Lobby</h2>
+            {% if active_rooms %}
+                <ul class="room-list">
+                    {% for room_id, details in active_rooms.items() %}
+                        <li class="room-item">
+                            <strong>Room: {{ room_id }}</strong><br>
+                            {{ details.category }} - {{ details.difficulty }} ({{ details.mode }})<br>
+                            Players: {{ details.players | length }}<br>
+                            <form action="{{ url_for('index') }}" method="post" style="margin-top: 5px;">
+                                <input type="hidden" name="join_room_id" value="{{ room_id }}">
+                                <input type="text" name="player_name" placeholder="Your name" required>
+                                <button type="submit">Join</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No active lobbies. Create one!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function updateModeLabel() {
+            const mode = document.getElementById('mode').value;
+            const label = document.getElementById('mode_label');
+            const input = document.getElementById('mode_value');
+            if (mode === 'time') {
+                label.textContent = "Time in seconds (5-300):";
+                input.min = 5;
+                input.max = 300;
+                input.value = 20;
+            } else {
+                label.textContent = "Number of questions (1-100):";
+                input.min = 1;
+                input.max = 100;
+                input.value = 10;
+            }
+        }
+
+        function toggleGameType() {
+            // Options remain the same, but the button text changes for clarity
+            const isMultiplayer = document.getElementById('multiplayer').checked;
+            const btn = document.getElementById('start_btn');
+            btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
+        }
+    </script>
     <br>
     <a href="{{ url_for('leaderboard') }}">View Leaderboard</a>
 </body>
