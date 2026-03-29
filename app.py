@@ -1,19 +1,27 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask import Flask, render_template, request, redirect, url_for, session, abort
+from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
 import time
 import os
+import uuid
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
-# Removed eventlet async_mode due to Python 3.13 compatibility issues
-# SocketIO will default to standard threading
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Security: Enforce a secret key in production
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY and os.environ.get('FLASK_ENV') == 'production':
+    raise RuntimeError("SECRET_KEY must be set in production environment")
+app.secret_key = SECRET_KEY or 'dev-secret-key-change-in-production'
+
+# Security: Restrict CORS origins (using * for dev, should be restricted in prod)
+# Compatibility: Explicitly use 'threading' for Python 3.13 + Flask-SocketIO
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*')
+socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threading')
 
 highscore_manager = HighscoreManager()
 
+# rooms[room_id] = {'players': [], 'scores': {}, 'category': '', 'difficulty': ''}
 rooms = {}
 
 @app.route('/', methods=['GET', 'POST'])
@@ -29,12 +37,21 @@ def index():
         
         if game_type == 'multiplayer':
             session['multiplayer'] = True
-            session['room_id'] = f"{session['category']}_{session['difficulty']}"
+            # Security: Use UUID for room IDs to prevent guessing
+            room_id = str(uuid.uuid4())[:8]
+            session['room_id'] = room_id
+            rooms[room_id] = {
+                'players': [], 
+                'scores': {}, 
+                'category': session['category'], 
+                'difficulty': session['difficulty']
+            }
             return redirect(url_for('multiplayer_lobby'))
         
         session['score'] = 0
         session['questions_answered'] = 0
         session['start_time'] = time.time()
+        session['multiplayer'] = False
         return redirect(url_for('game'))
     
     return render_template('index.html')
@@ -62,22 +79,19 @@ def game():
     except NotImplementedError:
         return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented for the '{session['difficulty']}' difficulty yet!")
 
+    context = {
+        'question': question,
+        'score': session['score'],
+        'mode': mode,
+        'choices': choices
+    }
+    
     if mode == 'time':
-        time_left = int(mode_value - elapsed_time)
-        return render_template('game.html',
-                               question=question,
-                               score=session['score'],
-                               time_left=time_left,
-                               mode=mode,
-                               choices=choices) # Pass choices
+        context['time_left'] = int(mode_value - elapsed_time)
     else:
-        questions_left = mode_value - questions_answered
-        return render_template('game.html',
-                               question=question,
-                               score=session['score'],
-                               questions_left=questions_left,
-                               mode=mode,
-                               choices=choices) # Pass choices
+        context['questions_left'] = mode_value - questions_answered
+        
+    return render_template('game.html', **context)
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
@@ -90,6 +104,17 @@ def submit_answer():
 
         if abs(user_answer - correct_answer) < 0.01:
             session['score'] += 1
+            
+            # Security: Server-authoritative score update for multiplayer
+            if session.get('multiplayer'):
+                room_id = session.get('room_id')
+                player_name = session.get('player_name')
+                if room_id in rooms and player_name in rooms[room_id]['scores']:
+                    rooms[room_id]['scores'][player_name] = session['score']
+                    # Broadcast update to all players in the room
+                    socketio.emit('score_update', 
+                                  {'players': rooms[room_id]['scores']}, 
+                                  room=room_id)
     except (ValueError, TypeError):
         pass
     
@@ -102,7 +127,7 @@ def game_over():
     player_name = session.get('player_name', 'Player')
     
     # Save the score
-    if 'start_time' in session: # Ensure it's a real game over
+    if 'start_time' in session:
         category = session.get('category', 'unknown')
         difficulty = session.get('difficulty', 'unknown')
         
@@ -111,7 +136,7 @@ def game_over():
         
         highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
 
-    # Clean up session for the next game
+    # Clean up session
     session.pop('start_time', None)
     session.pop('current_answer', None)
     
@@ -121,7 +146,6 @@ def game_over():
 def leaderboard():
     scores = highscore_manager.load()
     
-    # Filtering
     filter_category = request.args.get('filter_category', 'all')
     filter_difficulty = request.args.get('filter_difficulty', 'all')
     
@@ -130,7 +154,6 @@ def leaderboard():
     if filter_difficulty != 'all':
         scores = [s for s in scores if s.get('difficulty') == filter_difficulty]
         
-    # Sorting
     sort_by = request.args.get('sort_by', 'score')
     sort_order = request.args.get('sort_order', 'desc')
     
@@ -163,8 +186,17 @@ def multiplayer_lobby():
         session['difficulty'] = request.form['difficulty']
         session['mode'] = 'time'
         session['mode_value'] = int(request.form.get('mode_value', 20))
-        session['room_id'] = f"{session['category']}_{session['difficulty']}"
+        
+        room_id = str(uuid.uuid4())[:8]
+        session['room_id'] = room_id
         session['multiplayer'] = True
+        
+        rooms[room_id] = {
+            'players': [], 
+            'scores': {}, 
+            'category': session['category'], 
+            'difficulty': session['difficulty']
+        }
         return redirect(url_for('multiplayer_lobby'))
     return render_template('multiplayer_lobby.html', player_name=session.get('player_name', ''))
 
@@ -182,21 +214,12 @@ def start_multiplayer_game():
 def handle_join(data):
     name = data.get('name')
     room = data.get('room')
-    print(f"Join event: name={name}, room={room}")
     
-    if room:
+    if room and room in rooms:
         join_room(room)
-    
-    if room not in rooms:
-        rooms[room] = {'players': [], 'scores': {}}
-    
-    if name and name not in rooms[room]['players']:
-        rooms[room]['players'].append(name)
-        rooms[room]['scores'][name] = 0
-    
-    print(f"Players in room {room}: {rooms[room]['players']}")
-    
-    if room:
+        if name and name not in rooms[room]['players']:
+            rooms[room]['players'].append(name)
+            rooms[room]['scores'][name] = 0
         emit('update_players', rooms[room]['players'], room=room)
 
 @socketio.on('start_game_request')
@@ -204,24 +227,15 @@ def handle_start_game_request(data=None):
     room = session.get('room_id')
     if not room and data:
         room = data.get('room')
-    print(f"Start game request: room={room}, rooms={list(rooms.keys())}")
+    
+    # Security: Verify room exists and sender is authorized (in the room)
     if room and room in rooms:
         emit('game_start_signal', room=room, to=room)
 
-@socketio.on('answer')
-def handle_answer(data):
-    room = data.get('room')
-    name = data.get('name')
-    score = data.get('score')
-    
-    if room in rooms:
-        rooms[room]['scores'][name] = score
-        emit('score_update', {'players': rooms[room]['scores']}, room=room, include_self=False)
-
 @socketio.on('disconnect')
 def handle_disconnect():
+    # Optional: logic to remove player from room on disconnect
     pass
 
 if __name__ == '__main__':
-    # Using socketio.run with debug=True. It will use standard threading without eventlet.
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)

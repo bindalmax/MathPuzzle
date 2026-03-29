@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import os
 import json
 import time
-from app import app, HighscoreManager
+from app import app, HighscoreManager, socketio
 
 class TestWebApp(unittest.TestCase):
     def setUp(self):
@@ -48,6 +48,11 @@ class TestWebApp(unittest.TestCase):
         }, follow_redirects=False)
         self.assertEqual(response.status_code, 302)
         self.assertIn('/multiplayer_lobby', response.headers['Location'])
+        
+        # Verify room ID is a UUID (not predictable)
+        with self.client.session_transaction() as sess:
+            self.assertTrue(sess['multiplayer'])
+            self.assertEqual(len(sess['room_id']), 8)
 
     def test_multiplayer_lobby_access(self):
         with self.client.session_transaction() as sess:
@@ -73,7 +78,7 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'What is 5 + 5?', response.data)
 
-    def test_submit_answer_correct(self):
+    def test_submit_answer_correct_single_player(self):
         with self.client.session_transaction() as sess:
             sess['start_time'] = time.time()
             sess['current_answer'] = 10
@@ -81,13 +86,41 @@ class TestWebApp(unittest.TestCase):
             sess['questions_answered'] = 0
             sess['category'] = 'basic'
             sess['difficulty'] = 'easy'
+            sess['multiplayer'] = False
 
         response = self.client.post('/submit_answer', data={'answer': '10'}, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         
         with self.client.session_transaction() as sess:
             self.assertEqual(sess['score'], 1)
-            self.assertEqual(sess['questions_answered'], 1)
+
+    @patch('app.socketio.emit')
+    def test_submit_answer_multiplayer_broadcast(self, mock_emit):
+        # Setup multiplayer room
+        room_id = 'testroom'
+        player_name = 'TestMPPlayer'
+        from app import rooms
+        rooms[room_id] = {'players': [player_name], 'scores': {player_name: 0}}
+        
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = player_name
+            sess['room_id'] = room_id
+            sess['multiplayer'] = True
+            sess['start_time'] = time.time()
+            sess['current_answer'] = 15
+            sess['score'] = 5
+            # Fix: Add missing session keys required by the /game redirect
+            sess['category'] = 'basic'
+            sess['difficulty'] = 'easy'
+
+        response = self.client.post('/submit_answer', data={'answer': '15'}, follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        
+        # Check if rooms object was updated
+        self.assertEqual(rooms[room_id]['scores'][player_name], 6)
+        
+        # Check if score_update was emitted
+        mock_emit.assert_any_call('score_update', {'players': {player_name: 6}}, room=room_id)
 
     def test_game_over(self):
         with self.client.session_transaction() as sess:

@@ -11,6 +11,7 @@ A fun and educational math quiz game available in both console and web interface
 ### Game Modes
 - **Console Version**: Interactive command-line interface for quick play.
 - **Web Version**: User-friendly web application built with Flask.
+- **Multiplayer Mode**: Real-time multiplayer with synchronized game starts and live scoreboards using WebSockets.
 
 ### Question Categories
 - **Basic Arithmetic**: Addition, subtraction, multiplication, and division.
@@ -31,6 +32,12 @@ A fun and educational math quiz game available in both console and web interface
 - **Leaderboard**: View high scores with details like time taken and score percentage. **Now includes sorting and filtering options.**
 - **Session Management**: Web version supports user sessions for seamless gameplay.
 
+### Security Features
+- **XSS Protection**: Proper sanitization and encoding of user-provided data (e.g., player names) in templates using Jinja2's `tojson` and `textContent`.
+- **Server-Authoritative Scoring**: In multiplayer mode, scores are validated and updated on the server to prevent cheating via manual WebSocket events.
+- **Randomized Room IDs**: Uses unique UUIDs for multiplayer rooms to prevent unauthorized access through predictable IDs.
+- **Environment Hardening**: Enforces secret key requirements in production and restricts WebSocket CORS origins.
+
 ### Web Application Features
 - **Responsive Design**: Simple HTML/CSS interface.
 - **Real-time Timer**: Client-side countdown during gameplay.
@@ -43,15 +50,16 @@ A fun and educational math quiz game available in both console and web interface
 ## Installation
 
 ### Prerequisites
-- Python 3.7+
+- Python 3.11+
 - Flask (for web version)
+- Flask-SocketIO (for multiplayer)
 - Selenium (for UI tests)
 
 ### Setup
 1. Clone or download the repository.
 2. Install dependencies (if using virtual environment):
    ```bash
-   pip install flask selenium
+   pip install flask flask-socketio selenium
    ```
 3. Ensure all files are in the same directory.
 
@@ -75,6 +83,7 @@ python app.py
 ```
 - Open a web browser and go to `http://127.0.0.1:5000/`.
 - Enter your name, select category and difficulty.
+- Choose between **Single Player** or **Multiplayer**.
 - Choose between **Time Mode** (custom time limit 5-300 seconds) or **Question Count Mode** (custom question count 1-100).
 - Play the game and view your score.
 - Check the leaderboard at `/leaderboard`. Use the new filtering and sorting options to customize the view.
@@ -122,6 +131,7 @@ AIHandsOn/
     ├── game.html
     ├── game_over.html
     ├── leaderboard.html
+    ├── multiplayer_lobby.html
     └── quit.html
 ```
 

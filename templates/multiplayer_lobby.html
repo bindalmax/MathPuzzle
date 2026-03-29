@@ -29,8 +29,9 @@
     </div>
 
     <script>
-        const playerName = "{{ player_name | safe }}";
-        const roomId = "{{ session.get('room_id', '') }}";
+        // Security: Use tojson for safe data passing from Python to JS
+        const playerName = {{ player_name | tojson }};
+        const roomId = {{ session.get('room_id', '') | tojson }};
         
         console.log('Player name:', playerName);
         console.log('Room ID:', roomId);
@@ -52,6 +53,7 @@
             list.innerHTML = '';
             players.forEach(p => {
                 const li = document.createElement('li');
+                // Use textContent to prevent XSS during rendering
                 li.textContent = p + (p === playerName ? " (You)" : "");
                 list.appendChild(li);
             });

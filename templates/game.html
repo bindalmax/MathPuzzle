@@ -33,10 +33,12 @@
         .live-scores li { padding: 5px 0; border-bottom: 1px solid #ddd; }
     </style>
     <script>
-        const socket = io('/multiplayer');
-        const playerName = "{{ session.get('player_name', 'Player') }}";
-        const roomId = "{{ session.get('room_id', '') }}";
-        const isMultiplayer = "{{ session.get('multiplayer', 'false') }}";
+        // Security: Use tojson to safely inject session data
+        const playerName = {{ session.get('player_name', 'Player') | tojson }};
+        const roomId = {{ session.get('room_id', '') | tojson }};
+        const isMultiplayer = {{ session.get('multiplayer', False) | tojson }};
+
+        const socket = io();
 
         // Simple client-side timer display (only for time mode)
         window.onload = function() {
@@ -48,15 +50,16 @@
 
             const interval = setInterval(() => {
                 timeLeft--;
-                timerDisplay.innerText = timeLeft;
+                if (timerDisplay) timerDisplay.innerText = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(interval);
+                    window.location.href = "{{ url_for('game_over') }}";
                 }
             }, 1000);
         };
 
         // SocketIO for multiplayer
-        if (isMultiplayer === 'true') {
+        if (isMultiplayer) {
             socket.on('connect', () => {
                 socket.emit('join', { name: playerName, room: roomId });
             });
@@ -75,16 +78,6 @@
                 }
             });
         }
-
-        // Emit score update on answer submission
-        document.getElementById('answer-form').addEventListener('submit', function() {
-            if (isMultiplayer === 'true') {
-                const currentScore = {{ score }};
-                setTimeout(() => {
-                    socket.emit('answer', { name: playerName, room: roomId, score: currentScore + 1 });
-                }, 100);
-            }
-        });
     </script>
 </head>
 <body>
