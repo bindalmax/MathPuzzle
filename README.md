@@ -98,7 +98,8 @@ python run_all_tests.py
 ## Project Structure
 ```
 AIHandsOn/
-├── .copilot-instructions        # AI agent instructions for the project
+├── .ai-assistant-instructions   # AI agent instructions (Android Studio AI)
+├── .copilot-instructions        # AI agent instructions (GitHub Copilot)
 ├── README.md                    # Project documentation
 ├── USER_GUIDE.md                # Quick user guide
 ├── app.py                       # Flask web application

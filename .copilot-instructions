@@ -1,9 +1,9 @@
-# GitHub Copilot Instructions for MathPuzzle Project
+# AI Agent Instructions for MathPuzzle Project
 
 ## General Rules
 - Always maintain up-to-date documentation when making **code changes only**.
 - Update tests to reflect new functionality or bug fixes.
-- Ensure all changes are tested before committing.
+- Ensure all changes are syntactically correct using available analysis tools.
 - When providing **code explanations**, no testing or documentation updates are required.
 
 ## Documentation Updates (Code Changes Only)
@@ -17,9 +17,8 @@
 - **Web App Tests**: Update `test_app.py` for Flask app changes.
 - **UI Automation Tests**: Update `test_ui_automation.py` for any changes to the web UI.
 - Add new test cases for new features.
-- Ensure all tests pass before finalizing changes.
-- Target: 28+ tests (20 console + 8 web app) + UI tests.
-- Run tests only after code modifications, not for explanations.
+- Ensure tests are comprehensive (target: 28+ tests + UI tests).
+- **IMPORTANT**: As the AI cannot execute tests directly, provide the command for the user to run them: `python -m unittest test_math_game.py test_app.py test_ui_automation.py`
 
 ## Code Explanation
 - When explaining existing code, provide clear descriptions without making changes.
@@ -44,8 +43,6 @@
 - Only create new files for code changes, not for explanations.
 
 ## Quality Assurance
-- Run full test suite after any code changes: `python -m unittest test_math_game.py test_app.py test_ui_automation.py`
-- Verify web app functionality by starting server and testing manually.
-- Check for any broken links or outdated information in docs.
-- Ensure all 28+ tests pass.
-- Skip testing and documentation for code explanation requests.
+- Use `analyze_current_file` to check for syntax errors and warnings in modified files.
+- Verify logical consistency of changes.
+- Instruct the user to run the full test suite after applying changes.
