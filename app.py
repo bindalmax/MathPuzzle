@@ -21,13 +21,29 @@ socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threa
 
 highscore_manager = HighscoreManager()
 
-# rooms[room_id] = {'players': [], 'scores': {}, 'category': '', 'difficulty': ''}
+# rooms[room_id] = {'players': [], 'scores': {}, 'category': '', 'difficulty': '', 'mode': '', 'mode_value': 20}
 rooms = {}
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         session['player_name'] = request.form['player_name']
+        
+        # Handle joining an existing room
+        join_room_id = request.form.get('join_room_id')
+        if join_room_id:
+            if join_room_id in rooms:
+                session['multiplayer'] = True
+                session['room_id'] = join_room_id
+                session['category'] = rooms[join_room_id]['category']
+                session['difficulty'] = rooms[join_room_id]['difficulty']
+                session['mode'] = rooms[join_room_id]['mode']
+                session['mode_value'] = rooms[join_room_id]['mode_value']
+                return redirect(url_for('multiplayer_lobby'))
+            else:
+                return render_template('index.html', error="Room not found", active_rooms=rooms)
+
+        # Common fields
         session['category'] = request.form['category']
         session['difficulty'] = request.form['difficulty']
         session['mode'] = request.form.get('mode', 'time')
@@ -44,7 +60,9 @@ def index():
                 'players': [], 
                 'scores': {}, 
                 'category': session['category'], 
-                'difficulty': session['difficulty']
+                'difficulty': session['difficulty'],
+                'mode': session['mode'],
+                'mode_value': session['mode_value']
             }
             return redirect(url_for('multiplayer_lobby'))
         
@@ -54,7 +72,7 @@ def index():
         session['multiplayer'] = False
         return redirect(url_for('game'))
     
-    return render_template('index.html')
+    return render_template('index.html', active_rooms=rooms)
 
 @app.route('/game')
 def game():
@@ -195,7 +213,9 @@ def multiplayer_lobby():
             'players': [], 
             'scores': {}, 
             'category': session['category'], 
-            'difficulty': session['difficulty']
+            'difficulty': session['difficulty'],
+            'mode': session['mode'],
+            'mode_value': session['mode_value']
         }
         return redirect(url_for('multiplayer_lobby'))
     return render_template('multiplayer_lobby.html', player_name=session.get('player_name', ''))
