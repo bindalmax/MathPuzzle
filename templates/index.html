@@ -34,6 +34,13 @@
         <label for="player_name">Enter your name:</label><br>
         <input type="text" id="player_name" name="player_name" required><br><br>
 
+        <label>Game Type:</label><br>
+        <input type="radio" id="single" name="game_type" value="single" checked onchange="toggleGameType()">
+        <label for="single">Single Player</label>
+        <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="toggleGameType()">
+        <label for="multiplayer">Multiplayer</label>
+        <br><br>
+
         <label for="category">Choose a category:</label><br>
         <select id="category" name="category">
             <option value="basic">Basic Arithmetic</option>
@@ -59,8 +66,22 @@
         <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
         <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required><br><br>
 
-        <button type="submit">Start Game</button>
+        <button type="submit" id="start_btn">Start Game</button>
     </form>
+
+    <script>
+        function toggleGameType() {
+            const isMultiplayer = document.getElementById('multiplayer').checked;
+            const form = document.querySelector('form');
+            if (isMultiplayer) {
+                form.action = "{{ url_for('multiplayer_lobby') }}";
+            } else {
+                form.action = "{{ url_for('index') }}";
+            }
+        }
+        // Set initial action
+        document.querySelector('form').action = "{{ url_for('index') }}";
+    </script>
     <br>
     <a href="{{ url_for('leaderboard') }}">View Leaderboard</a>
 </body>

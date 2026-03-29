@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Multiplayer Lobby</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f4f4f9; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 300px; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; border-bottom: 1px solid #eee; font-weight: bold; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; margin-top: 20px; }
+        button:hover { background: #45a049; }
+        .status { color: #666; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Multiplayer Lobby</h1>
+        <p>Waiting for players to join...</p>
+
+        <h3>Current Players:</h3>
+        <ul id="player-list"></ul>
+
+        <div id="controls">
+            <button onclick="startGame()">Start Game for Everyone</button>
+        </div>
+        <p class="status" id="status-msg">All players must be ready!</p>
+    </div>
+
+    <script>
+        const playerName = "{{ player_name | safe }}";
+        const roomId = "{{ session.get('room_id', '') }}";
+        
+        console.log('Player name:', playerName);
+        console.log('Room ID:', roomId);
+        
+        const socket = io({ transports: ['websocket', 'polling'] });
+
+        socket.on('connect', () => {
+            console.log('Connected to server, socket ID:', socket.id);
+            socket.emit('join', { name: playerName, room: roomId });
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+        });
+
+        socket.on('update_players', (players) => {
+            console.log('Received update_players:', players);
+            const list = document.getElementById('player-list');
+            list.innerHTML = '';
+            players.forEach(p => {
+                const li = document.createElement('li');
+                li.textContent = p + (p === playerName ? " (You)" : "");
+                list.appendChild(li);
+            });
+        });
+
+        socket.on('game_start_signal', (data) => {
+            console.log('Game start signal received!', data);
+            window.location.href = "{{ url_for('start_multiplayer_game') }}";
+        });
+
+        function startGame() {
+            console.log('Starting game for room:', roomId);
+            socket.emit('start_game_request', { room: roomId });
+        }
+    </script>
+</body>
+</html>

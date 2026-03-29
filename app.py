@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from flask_socketio import SocketIO, emit, join_room, leave_room
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
 import time
@@ -7,7 +8,13 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 
+# Removed eventlet async_mode due to Python 3.13 compatibility issues
+# SocketIO will default to standard threading
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 highscore_manager = HighscoreManager()
+
+rooms = {}
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -17,6 +24,14 @@ def index():
         session['difficulty'] = request.form['difficulty']
         session['mode'] = request.form.get('mode', 'time')
         session['mode_value'] = int(request.form.get('mode_value', 20))
+        
+        game_type = request.form.get('game_type', 'single')
+        
+        if game_type == 'multiplayer':
+            session['multiplayer'] = True
+            session['room_id'] = f"{session['category']}_{session['difficulty']}"
+            return redirect(url_for('multiplayer_lobby'))
+        
         session['score'] = 0
         session['questions_answered'] = 0
         session['start_time'] = time.time()
@@ -42,7 +57,6 @@ def game():
 
     factory = QuestionFactory(session['category'], session['difficulty'])
     try:
-        # Update: create_question now returns 3 values
         question, answer, choices = factory.create_question()
         session['current_answer'] = answer
     except NotImplementedError:
@@ -123,7 +137,6 @@ def leaderboard():
     reverse = sort_order == 'desc'
     
     if sort_by == 'score':
-        # Sort by score percentage if available, otherwise absolute score
         scores.sort(key=lambda x: (x['score'] / x['questions_attempted']) if x.get('questions_attempted', 0) > 0 else x['score'], reverse=reverse)
     elif sort_by == 'time':
         scores.sort(key=lambda x: x.get('time_taken', 0), reverse=reverse)
@@ -139,9 +152,76 @@ def leaderboard():
 
 @app.route('/quit')
 def quit_game():
-    # Clear all session data
     session.clear()
     return render_template('quit.html')
 
+@app.route('/multiplayer_lobby', methods=['GET', 'POST'])
+def multiplayer_lobby():
+    if request.method == 'POST':
+        session['player_name'] = request.form['player_name']
+        session['category'] = request.form['category']
+        session['difficulty'] = request.form['difficulty']
+        session['mode'] = 'time'
+        session['mode_value'] = int(request.form.get('mode_value', 20))
+        session['room_id'] = f"{session['category']}_{session['difficulty']}"
+        session['multiplayer'] = True
+        return redirect(url_for('multiplayer_lobby'))
+    return render_template('multiplayer_lobby.html', player_name=session.get('player_name', ''))
+
+@app.route('/start_multiplayer_game')
+def start_multiplayer_game():
+    if 'multiplayer' not in session:
+        return redirect(url_for('index'))
+    
+    session['score'] = 0
+    session['questions_answered'] = 0
+    session['start_time'] = time.time()
+    return redirect(url_for('game'))
+
+@socketio.on('join')
+def handle_join(data):
+    name = data.get('name')
+    room = data.get('room')
+    print(f"Join event: name={name}, room={room}")
+    
+    if room:
+        join_room(room)
+    
+    if room not in rooms:
+        rooms[room] = {'players': [], 'scores': {}}
+    
+    if name and name not in rooms[room]['players']:
+        rooms[room]['players'].append(name)
+        rooms[room]['scores'][name] = 0
+    
+    print(f"Players in room {room}: {rooms[room]['players']}")
+    
+    if room:
+        emit('update_players', rooms[room]['players'], room=room)
+
+@socketio.on('start_game_request')
+def handle_start_game_request(data=None):
+    room = session.get('room_id')
+    if not room and data:
+        room = data.get('room')
+    print(f"Start game request: room={room}, rooms={list(rooms.keys())}")
+    if room and room in rooms:
+        emit('game_start_signal', room=room, to=room)
+
+@socketio.on('answer')
+def handle_answer(data):
+    room = data.get('room')
+    name = data.get('name')
+    score = data.get('score')
+    
+    if room in rooms:
+        rooms[room]['scores'][name] = score
+        emit('score_update', {'players': rooms[room]['scores']}, room=room, include_self=False)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    pass
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Using socketio.run with debug=True. It will use standard threading without eventlet.
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)

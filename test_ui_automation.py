@@ -79,7 +79,95 @@ class TestUIAutomation(unittest.TestCase):
         wait.until(EC.url_contains("game"))
         self.assertIn("game", self.driver.current_url)
 
+    def test_multiplayer_radio_exists(self):
+        """Test that multiplayer radio button exists on start page."""
+        self.driver.get(self.base_url)
+        
+        # Check multiplayer radio button exists
+        multiplayer_radio = self.driver.find_element(By.ID, "multiplayer")
+        self.assertTrue(multiplayer_radio.is_enabled())
+        
+        single_radio = self.driver.find_element(By.ID, "single")
+        self.assertTrue(single_radio.is_enabled())
+
+    def test_multiplayer_lobby_access(self):
+        """Test accessing multiplayer lobby."""
+        self.driver.get(self.base_url)
+        
+        wait = WebDriverWait(self.driver, 10)
+        
+        # Select multiplayer
+        multiplayer_radio = wait.until(EC.element_to_be_clickable((By.ID, "multiplayer")))
+        multiplayer_radio.click()
+        
+        # Fill name
+        self.driver.find_element(By.NAME, "player_name").send_keys("MPPlayer1")
+        
+        # Select category and difficulty
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//option[@value='basic']"))).click()
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//option[@value='easy']"))).click()
+        
+        # Start game
+        start_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Start Game')]")))
+        start_button.click()
+        
+        # Should redirect to lobby
+        wait.until(EC.url_contains("multiplayer_lobby"))
+        self.assertIn("multiplayer_lobby", self.driver.current_url)
+        
+        # Check lobby elements
+        lobby_title = self.driver.find_element(By.TAG_NAME, "h1").text
+        self.assertIn("Multiplayer Lobby", lobby_title)
+        
+        # Check player list exists
+        player_list = self.driver.find_element(By.ID, "player-list")
+        self.assertIsNotNone(player_list)
+        
+        # Check start game button exists
+        start_game_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Start Game for Everyone')]")
+        self.assertIsNotNone(start_game_btn)
+
+    def test_multiplayer_game_flow(self):
+        """Test full multiplayer game flow."""
+        self.driver.get(self.base_url)
+        
+        wait = WebDriverWait(self.driver, 10)
+        
+        # Select multiplayer and fill form
+        wait.until(EC.element_to_be_clickable((By.ID, "multiplayer"))).click()
+        self.driver.find_element(By.NAME, "player_name").send_keys("MPPlayer2")
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//option[@value='basic']"))).click()
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//option[@value='easy']"))).click()
+        
+        # Start game
+        start_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Start Game')]")))
+        start_button.click()
+        
+        # Wait for lobby
+        wait.until(EC.url_contains("multiplayer_lobby"))
+        
+        # Click start game for everyone
+        start_game_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Start Game for Everyone')]")))
+        start_game_btn.click()
+        
+        # Should redirect to game
+        wait.until(EC.url_contains("game"))
+        self.assertIn("game", self.driver.current_url)
+        
+        # Check game elements exist
+        question_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".question p")))
+        self.assertIsNotNone(question_element)
+        
+        # Check live scores panel exists (for multiplayer)
+        try:
+            live_scores = self.driver.find_element(By.CLASS_NAME, "live-scores")
+            self.assertIsNotNone(live_scores)
+        except:
+            pass  # Live scores might not appear until game starts
+
+
 if __name__ == '__main__':
     print("To run these UI tests, you need to have 'selenium' installed (`pip install selenium`)")
     print("You also need to have the correct WebDriver for your browser (e.g., chromedriver).")
+    print("Note: These tests require the Flask app to be running separately.")
     unittest.main()

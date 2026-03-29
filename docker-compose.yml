@@ -9,7 +9,7 @@ services:
       - ./data/highscores.json:/app/highscores.json
     environment:
       - FLASK_ENV=production
-      - SECRET_KEY=${SECRET_KEY}
-      - HOST=0.0.0.0
-    command: gunicorn --bind ${HOST}:5000 --workers 2 app:app
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+    # Using Gunicorn with threads to support SocketIO without eventlet (Python 3.13 compatibility)
+    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 100 app:app
     restart: unless-stopped
