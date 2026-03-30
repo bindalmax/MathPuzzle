@@ -16,3 +16,8 @@ venv/
 
 # Logs
 *.log
+
+# Data
+highscores.json
+data/highscores.json
+test_highscores*.json
