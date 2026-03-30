@@ -2,19 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Game Over</title>
+    <title>Math Game - Game Over</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; }
+        body { font-family: sans-serif; text-align: center; background: #f4f4f9; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 350px; }
+        .score { font-size: 2em; color: #4CAF50; margin: 20px 0; }
+        .multiplayer-leaderboard { margin: 20px 0; border-top: 1px solid #ddd; padding-top: 20px; text-align: left; }
+        .multiplayer-leaderboard table { width: 100%; border-collapse: collapse; }
+        .multiplayer-leaderboard th, .multiplayer-leaderboard td { padding: 8px; border-bottom: 1px solid #eee; }
+        .multiplayer-leaderboard tr.highlight { background-color: #e8f5e9; font-weight: bold; }
+        .links { margin-top: 30px; }
+        .links a { text-decoration: none; background: #2196F3; color: white; padding: 10px 20px; border-radius: 5px; margin: 0 10px; }
+        .links a:hover { background: #1976D2; }
+        .error { color: #d32f2f; }
     </style>
 </head>
 <body>
-    <h1>Game Over!</h1>
-    {% if error %}
-        <p style="color: red;">{{ error }}</p>
-    {% else %}
-        <p>Your final score is: <strong>{{ score }}</strong></p>
-    {% endif %}
-    <br>
-    <a href="{{ url_for('index') }}">Play Again</a> | <a href="{{ url_for('leaderboard') }}">View Leaderboard</a>
+    <div class="container">
+        <h1>Game Over!</h1>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% else %}
+            <p>Your final score is:</p>
+            <div class="score"><strong>{{ score }}</strong></div>
+
+            {% if multiplayer_results %}
+                <div class="multiplayer-leaderboard">
+                    <h3>Multiplayer Results</h3>
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            {% for player, p_score in multiplayer_results.items() | sort(attribute='1', reverse=True) %}
+                                <tr id="row-{{ player }}" class="{{ 'highlight' if player == session.get('player_name') }}">
+                                    <td>{{ player }} {{ '(You)' if player == session.get('player_name') }}</td>
+                                    <td class="player-score">{{ p_score }} pts</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <p id="live-status" style="font-size: 0.8em; color: #666; margin-top: 10px;">Waiting for others to finish...</p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="links">
+            <a href="{{ url_for('index') }}">Play Again</a>
+            <a href="{{ url_for('leaderboard') }}">Global Leaderboard</a>
+        </div>
+    </div>
+
+    <script>
+        const isMultiplayer = {{ session.get('multiplayer', False) | tojson }};
+        const playerName = {{ session.get('player_name', 'Player') | tojson }};
+        const roomId = {{ session.get('room_id', '') | tojson }};
+
+        if (isMultiplayer) {
+            const socket = io();
+
+            socket.on('connect', () => {
+                socket.emit('join', { name: playerName, room: roomId });
+            });
+
+            socket.on('score_update', (data) => {
+                const resultsBody = document.getElementById('results-body');
+                if (resultsBody) {
+                    resultsBody.innerHTML = '';
+                    const players = data.players;
+                    // Sort by score descending
+                    const sortedPlayers = Object.entries(players).sort((a, b) => b[1] - a[1]);
+
+                    sortedPlayers.forEach(([name, score]) => {
+                        const tr = document.createElement('tr');
+                        tr.id = 'row-' + name;
+                        if (name === playerName) tr.className = 'highlight';
+
+                        const tdName = document.createElement('td');
+                        tdName.textContent = name + (name === playerName ? " (You)" : "");
+
+                        const tdScore = document.createElement('td');
+                        tdScore.className = 'player-score';
+                        tdScore.textContent = score + ' pts';
+
+                        tr.appendChild(tdName);
+                        tr.appendChild(tdScore);
+                        resultsBody.appendChild(tr);
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>

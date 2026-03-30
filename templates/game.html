@@ -77,6 +77,10 @@
                     });
                 }
             });
+
+            // PHASE 3: Decoupled Game Over Signal
+            // No longer listening for 'game_over_signal' from other players.
+            // Each player will only redirect to game_over when THEIR OWN timer expires or they click End Game.
         }
     </script>
 </head>
