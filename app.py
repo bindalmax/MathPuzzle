@@ -21,7 +21,20 @@ socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threa
 
 highscore_manager = HighscoreManager()
 
-# rooms[room_id] = {'players': [], 'scores': {}, 'category': '', 'difficulty': '', 'mode': '', 'mode_value': 20}
+# rooms[room_id] = {
+#   'players': [], 
+#   'scores': {}, 
+#   'active_connections': set(),
+#   'category': '', 
+#   'difficulty': '', 
+#   'mode': '', 
+#   'mode_value': 20, 
+#   'is_started': False, 
+#   'results': {},
+#   'creator': '',
+#   'question_pool': [],
+#   'last_activity': 0
+# }
 rooms = {}
 
 @app.route('/', methods=['GET', 'POST'])
@@ -33,6 +46,9 @@ def index():
         join_room_id = request.form.get('join_room_id')
         if join_room_id:
             if join_room_id in rooms:
+                if rooms[join_room_id].get('is_started'):
+                     return render_template('index.html', error="Game already started", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
+                
                 session['multiplayer'] = True
                 session['room_id'] = join_room_id
                 session['category'] = rooms[join_room_id]['category']
@@ -41,7 +57,7 @@ def index():
                 session['mode_value'] = rooms[join_room_id]['mode_value']
                 return redirect(url_for('multiplayer_lobby'))
             else:
-                return render_template('index.html', error="Room not found", active_rooms=rooms)
+                return render_template('index.html', error="Room not found", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
 
         # Common fields
         session['category'] = request.form['category']
@@ -59,10 +75,16 @@ def index():
             rooms[room_id] = {
                 'players': [], 
                 'scores': {}, 
+                'active_connections': set(),
                 'category': session['category'], 
                 'difficulty': session['difficulty'],
                 'mode': session['mode'],
-                'mode_value': session['mode_value']
+                'mode_value': session['mode_value'],
+                'is_started': False,
+                'results': {},
+                'creator': session['player_name'],
+                'question_pool': [],
+                'last_activity': time.time()
             }
             return redirect(url_for('multiplayer_lobby'))
         
@@ -72,7 +94,9 @@ def index():
         session['multiplayer'] = False
         return redirect(url_for('game'))
     
-    return render_template('index.html', active_rooms=rooms)
+    # Only show rooms that haven't started
+    visible_rooms = {k: v for k, v in rooms.items() if not v.get('is_started')}
+    return render_template('index.html', active_rooms=visible_rooms)
 
 @app.route('/game')
 def game():
@@ -90,12 +114,22 @@ def game():
     elif mode == 'questions' and questions_answered >= mode_value:
         return redirect(url_for('game_over'))
 
-    factory = QuestionFactory(session['category'], session['difficulty'])
-    try:
-        question, answer, choices = factory.create_question()
-        session['current_answer'] = answer
-    except NotImplementedError:
-        return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented for the '{session['difficulty']}' difficulty yet!")
+    # Multiplayer: Use synchronized question pool
+    if session.get('multiplayer'):
+        room_id = session.get('room_id')
+        q_idx = session.get('question_index', 0)
+        if room_id in rooms and q_idx < len(rooms[room_id]['question_pool']):
+            question, answer, choices = rooms[room_id]['question_pool'][q_idx]
+            session['current_answer'] = answer
+        else:
+            return redirect(url_for('game_over'))
+    else:
+        factory = QuestionFactory(session['category'], session['difficulty'])
+        try:
+            question, answer, choices = factory.create_question()
+            session['current_answer'] = answer
+        except NotImplementedError:
+            return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented for the '{session['difficulty']}' difficulty yet!")
 
     context = {
         'question': question,
@@ -129,6 +163,7 @@ def submit_answer():
                 player_name = session.get('player_name')
                 if room_id in rooms and player_name in rooms[room_id]['scores']:
                     rooms[room_id]['scores'][player_name] = session['score']
+                    rooms[room_id]['last_activity'] = time.time()
                     # Broadcast update to all players in the room
                     socketio.emit('score_update', 
                                   {'players': rooms[room_id]['scores']}, 
@@ -137,12 +172,17 @@ def submit_answer():
         pass
     
     session['questions_answered'] = session.get('questions_answered', 0) + 1
+    if session.get('multiplayer'):
+        session['question_index'] = session.get('question_index', 0) + 1
+        
     return redirect(url_for('game'))
 
 @app.route('/game_over')
 def game_over():
     score = session.get('score', 0)
     player_name = session.get('player_name', 'Player')
+    
+    room_results = None
     
     # Save the score
     if 'start_time' in session:
@@ -154,11 +194,26 @@ def game_over():
         
         highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
 
+        if session.get('multiplayer'):
+            room_id = session.get('room_id')
+            if room_id in rooms:
+                rooms[room_id]['scores'][player_name] = score
+                rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
+                rooms[room_id]['last_activity'] = time.time()
+                room_results = rooms[room_id]['results']
+                # Emit final score one last time when reaching game over
+                socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
+
     # Clean up session
     session.pop('start_time', None)
     session.pop('current_answer', None)
     
-    return render_template('game_over.html', score=score)
+    if session.get('multiplayer'):
+        room_id = session.get('room_id')
+        if not room_results and room_id in rooms:
+             room_results = rooms[room_id].get('results', rooms[room_id]['scores'])
+
+    return render_template('game_over.html', score=score, multiplayer_results=room_results)
 
 @app.route('/leaderboard')
 def leaderboard():
@@ -193,32 +248,30 @@ def leaderboard():
 
 @app.route('/quit')
 def quit_game():
+    if session.get('multiplayer'):
+        room_id = session.get('room_id')
+        player_name = session.get('player_name')
+        if room_id in rooms:
+            if player_name in rooms[room_id]['players']:
+                rooms[room_id]['players'].remove(player_name)
+            if player_name in rooms[room_id]['scores']:
+                del rooms[room_id]['scores'][player_name]
+            if not rooms[room_id]['players']:
+                del rooms[room_id]
+                
     session.clear()
     return render_template('quit.html')
 
 @app.route('/multiplayer_lobby', methods=['GET', 'POST'])
 def multiplayer_lobby():
-    if request.method == 'POST':
-        session['player_name'] = request.form['player_name']
-        session['category'] = request.form['category']
-        session['difficulty'] = request.form['difficulty']
-        session['mode'] = 'time'
-        session['mode_value'] = int(request.form.get('mode_value', 20))
-        
-        room_id = str(uuid.uuid4())[:8]
-        session['room_id'] = room_id
-        session['multiplayer'] = True
-        
-        rooms[room_id] = {
-            'players': [], 
-            'scores': {}, 
-            'category': session['category'], 
-            'difficulty': session['difficulty'],
-            'mode': session['mode'],
-            'mode_value': session['mode_value']
-        }
-        return redirect(url_for('multiplayer_lobby'))
-    return render_template('multiplayer_lobby.html', player_name=session.get('player_name', ''))
+    room_id = session.get('room_id')
+    if not room_id or room_id not in rooms:
+        return redirect(url_for('index'))
+    
+    is_creator = (rooms[room_id]['creator'] == session.get('player_name'))
+    return render_template('multiplayer_lobby.html', 
+                           player_name=session.get('player_name', ''),
+                           is_creator=is_creator)
 
 @app.route('/start_multiplayer_game')
 def start_multiplayer_game():
@@ -227,6 +280,7 @@ def start_multiplayer_game():
     
     session['score'] = 0
     session['questions_answered'] = 0
+    session['question_index'] = 0
     session['start_time'] = time.time()
     return redirect(url_for('game'))
 
@@ -234,9 +288,12 @@ def start_multiplayer_game():
 def handle_join(data):
     name = data.get('name')
     room = data.get('room')
+    sid = request.sid
     
     if room and room in rooms:
         join_room(room)
+        rooms[room]['active_connections'].add(sid)
+        rooms[room]['last_activity'] = time.time()
         if name and name not in rooms[room]['players']:
             rooms[room]['players'].append(name)
             rooms[room]['scores'][name] = 0
@@ -244,18 +301,32 @@ def handle_join(data):
 
 @socketio.on('start_game_request')
 def handle_start_game_request(data=None):
-    room = session.get('room_id')
-    if not room and data:
-        room = data.get('room')
+    room_id = session.get('room_id')
+    if not room_id and data:
+        room_id = data.get('room')
     
-    # Security: Verify room exists and sender is authorized (in the room)
-    if room and room in rooms:
-        emit('game_start_signal', room=room, to=room)
+    if room_id and room_id in rooms:
+        if rooms[room_id]['creator'] == session.get('player_name'):
+            factory = QuestionFactory(rooms[room_id]['category'], rooms[room_id]['difficulty'])
+            pool = []
+            for _ in range(50): 
+                try:
+                    pool.append(factory.create_question())
+                except:
+                    break
+            rooms[room_id]['question_pool'] = pool
+            rooms[room_id]['is_started'] = True
+            rooms[room_id]['last_activity'] = time.time()
+            emit('game_start_signal', room=room_id, to=room_id)
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    # Optional: logic to remove player from room on disconnect
-    pass
+    sid = request.sid
+    # Less aggressive cleanup: don't delete immediately on disconnect
+    # Rooms will be cleaned up on manual 'quit' or could be handled by a cleanup task
+    for room_id, room_data in rooms.items():
+        if sid in room_data['active_connections']:
+            room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
