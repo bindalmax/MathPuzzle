@@ -6,6 +6,11 @@
 - Ensure all changes are syntactically correct using available analysis tools.
 - When providing **code explanations**, no testing or documentation updates are required.
 
+## Commit Messages
+- When prompted to create a commit description or message, **always create a point-wise commit message**.
+- Group points by category (e.g., Security, Feature, Bugfix, Testing, Documentation).
+- Ensure each point clearly describes the change and its impact.
+
 ## Documentation Updates (Code Changes Only)
 - **README.md**: Update features, installation, usage, and project structure as needed.
 - **USER_GUIDE.md**: Keep step-by-step instructions current with any UI or gameplay changes.
