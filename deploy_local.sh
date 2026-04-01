@@ -38,7 +38,7 @@ docker-compose up -d --build
 # 4. Final check
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}SUCCESS: MathPuzzle is running locally!${NC}"
-    echo -e "Access the web app at: ${BLUE}http://localhost:5001${NC}"
+    echo -e "Access the web app at: ${BLUE}https://localhost:5001${NC}"
     echo -e "To view logs, run: ${BLUE}docker-compose logs -f web${NC}"
 else
     echo "ERROR: Docker deployment failed. Check the logs for details."

@@ -22,3 +22,6 @@ highscores.json
 data/highscores.json
 test_highscores*.json
 *.db
+
+# SSL Certificates
+*.pem

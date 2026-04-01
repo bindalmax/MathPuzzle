@@ -217,7 +217,6 @@ def leaderboard():
     reverse = sort_order == 'desc'
     
     if sort_by == 'score':
-        # Simple absolute score sorting for now, as DB doesn't automatically store %
         scores.sort(key=lambda x: x['score'], reverse=reverse)
     elif sort_by == 'time':
         scores.sort(key=lambda x: x.get('time_taken', 0), reverse=reverse)
@@ -312,4 +311,16 @@ def handle_disconnect():
             room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    # SSL Configuration: Use local files if they exist, else fall back to 'adhoc'
+    cert_file = 'cert.pem'
+    key_file = 'key.pem'
+    
+    if os.path.exists(cert_file) and os.path.exists(key_file):
+        ssl_ctx = (cert_file, key_file)
+        print(f"Starting server with local SSL certificate: {cert_file}")
+    else:
+        ssl_ctx = 'adhoc'
+        print("Starting server with adhoc SSL context (expect browser warnings)")
+
+    # Changed port to 5005 to avoid address in use issues (common on macOS)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5005, ssl_context=ssl_ctx, allow_unsafe_werkzeug=True)
