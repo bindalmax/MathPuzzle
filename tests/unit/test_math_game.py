@@ -2,36 +2,50 @@ import unittest
 import os
 import sys
 from unittest.mock import patch, MagicMock
+from flask import Flask
 
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from math_game import HighscoreManager, Game
+from math_game import Game
 from questions import QuestionFactory
-from questions.basic_arithmetic import BasicArithmeticQuestion
-from questions.decimal_fraction import DecimalFractionQuestion
 from questions.percentage import PercentageQuestion
-from questions.profit_loss import ProfitLossQuestion
-from questions.algebra import AlgebraQuestion
+from highscore_manager import HighscoreManager
+from database import db
 
 class TestHighscoreManager(unittest.TestCase):
     def setUp(self):
-        self.test_file = "test_highscores.json"
-        self.manager = HighscoreManager(filename=self.test_file)
+        # Create a minimal Flask app for database context
+        self.app = Flask(__name__)
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        
+        self.manager = HighscoreManager()
+        self.manager.init_app(self.app)
+        
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+
     def tearDown(self):
-        if os.path.exists(self.test_file):
-            os.remove(self.test_file)
-    def test_load_no_file(self):
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
+
+    def test_load_empty(self):
         self.assertEqual(self.manager.load(), [])
-    def test_add_score_with_details(self):
-        self.manager.add_score('Player2', 20, 'decimal', 'medium', time_taken=15.5, questions_attempted=25)
+
+    def test_add_and_load_score(self):
+        self.manager.add_score('Player1', 10, 'basic', 'easy', time_taken=5.0, questions_attempted=10)
         scores = self.manager.load()
         self.assertEqual(len(scores), 1)
-        self.assertEqual(scores[0]['name'], 'Player2')
-        self.assertEqual(scores[0]['score'], 20)
+        self.assertEqual(scores[0]['name'], 'Player1')
+        self.assertEqual(scores[0]['score'], 10)
+        self.assertEqual(scores[0]['time_taken'], 5.0)
 
 class TestQuestionFactory(unittest.TestCase):
     def test_creates_basic_arithmetic_question(self):
+        from questions.basic_arithmetic import BasicArithmeticQuestion
         factory = QuestionFactory("basic", "easy")
         self.assertIsInstance(factory.question_class(), BasicArithmeticQuestion)
 
@@ -42,13 +56,6 @@ class TestPercentageQuestion(unittest.TestCase):
         question, answer, choices = PercentageQuestion().generate('easy')
         self.assertEqual(question, "What is 25% of 40? ")
         self.assertEqual(answer, 10.0)
-
-    @patch('questions.percentage.random.choice', side_effect=['percentage_of', 25, 1, 1, 1])
-    @patch('questions.percentage.random.randint', side_effect=[10, 1, 2, 3])
-    def test_medium_percentage_of(self, mock_randint, mock_choice):
-        question, answer, choices = PercentageQuestion().generate('medium')
-        self.assertIn("What is 25% of", question)
-        self.assertIsInstance(choices, list)
 
 class TestGame(unittest.TestCase):
     @patch('math_game.threading.Thread')

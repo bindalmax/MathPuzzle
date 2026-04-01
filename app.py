@@ -14,27 +14,19 @@ if not SECRET_KEY and os.environ.get('FLASK_ENV') == 'production':
     raise RuntimeError("SECRET_KEY must be set in production environment")
 app.secret_key = SECRET_KEY or 'dev-secret-key-change-in-production'
 
+# Database Configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///math_game.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize database manager
+highscore_manager = HighscoreManager(app)
+
 # Security: Restrict CORS origins (using * for dev, should be restricted in prod)
 # Compatibility: Explicitly use 'threading' for Python 3.13 + Flask-SocketIO
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*')
 socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threading')
 
-highscore_manager = HighscoreManager()
-
-# rooms[room_id] = {
-#   'players': [], 
-#   'scores': {}, 
-#   'active_connections': set(),
-#   'category': '', 
-#   'difficulty': '', 
-#   'mode': '', 
-#   'mode_value': 20, 
-#   'is_started': False, 
-#   'results': {},
-#   'creator': '',
-#   'question_pool': [],
-#   'last_activity': 0
-# }
+# rooms[room_id] = { ... }
 rooms = {}
 
 @app.route('/', methods=['GET', 'POST'])
@@ -69,7 +61,6 @@ def index():
         
         if game_type == 'multiplayer':
             session['multiplayer'] = True
-            # Security: Use UUID for room IDs to prevent guessing
             room_id = str(uuid.uuid4())[:8]
             session['room_id'] = room_id
             rooms[room_id] = {
@@ -108,13 +99,11 @@ def game():
     mode_value = session.get('mode_value', 20)
     questions_answered = session.get('questions_answered', 0)
 
-    # Check if game should end based on mode
     if mode == 'time' and elapsed_time > mode_value:
         return redirect(url_for('game_over'))
     elif mode == 'questions' and questions_answered >= mode_value:
         return redirect(url_for('game_over'))
 
-    # Multiplayer: Use synchronized question pool
     if session.get('multiplayer'):
         room_id = session.get('room_id')
         q_idx = session.get('question_index', 0)
@@ -157,14 +146,12 @@ def submit_answer():
         if abs(user_answer - correct_answer) < 0.01:
             session['score'] += 1
             
-            # Security: Server-authoritative score update for multiplayer
             if session.get('multiplayer'):
                 room_id = session.get('room_id')
                 player_name = session.get('player_name')
                 if room_id in rooms and player_name in rooms[room_id]['scores']:
                     rooms[room_id]['scores'][player_name] = session['score']
                     rooms[room_id]['last_activity'] = time.time()
-                    # Broadcast update to all players in the room
                     socketio.emit('score_update', 
                                   {'players': rooms[room_id]['scores']}, 
                                   room=room_id)
@@ -184,7 +171,6 @@ def game_over():
     
     room_results = None
     
-    # Save the score
     if 'start_time' in session:
         category = session.get('category', 'unknown')
         difficulty = session.get('difficulty', 'unknown')
@@ -201,10 +187,8 @@ def game_over():
                 rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
                 rooms[room_id]['last_activity'] = time.time()
                 room_results = rooms[room_id]['results']
-                # Emit final score one last time when reaching game over
                 socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
 
-    # Clean up session
     session.pop('start_time', None)
     session.pop('current_answer', None)
     
@@ -233,7 +217,8 @@ def leaderboard():
     reverse = sort_order == 'desc'
     
     if sort_by == 'score':
-        scores.sort(key=lambda x: (x['score'] / x['questions_attempted']) if x.get('questions_attempted', 0) > 0 else x['score'], reverse=reverse)
+        # Simple absolute score sorting for now, as DB doesn't automatically store %
+        scores.sort(key=lambda x: x['score'], reverse=reverse)
     elif sort_by == 'time':
         scores.sort(key=lambda x: x.get('time_taken', 0), reverse=reverse)
     elif sort_by == 'name':
@@ -322,8 +307,6 @@ def handle_start_game_request(data=None):
 @socketio.on('disconnect')
 def handle_disconnect():
     sid = request.sid
-    # Less aggressive cleanup: don't delete immediately on disconnect
-    # Rooms will be cleaned up on manual 'quit' or could be handled by a cleanup task
     for room_id, room_data in rooms.items():
         if sid in room_data['active_connections']:
             room_data['active_connections'].remove(sid)

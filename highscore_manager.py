@@ -1,46 +1,43 @@
-import json
-import os
-import time
+from database import db, Highscore
 
 class HighscoreManager:
-    def __init__(self, filename="highscores.json"):
-        self.filename = filename
+    def __init__(self, app=None):
+        if app:
+            self.init_app(app)
+
+    def init_app(self, app):
+        db.init_app(app)
+        with app.app_context():
+            db.create_all()
+
+    def add_score(self, name, score, category, difficulty, time_taken=None, questions_attempted=None):
+        new_score = Highscore(
+            name=name,
+            score=score,
+            category=category,
+            difficulty=difficulty,
+            time_taken=time_taken,
+            questions_attempted=questions_attempted
+        )
+        db.session.add(new_score)
+        db.session.commit()
 
     def load(self):
-        if not os.path.exists(self.filename):
-            return []
-        with open(self.filename, 'r') as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                return []
+        """Loads all highscores and returns them as a list of dictionaries for compatibility."""
+        scores = Highscore.query.order_by(Highscore.score.desc()).all()
+        return [
+            {
+                'name': s.name,
+                'score': s.score,
+                'category': s.category,
+                'difficulty': s.difficulty,
+                'time_taken': s.time_taken,
+                'questions_attempted': s.questions_attempted,
+                'created_at': s.created_at
+            }
+            for s in scores
+        ]
 
-    def save(self, highscores):
-        with open(self.filename, 'w') as f:
-            json.dump(highscores, f, indent=4)
-
-    def add_score(self, name, score, category="unknown", difficulty="unknown", time_taken=0, questions_attempted=0):
-        highscores = self.load()
-        highscores.append({
-            'name': name,
-            'score': score,
-            'category': category,
-            'difficulty': difficulty,
-            'time_taken': time_taken,
-            'questions_attempted': questions_attempted,
-            'timestamp': time.time()
-        })
-        self.save(highscores)
-        return highscores
-
-    def display(self, highscores):
-        print("\n--- High Scores ---")
-        if not highscores:
-            print("No high scores yet.")
-            return
-        sorted_highscores = sorted(highscores, key=lambda x: x['score'], reverse=True)
-        for i, entry in enumerate(sorted_highscores[:5]):
-            category = entry.get('category', 'unknown').replace('_', ' ').title()
-            difficulty = entry.get('difficulty', 'unknown').title()
-            print(f"{i+1}. {entry['name']}: {entry['score']} ({category}, {difficulty})")
-        print("-------------------\n")
+    def save(self, scores):
+        """Legacy method for backward compatibility, though no longer needed for DB."""
+        pass
