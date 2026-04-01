@@ -17,6 +17,7 @@ class TestHighscoreManager(unittest.TestCase):
     def setUp(self):
         # Create a minimal Flask app for database context
         self.app = Flask(__name__)
+        # Ensure unit tests use isolated in-memory DB
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         
