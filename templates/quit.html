@@ -1,16 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Quit Game</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Math Game - Quit{% endblock %}
+
+{% block content %}
     <h1>Game Quit</h1>
-    <p>You have quit the game.</p>
-    <br>
-    <a href="{{ url_for('index') }}">Back to Main Menu</a>
-</body>
-</html>
+    <p>You have successfully quit the game.</p>
+    <p>Thanks for playing!</p>
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('index') }}" style="text-decoration:none; background:var(--primary-color); color:white; padding:10px 20px; border-radius:5px;">Play Again</a>
+    </div>
+{% endblock %}

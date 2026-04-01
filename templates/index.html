@@ -1,42 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Math Game - Setup</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; }
-        .container { display: flex; justify-content: space-around; padding: 20px; }
-        .setup-box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; min-width: 300px; }
-        .error { color: red; }
-        .room-list { list-style: none; padding: 0; }
-        .room-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}MathPuzzle - Welcome{% endblock %}
+
+{% block content %}
     <h1>Welcome to the Math Game!</h1>
 
     {% if error %}
-        <p class="error">{{ error }}</p>
+        <p class="error" role="alert">{{ error }}</p>
     {% endif %}
 
-    <div class="container">
+    <div class="home-grid">
         <!-- Setup Game -->
-        <div class="setup-box">
+        <section class="setup-box">
             <h2>Start New Game</h2>
             <form action="{{ url_for('index') }}" method="post">
-                <label for="player_name">Enter your name:</label><br>
-                <input type="text" id="player_name" name="player_name" required><br><br>
-
-                <label>Game Type:</label><br>
-                <input type="radio" id="single" name="game_type" value="single" checked onchange="toggleGameType()">
-                <label for="single">Single Player</label>
-                <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="toggleGameType()">
-                <label for="multiplayer">Multiplayer</label>
-                <br><br>
+                <div>
+                    <label for="player_name">Enter your name:</label><br>
+                    <input type="text" id="player_name" name="player_name" required aria-required="true">
+                </div>
+                <br>
+                <fieldset style="border:none; padding:0;">
+                    <legend style="font-weight:bold;">Game Type:</legend>
+                    <input type="radio" id="single" name="game_type" value="single" checked onchange="toggleGameType()">
+                    <label for="single">Single Player</label>
+                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="toggleGameType()">
+                    <label for="multiplayer">Multiplayer</label>
+                </fieldset>
+                <br>
 
                 <div id="game-options">
                     <label for="category">Choose a category:</label><br>
-                    <select id="category" name="category">
+                    <select id="category" name="category" style="width:100%;">
                         <option value="basic">Basic Arithmetic</option>
                         <option value="decimal">Decimals and Fractions</option>
                         <option value="percentage">Percentages</option>
@@ -45,48 +39,54 @@
                     </select><br><br>
 
                     <label for="difficulty">Choose a difficulty:</label><br>
-                    <select id="difficulty" name="difficulty">
+                    <select id="difficulty" name="difficulty" style="width:100%;">
                         <option value="easy">Easy</option>
                         <option value="medium">Medium</option>
                         <option value="hard">Hard</option>
                     </select><br><br>
 
                     <label for="mode">Choose a game mode:</label><br>
-                    <select id="mode" name="mode" onchange="updateModeLabel()">
+                    <select id="mode" name="mode" onchange="updateModeLabel()" style="width:100%;">
                         <option value="time">Time Mode</option>
                         <option value="questions">Question Count Mode</option>
                     </select><br><br>
 
                     <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
-                    <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required><br><br>
+                    <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
                 </div>
-
-                <button type="submit" id="start_btn">Start Game / Create Lobby</button>
+                <br>
+                <button type="submit" id="start_btn" style="width:100%;">Start Single Player Game</button>
             </form>
-        </div>
+        </section>
 
-        <!-- Join Existing Lobby (Multiplayer only) -->
-        <div class="setup-box">
+        <!-- Join Existing Lobby -->
+        <section class="setup-box">
             <h2>Join Active Lobby</h2>
             {% if active_rooms %}
                 <ul class="room-list">
                     {% for room_id, details in active_rooms.items() %}
                         <li class="room-item">
-                            <strong>Room: {{ room_id }}</strong><br>
-                            {{ details.category }} - {{ details.difficulty }} ({{ details.mode }})<br>
-                            Players: {{ details.players | length }}<br>
-                            <form action="{{ url_for('index') }}" method="post" style="margin-top: 5px;">
+                            <div>
+                                <strong>Room: {{ room_id }}</strong><br>
+                                <small>{{ details.category | capitalize }} - {{ details.difficulty | capitalize }} ({{ details.mode }})</small><br>
+                                <span>Players: {{ details.players | length }}</span>
+                            </div>
+                            <form action="{{ url_for('index') }}" method="post">
                                 <input type="hidden" name="join_room_id" value="{{ room_id }}">
-                                <input type="text" name="player_name" placeholder="Your name" required>
-                                <button type="submit">Join</button>
+                                <input type="text" name="player_name" placeholder="Your name" required aria-label="Your name to join">
+                                <button type="submit" style="margin-top:5px; width:100%;">Join Lobby</button>
                             </form>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No active lobbies. Create one!</p>
+                <p>No active lobbies. Create one to play with friends!</p>
             {% endif %}
-        </div>
+        </section>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="{{ url_for('leaderboard') }}" style="text-decoration:none; color:var(--primary-color); font-weight:bold;">View Global Leaderboard</a>
     </div>
 
     <script>
@@ -108,13 +108,9 @@
         }
 
         function toggleGameType() {
-            // Options remain the same, but the button text changes for clarity
             const isMultiplayer = document.getElementById('multiplayer').checked;
             const btn = document.getElementById('start_btn');
             btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
         }
     </script>
-    <br>
-    <a href="{{ url_for('leaderboard') }}">View Leaderboard</a>
-</body>
-</html>
+{% endblock %}

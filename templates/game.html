@@ -1,37 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Math Game - Play</title>
+{% extends "base.html" %}
+
+{% block title %}Math Game - Play{% endblock %}
+
+{% block scripts %}
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <style>
-        body { font-family: sans-serif; text-align: center; }
-        .game-info { margin-bottom: 20px; }
-        .question { font-size: 1.5em; margin-bottom: 20px; }
-        form { display: inline-block; }
-        input, button { margin: 5px; padding: 5px; }
-        .choice-btn {
-            display: block;
-            width: 200px;
-            margin: 10px auto;
-            padding: 10px;
-            font-size: 1.1em;
-            cursor: pointer;
-        }
-        .live-scores {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: left;
-            min-width: 150px;
-        }
-        .live-scores h3 { margin-top: 0; }
-        .live-scores ul { list-style: none; padding: 0; }
-        .live-scores li { padding: 5px 0; border-bottom: 1px solid #ddd; }
-    </style>
     <script>
         // Security: Use tojson to safely inject session data
         const playerName = {{ session.get('player_name', 'Player') | tojson }};
@@ -72,52 +44,59 @@
                     const sortedPlayers = Object.entries(players).sort((a, b) => b[1] - a[1]);
                     sortedPlayers.forEach(([name, score]) => {
                         const li = document.createElement('li');
+                        li.style.padding = '5px 0';
+                        li.style.borderBottom = '1px solid #ddd';
                         li.textContent = name + ': ' + score + ' pts';
                         scoreList.appendChild(li);
                     });
                 }
             });
-
-            // PHASE 3: Decoupled Game Over Signal
-            // No longer listening for 'game_over_signal' from other players.
-            // Each player will only redirect to game_over when THEIR OWN timer expires or they click End Game.
         }
     </script>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
     {% if session.get('multiplayer') %}
-    <div class="live-scores">
-        <h3>Live Scores</h3>
-        <ul id="score-list">
+    <aside class="live-scores">
+        <h3 style="margin-top:0;">Live Scores</h3>
+        <ul id="score-list" style="list-style:none; padding:0; text-align:left;">
             <li>{{ session.get('player_name', 'Player') }}: {{ score }} pts</li>
         </ul>
-    </div>
+    </aside>
     {% endif %}
+
     <h1>Math Game</h1>
-    <div class="game-info">
-        <p>Score: {{ score }} |
+
+    <div class="game-info" style="font-size: 1.2rem; margin-bottom: 20px;">
+        <p>Score: <strong style="color:var(--secondary-color);">{{ score }}</strong> |
         {% if mode == 'time' %}
-            Time Left: <span id="time-left">{{ time_left }}</span> seconds
+            Time Left: <span id="time-left" style="font-weight:bold;">{{ time_left }}</span>s
         {% else %}
-            Questions Left: {{ questions_left }}
+            Questions Left: <span style="font-weight:bold;">{{ questions_left }}</span>
         {% endif %}
         </p>
     </div>
-    <div class="question">
-        <p>{{ question }}</p>
+
+    <div class="question" style="background:#f0f7ff; padding:20px; border-radius:8px; margin-bottom:20px;">
+        <p style="font-size: 1.5rem; margin:0;">{{ question }}</p>
     </div>
+
     <form id="answer-form" action="{{ url_for('submit_answer') }}" method="post">
         {% if choices %}
-            <div class="choices">
+            <div class="choice-container">
                 {% for choice in choices %}
                     <button type="submit" name="answer" value="{{ choice }}" class="choice-btn">{{ choice }}</button>
                 {% endfor %}
             </div>
         {% else %}
-            <input type="number" name="answer" placeholder="Your answer" step="any" required autofocus>
-            <button type="submit">Submit</button>
+            <div style="margin-bottom: 20px;">
+                <input type="number" name="answer" placeholder="Your answer" step="any" required autofocus style="width:100%; max-width:300px; text-align:center;">
+            </div>
+            <button type="submit" style="width:100%; max-width:300px;">Submit Answer</button>
         {% endif %}
     </form>
-    <p><a href="{{ url_for('game_over') }}">End Game</a></p>
-</body>
-</html>
+
+    <p style="margin-top: 40px;">
+        <a href="{{ url_for('game_over') }}" style="color:var(--error-color); font-weight:bold; text-decoration:none;">End Game & Save Score</a>
+    </p>
+{% endblock %}

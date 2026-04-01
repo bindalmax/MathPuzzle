@@ -56,7 +56,8 @@ class TestMultiplayerE2E(unittest.TestCase):
         wait2.until(EC.presence_of_element_located((By.CLASS_NAME, "room-item")))
         room_item = p2.find_element(By.CLASS_NAME, "room-item")
         room_item.find_element(By.NAME, "player_name").send_keys("Guest")
-        room_item.find_element(By.XPATH, ".//button[text()='Join']").click()
+        # Updated to match new UI button text 'Join Lobby'
+        room_item.find_element(By.XPATH, ".//button[contains(text(), 'Join')]").click()
         wait2.until(EC.url_contains("multiplayer_lobby"))
 
         # 3. Start Game
@@ -70,7 +71,8 @@ class TestMultiplayerE2E(unittest.TestCase):
         self.assertEqual(q1, q2, "Questions are not synchronized!")
 
         # 5. Independence: Player 1 finishes, Player 2 stays
-        p1.find_element(By.LINK_TEXT, "End Game").click()
+        # Corrected selector for the end game link
+        p1.find_element(By.LINK_TEXT, "End Game & Save Score").click()
         wait1.until(EC.url_contains("game_over"))
         
         self.assertIn("game", p2.current_url, "Player 2 was forced out!")
