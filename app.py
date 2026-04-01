@@ -14,8 +14,12 @@ if not SECRET_KEY and os.environ.get('FLASK_ENV') == 'production':
     raise RuntimeError("SECRET_KEY must be set in production environment")
 app.secret_key = SECRET_KEY or 'dev-secret-key-change-in-production'
 
-# Database Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///math_game.db')
+# Database Configuration: Handle postgres:// vs postgresql:// for SQLAlchemy compatibility
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///math_game.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database manager
@@ -322,5 +326,4 @@ if __name__ == '__main__':
         ssl_ctx = 'adhoc'
         print("Starting server with adhoc SSL context (expect browser warnings)")
 
-    # Changed port to 5005 to avoid address in use issues (common on macOS)
     socketio.run(app, debug=True, host='0.0.0.0', port=5005, ssl_context=ssl_ctx, allow_unsafe_werkzeug=True)

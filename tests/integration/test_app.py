@@ -14,6 +14,7 @@ class TestWebApp(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
+        # Force in-memory database for integration tests to ensure isolation from Postgres/Local DB
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.client = self.app.test_client()
         
