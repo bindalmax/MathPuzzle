@@ -6,10 +6,20 @@ services:
     ports:
       - "5001:5000"
     volumes:
-      - ./data/highscores.json:/app/highscores.json
+      - ./data/math_game.db:/app/math_game.db
+      - .:/app  # Mounting root for local dev allows Gunicorn to find certs if they exist
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
-    # Using Gunicorn with threads to support SocketIO without eventlet (Python 3.13 compatibility)
-    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 100 app:app
+      - DATABASE_URL=sqlite:///math_game.db
+    # Using Gunicorn with SSL if certificates exist. 
+    # Fallback to standard command if not (though Gunicorn usually requires explicit SSL args)
+    command: >
+      gunicorn 
+      --bind 0.0.0.0:5000 
+      --workers 1 
+      --threads 100 
+      --certfile=cert.pem 
+      --keyfile=key.pem 
+      app:app
     restart: unless-stopped
