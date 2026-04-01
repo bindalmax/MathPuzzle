@@ -37,7 +37,7 @@ class TestUIAutomation(unittest.TestCase):
     def test_start_page_loads(self):
         """Test that the start page loads correctly."""
         self.driver.get(self.base_url)
-        self.assertEqual("Math Game", self.driver.title)
+        self.assertEqual("Math Game - Setup", self.driver.title)
         welcome_text = self.driver.find_element(By.TAG_NAME, "h1").text
         self.assertEqual("Welcome to the Math Game!", welcome_text)
 

@@ -8,23 +8,24 @@ import time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from app import app, HighscoreManager, socketio, rooms
+from database import db
 
 class TestWebApp(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.client = self.app.test_client()
-        self.test_highscores = "test_highscores_web.json"
-        self.manager = HighscoreManager(self.test_highscores)
-        self.patcher = patch('app.highscore_manager', self.manager)
-        self.patcher.start()
+        
         # Ensure a clean state for each test
+        with self.app.app_context():
+            db.create_all()
         rooms.clear()
 
     def tearDown(self):
-        self.patcher.stop()
-        if os.path.exists(self.test_highscores):
-            os.remove(self.test_highscores)
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
 
     def test_index_get(self):
         response = self.client.get('/')
@@ -54,7 +55,7 @@ class TestWebApp(unittest.TestCase):
         }, follow_redirects=False)
         self.assertEqual(response.status_code, 302)
         self.assertIn('/multiplayer_lobby', response.headers['Location'])
-
+        
         with self.client.session_transaction() as sess:
             self.assertTrue(sess['multiplayer'])
             self.assertEqual(len(sess['room_id']), 8)
@@ -80,24 +81,26 @@ class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.client = self.app.test_client()
-        self.test_highscores = "test_highscores_features.json"
-        self.manager = HighscoreManager(self.test_highscores)
-        self.patcher = patch('app.highscore_manager', self.manager)
-        self.patcher.start()
-
-        # Populate with test data
-        self.manager.add_score('Charlie', 8, 'basic', 'hard', 30, 10)
-        self.manager.add_score('Alice', 10, 'basic', 'easy', 20, 10)
+        
+        with self.app.app_context():
+            db.create_all()
+            # Initialize manager logic
+            self.manager = HighscoreManager()
+            # Populate with test data
+            self.manager.add_score('Charlie', 8, 'basic', 'hard', 30, 10)
+            self.manager.add_score('Alice', 10, 'basic', 'easy', 20, 10)
 
     def tearDown(self):
-        self.patcher.stop()
-        if os.path.exists(self.test_highscores):
-            os.remove(self.test_highscores)
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
 
     def test_filter_by_category(self):
         response = self.client.get('/leaderboard?filter_category=basic')
         self.assertIn(b'Alice', response.data)
+        self.assertIn(b'Charlie', response.data)
 
 if __name__ == '__main__':
     unittest.main()
