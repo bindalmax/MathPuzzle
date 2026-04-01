@@ -7,8 +7,9 @@
 - When providing **code explanations**, no testing or documentation updates are required.
 
 ## Commit Messages
-- When prompted to create a commit description or message, **always create a point-wise commit message**.
-- Group points by category (e.g., Security, Feature, Bugfix, Testing, Documentation).
+- When prompted to create a commit description or message, **always create a point-wise commit message summarizing all uncommitted changes in the workspace at that time**.
+- Use the available Git tools to identify all staged and unstaged changes before generating the message.
+- Group points by category (e.g., Security, Feature, Bugfix, Testing, Documentation, Database, UI/UX).
 - Ensure each point clearly describes the change and its impact.
 
 ## Documentation Updates (Code Changes Only)
@@ -23,7 +24,7 @@
 - **UI Automation Tests**: Update `test_ui_automation.py` for any changes to the web UI.
 - Add new test cases for new features.
 - Ensure tests are comprehensive (target: 28+ tests + UI tests).
-- **IMPORTANT**: As the AI cannot execute tests directly, provide the command for the user to run them: `python -m unittest test_math_game.py test_app.py test_ui_automation.py`
+- **IMPORTANT**: As the AI cannot execute tests directly, provide the command for the user to run them: `python run_tests.py`
 
 ## Code Explanation
 - When explaining existing code, provide clear descriptions without making changes.

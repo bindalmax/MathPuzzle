@@ -1,63 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Math Game - Game Over</title>
+{% extends "base.html" %}
+
+{% block title %}Math Game - Game Over{% endblock %}
+
+{% block scripts %}
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f9; padding: 50px; }
-        .container { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-width: 350px; }
-        .score { font-size: 2em; color: #4CAF50; margin: 20px 0; }
-        .multiplayer-leaderboard { margin: 20px 0; border-top: 1px solid #ddd; padding-top: 20px; text-align: left; }
-        .multiplayer-leaderboard table { width: 100%; border-collapse: collapse; }
-        .multiplayer-leaderboard th, .multiplayer-leaderboard td { padding: 8px; border-bottom: 1px solid #eee; }
-        .multiplayer-leaderboard tr.highlight { background-color: #e8f5e9; font-weight: bold; }
-        .links { margin-top: 30px; }
-        .links a { text-decoration: none; background: #2196F3; color: white; padding: 10px 20px; border-radius: 5px; margin: 0 10px; }
-        .links a:hover { background: #1976D2; }
-        .error { color: #d32f2f; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Game Over!</h1>
-
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% else %}
-            <p>Your final score is:</p>
-            <div class="score"><strong>{{ score }}</strong></div>
-
-            {% if multiplayer_results %}
-                <div class="multiplayer-leaderboard">
-                    <h3>Multiplayer Results</h3>
-                    <table id="results-table">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Score</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results-body">
-                            {% for player, p_score in multiplayer_results.items() | sort(attribute='1', reverse=True) %}
-                                <tr id="row-{{ player }}" class="{{ 'highlight' if player == session.get('player_name') }}">
-                                    <td>{{ player }} {{ '(You)' if player == session.get('player_name') }}</td>
-                                    <td class="player-score">{{ p_score }} pts</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <p id="live-status" style="font-size: 0.8em; color: #666; margin-top: 10px;">Waiting for others to finish...</p>
-                </div>
-            {% endif %}
-        {% endif %}
-
-        <div class="links">
-            <a href="{{ url_for('index') }}">Play Again</a>
-            <a href="{{ url_for('leaderboard') }}">Global Leaderboard</a>
-        </div>
-    </div>
-
     <script>
         const isMultiplayer = {{ session.get('multiplayer', False) | tojson }};
         const playerName = {{ session.get('player_name', 'Player') | tojson }};
@@ -75,19 +21,20 @@
                 if (resultsBody) {
                     resultsBody.innerHTML = '';
                     const players = data.players;
-                    // Sort by score descending
                     const sortedPlayers = Object.entries(players).sort((a, b) => b[1] - a[1]);
 
                     sortedPlayers.forEach(([name, score]) => {
                         const tr = document.createElement('tr');
-                        tr.id = 'row-' + name;
-                        if (name === playerName) tr.className = 'highlight';
+                        if (name === playerName) tr.style.backgroundColor = '#e8f5e9';
 
                         const tdName = document.createElement('td');
+                        tdName.style.padding = '10px';
+                        tdName.style.borderBottom = '1px solid #eee';
                         tdName.textContent = name + (name === playerName ? " (You)" : "");
 
                         const tdScore = document.createElement('td');
-                        tdScore.className = 'player-score';
+                        tdScore.style.padding = '10px';
+                        tdScore.style.borderBottom = '1px solid #eee';
                         tdScore.textContent = score + ' pts';
 
                         tr.appendChild(tdName);
@@ -98,5 +45,60 @@
             });
         }
     </script>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_style %}
+    .final-score { font-size: 3rem; color: var(--secondary-color); margin: 10px 0; }
+    .multiplayer-results { margin-top: 30px; text-align: left; }
+    .nav-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 40px; }
+    .nav-links a {
+        text-decoration: none;
+        background: var(--primary-color);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 5px;
+        min-width: 150px;
+    }
+    .nav-links a.secondary { background: #607D8B; }
+{% endblock %}
+
+{% block content %}
+    <h1>Game Over!</h1>
+
+    {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+    {% else %}
+        <p style="font-size: 1.2rem; margin-bottom:0;">Your final score is:</p>
+        <div class="final-score"><strong>{{ score }}</strong></div>
+
+        {% if multiplayer_results %}
+            <section class="multiplayer-results">
+                <h3 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">Multiplayer Results</h3>
+                <div class="table-container">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="padding:10px; text-align:left;">Player</th>
+                                <th style="padding:10px; text-align:left;">Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            {% for player, p_score in multiplayer_results.items() | sort(attribute='1', reverse=True) %}
+                                <tr style="{{ 'background-color: #e8f5e9;' if player == session.get('player_name') }}">
+                                    <td style="padding:10px; border-bottom: 1px solid #eee;">{{ player }} {{ '(You)' if player == session.get('player_name') }}</td>
+                                    <td style="padding:10px; border-bottom: 1px solid #eee;">{{ p_score }} pts</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size: 0.9rem; color: #666; font-style: italic;">Score table updates in real-time as others finish.</p>
+            </section>
+        {% endif %}
+    {% endif %}
+
+    <nav class="nav-links">
+        <a href="{{ url_for('index') }}">Play Again</a>
+        <a href="{{ url_for('leaderboard') }}" class="secondary">Global Leaderboard</a>
+    </nav>
+{% endblock %}
