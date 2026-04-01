@@ -1,91 +1,142 @@
-/* Mobile-first Responsive Layout */
+/* Math Lover's Responsive CSS */
 
-/* Container for Home Page Setup Boxes */
+/* Grid Paper Effect for the Body */
+body {
+    background-attachment: fixed;
+}
+
+/* Chalkboard Question Style */
+.question-box {
+    background: #1e3d2b; /* Deep chalkboard green */
+    color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 8px solid #5d4037; /* Wood frame */
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.question-box p {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.8rem;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.2);
+}
+
+/* Home Page Layout */
 .home-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
     margin-top: 20px;
 }
 
 .setup-box {
-    border: 1px solid #ddd;
-    padding: 20px;
-    border-radius: 8px;
+    background: #fff;
+    border: 2px solid #e1e8ed;
+    padding: 25px;
+    border-radius: 12px;
     text-align: left;
+    transition: transform 0.2s;
 }
 
-/* Room Items in discovery list */
-.room-list {
-    list-style: none;
-    padding: 0;
+.setup-box:hover {
+    transform: scale(1.01);
+    border-color: var(--accent-color);
 }
 
-.room-item {
-    background: #f9f9f9;
-    border: 1px solid #eee;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* Game Page Styles */
+/* Choice Buttons */
 .choice-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
     margin: 20px 0;
 }
 
 .choice-btn {
-    width: 100%;
-    min-height: 50px;
+    background: #f8f9fa;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 0 var(--primary-color);
+    font-size: 1.2rem;
 }
 
-/* Live Scores Layout */
+.choice-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 0 var(--primary-color);
+}
+
+/* Stable Live Scores */
 .live-scores {
-    background: #eee;
-    padding: 15px;
+    background: #fff;
+    border: 2px solid var(--primary-color);
+    padding: 12px;
     border-radius: 8px;
     margin-bottom: 20px;
+    height: 130px;
+    overflow-y: auto;
 }
 
+.live-scores h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    color: var(--accent-color);
+}
+
+/* Desktop Fixes */
 @media (min-width: 1024px) {
     .live-scores {
         position: fixed;
         top: 20px;
         right: 20px;
-        width: 200px;
-        margin-bottom: 0;
+        width: 220px;
+        height: auto;
+        max-height: 70vh;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
 }
 
-/* Accessibility */
-:focus-visible {
-    outline: 3px solid var(--primary-color);
-    outline-offset: 2px;
+/* Mobile Adjustments */
+@media (max-width: 1023px) {
+    .live-scores {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-width: 0 0 2px 0;
+        border-radius: 0;
+        margin: -10px -15px 20px -15px;
+    }
 }
 
-/* Utilities */
+/* Table styling for math lovers */
 .table-container {
     overflow-x: auto;
-    width: 100%;
-    margin: 20px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px; /* Forces scroll on narrow mobile */
+    min-width: 600px;
 }
 
-/* Mobile Typography */
-@media (max-width: 600px) {
-    h1 { font-size: 1.5rem; }
-    h2 { font-size: 1.25rem; }
-    body { padding: 5px; }
-    .main-container { padding: 15px; }
+th {
+    background: var(--primary-color);
+    font-family: 'Fira Code', monospace;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+/* iOS zoom fix & general input styling */
+input, select {
+    background: #fff;
+    border: 2px solid #e1e8ed;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent-color);
+    outline: none;
 }

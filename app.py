@@ -14,7 +14,7 @@ if not SECRET_KEY and os.environ.get('FLASK_ENV') == 'production':
     raise RuntimeError("SECRET_KEY must be set in production environment")
 app.secret_key = SECRET_KEY or 'dev-secret-key-change-in-production'
 
-# Database Configuration: Handle postgres:// vs postgresql:// for SQLAlchemy compatibility
+# Database Configuration
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///math_game.db')
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -25,8 +25,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize database manager
 highscore_manager = HighscoreManager(app)
 
-# Security: Restrict CORS origins (using * for dev, should be restricted in prod)
-# Compatibility: Explicitly use 'threading' for Python 3.13 + Flask-SocketIO
+# Security: Restrict CORS origins
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*')
 socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threading')
 
@@ -38,7 +37,6 @@ def index():
     if request.method == 'POST':
         session['player_name'] = request.form['player_name']
         
-        # Handle joining an existing room
         join_room_id = request.form.get('join_room_id')
         if join_room_id:
             if join_room_id in rooms:
@@ -55,13 +53,13 @@ def index():
             else:
                 return render_template('index.html', error="Room not found", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
 
-        # Common fields
-        session['category'] = request.form['category']
-        session['difficulty'] = request.form['difficulty']
+        # Set Defaults
+        session['category'] = request.form.get('category', 'percentage')
+        session['difficulty'] = request.form.get('difficulty', 'medium')
         session['mode'] = request.form.get('mode', 'time')
         session['mode_value'] = int(request.form.get('mode_value', 20))
         
-        game_type = request.form.get('game_type', 'single')
+        game_type = request.form.get('game_type', 'multiplayer')
         
         if game_type == 'multiplayer':
             session['multiplayer'] = True
@@ -89,7 +87,6 @@ def index():
         session['multiplayer'] = False
         return redirect(url_for('game'))
     
-    # Only show rooms that haven't started
     visible_rooms = {k: v for k, v in rooms.items() if not v.get('is_started')}
     return render_template('index.html', active_rooms=visible_rooms)
 
@@ -156,6 +153,7 @@ def submit_answer():
                 if room_id in rooms and player_name in rooms[room_id]['scores']:
                     rooms[room_id]['scores'][player_name] = session['score']
                     rooms[room_id]['last_activity'] = time.time()
+                    # Ensure full room state is emitted
                     socketio.emit('score_update', 
                                   {'players': rooms[room_id]['scores']}, 
                                   room=room_id)
@@ -191,6 +189,7 @@ def game_over():
                 rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
                 rooms[room_id]['last_activity'] = time.time()
                 room_results = rooms[room_id]['results']
+                # Final broadcast of all scores
                 socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
 
     session.pop('start_time', None)
@@ -285,6 +284,8 @@ def handle_join(data):
         if name and name not in rooms[room]['players']:
             rooms[room]['players'].append(name)
             rooms[room]['scores'][name] = 0
+        # Send full list of scores to the new joiner
+        emit('score_update', {'players': rooms[room]['scores']}, room=room)
         emit('update_players', rooms[room]['players'], room=room)
 
 @socketio.on('start_game_request')
@@ -315,15 +316,5 @@ def handle_disconnect():
             room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
-    # SSL Configuration: Use local files if they exist, else fall back to 'adhoc'
-    cert_file = 'cert.pem'
-    key_file = 'key.pem'
-    
-    if os.path.exists(cert_file) and os.path.exists(key_file):
-        ssl_ctx = (cert_file, key_file)
-        print(f"Starting server with local SSL certificate: {cert_file}")
-    else:
-        ssl_ctx = 'adhoc'
-        print("Starting server with adhoc SSL context (expect browser warnings)")
-
-    socketio.run(app, debug=True, host='0.0.0.0', port=5005, ssl_context=ssl_ctx, allow_unsafe_werkzeug=True)
+    # Using specific port 5005
+    socketio.run(app, debug=True, host='0.0.0.0', port=5005, ssl_context='adhoc', allow_unsafe_werkzeug=True)
