@@ -21,9 +21,10 @@
                 <br>
                 <fieldset style="border:none; padding:0;">
                     <legend style="font-weight:bold;">Game Type:</legend>
-                    <input type="radio" id="single" name="game_type" value="single" checked onchange="toggleGameType()">
+                    <input type="radio" id="single" name="game_type" value="single" onchange="toggleGameType()">
                     <label for="single">Single Player</label>
-                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="toggleGameType()">
+                    <!-- Multiplayer is now default -->
+                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" checked onchange="toggleGameType()">
                     <label for="multiplayer">Multiplayer</label>
                 </fieldset>
                 <br>
@@ -33,7 +34,8 @@
                     <select id="category" name="category" style="width:100%;">
                         <option value="basic">Basic Arithmetic</option>
                         <option value="decimal">Decimals and Fractions</option>
-                        <option value="percentage">Percentages</option>
+                        <!-- Percentage is now default -->
+                        <option value="percentage" selected>Percentages</option>
                         <option value="profit">Profit and Loss</option>
                         <option value="algebra">Algebra</option>
                     </select><br><br>
@@ -41,7 +43,8 @@
                     <label for="difficulty">Choose a difficulty:</label><br>
                     <select id="difficulty" name="difficulty" style="width:100%;">
                         <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
+                        <!-- Medium is now default -->
+                        <option value="medium" selected>Medium</option>
                         <option value="hard">Hard</option>
                     </select><br><br>
 
@@ -55,7 +58,8 @@
                     <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
                 </div>
                 <br>
-                <button type="submit" id="start_btn" style="width:100%;">Start Single Player Game</button>
+                <!-- Updated button text to match default multiplayer -->
+                <button type="submit" id="start_btn" style="width:100%;">Create Multiplayer Lobby</button>
             </form>
         </section>
 
@@ -112,5 +116,11 @@
             const btn = document.getElementById('start_btn');
             btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
         }
+
+        // Ensure UI state matches defaults on page load
+        window.onload = function() {
+            toggleGameType();
+            updateModeLabel();
+        };
     </script>
 {% endblock %}

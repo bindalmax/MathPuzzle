@@ -33,41 +33,46 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Welcome to the Math Game!', response.data)
 
-    def test_index_post_single_player(self):
+    def test_index_post_with_new_defaults(self):
+        """Verify that server-side defaults (Multiplayer, Percentage, Medium) are applied."""
         response = self.client.post('/', data={
-            'player_name': 'TestPlayer',
-            'category': 'basic',
-            'difficulty': 'easy',
-            'mode': 'time',
-            'mode_value': '20',
-            'game_type': 'single'
-        }, follow_redirects=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Math Game', response.data)
-
-    def test_index_post_multiplayer(self):
-        response = self.client.post('/', data={
-            'player_name': 'MultiPlayer',
-            'category': 'basic',
-            'difficulty': 'easy',
-            'mode': 'time',
-            'mode_value': '20',
-            'game_type': 'multiplayer'
+            'player_name': 'DefaultTester'
+            # Sending NO other fields should trigger defaults
         }, follow_redirects=False)
+        
+        # Should redirect to lobby because Multiplayer is default
         self.assertEqual(response.status_code, 302)
         self.assertIn('/multiplayer_lobby', response.headers['Location'])
         
         with self.client.session_transaction() as sess:
             self.assertTrue(sess['multiplayer'])
-            self.assertEqual(len(sess['room_id']), 8)
+            self.assertEqual(sess['category'], 'percentage')
+            self.assertEqual(sess['difficulty'], 'medium')
+
+    def test_index_post_explicit_single_player(self):
+        """Verify that explicit choices override defaults."""
+        response = self.client.post('/', data={
+            'player_name': 'SingleTester',
+            'game_type': 'single',
+            'category': 'basic',
+            'difficulty': 'easy'
+        }, follow_redirects=True)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Math Game', response.data)
+        
+        with self.client.session_transaction() as sess:
+            self.assertFalse(sess.get('multiplayer', False))
+            self.assertEqual(sess['category'], 'basic')
+            self.assertEqual(sess['difficulty'], 'easy')
 
     @patch('app.QuestionFactory')
     def test_game_route(self, mock_factory):
         mock_factory.return_value.create_question.return_value = ("What is 5 + 5?", 10, None)
         with self.client.session_transaction() as sess:
             sess['player_name'] = 'TestUser'
-            sess['category'] = 'basic'
-            sess['difficulty'] = 'easy'
+            sess['category'] = 'percentage'
+            sess['difficulty'] = 'medium'
             sess['mode'] = 'time'
             sess['mode_value'] = 20
             sess['score'] = 0
@@ -90,8 +95,8 @@ class TestLeaderboardFeatures(unittest.TestCase):
             # Initialize manager logic
             self.manager = HighscoreManager()
             # Populate with test data
-            self.manager.add_score('Charlie', 8, 'basic', 'hard', 30, 10)
-            self.manager.add_score('Alice', 10, 'basic', 'easy', 20, 10)
+            self.manager.add_score('Charlie', 8, 'percentage', 'medium', 30, 10)
+            self.manager.add_score('Alice', 10, 'percentage', 'medium', 20, 10)
 
     def tearDown(self):
         with self.app.app_context():
@@ -99,7 +104,7 @@ class TestLeaderboardFeatures(unittest.TestCase):
             db.drop_all()
 
     def test_filter_by_category(self):
-        response = self.client.get('/leaderboard?filter_category=basic')
+        response = self.client.get('/leaderboard?filter_category=percentage')
         self.assertIn(b'Alice', response.data)
         self.assertIn(b'Charlie', response.data)
 

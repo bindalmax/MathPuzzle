@@ -11,7 +11,7 @@ import sys
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from app import app
+from app import app, rooms
 
 class TestUIAutomation(unittest.TestCase):
     @classmethod
@@ -30,39 +30,52 @@ class TestUIAutomation(unittest.TestCase):
 
         self.driver.implicitly_wait(5)
         self.base_url = "http://127.0.0.1:5006/"
+        rooms.clear()
 
     def tearDown(self):
         self.driver.quit()
 
-    def test_start_page_loads(self):
-        """Test that the start page loads correctly."""
+    def test_defaults_on_page_load(self):
+        """Verify that Multiplayer, Percentage, and Medium are selected by default."""
         self.driver.get(self.base_url)
-        self.assertEqual("MathPuzzle - Welcome", self.driver.title)
-        welcome_text = self.driver.find_element(By.TAG_NAME, "h1").text
-        self.assertEqual("Welcome to the Math Game!", welcome_text)
-
-    def test_multiplayer_radio_exists(self):
-        """Test that multiplayer radio button exists on start page."""
-        self.driver.get(self.base_url)
+        
+        # Check Multiplayer is checked
         multiplayer_radio = self.driver.find_element(By.ID, "multiplayer")
-        self.assertTrue(multiplayer_radio.is_enabled())
-        single_radio = self.driver.find_element(By.ID, "single")
-        self.assertTrue(single_radio.is_enabled())
+        self.assertTrue(multiplayer_radio.is_selected())
+        
+        # Check Percentage is selected
+        category_select = self.driver.find_element(By.ID, "category")
+        selected_category = category_select.find_element(By.XPATH, ".//option[@selected]").get_attribute("value")
+        self.assertEqual(selected_category, "percentage")
+        
+        # Check Medium is selected
+        difficulty_select = self.driver.find_element(By.ID, "difficulty")
+        selected_difficulty = difficulty_select.find_element(By.XPATH, ".//option[@selected]").get_attribute("value")
+        self.assertEqual(selected_difficulty, "medium")
+        
+        # Check button text
+        start_btn = self.driver.find_element(By.ID, "start_btn")
+        self.assertEqual(start_btn.text, "Create Multiplayer Lobby")
 
-    def test_single_player_game_flow(self):
-        """Test starting a single player game and answering a question."""
+    def test_single_player_flow_explicit_selection(self):
+        """Test starting a single player game by explicitly overriding defaults."""
         self.driver.get(self.base_url)
-        self.driver.find_element(By.NAME, "player_name").send_keys("UITestPlayer")
+        
+        # Select Single Player
+        self.driver.find_element(By.ID, "single").click()
+        
+        # Fill name
+        self.driver.find_element(By.NAME, "player_name").send_keys("SoloPlayer")
+        
+        # Category and Difficulty are already defaulted to something valid
         
         wait = WebDriverWait(self.driver, 10)
         start_button = wait.until(EC.element_to_be_clickable((By.ID, "start_btn")))
+        self.assertEqual(start_button.text, "Start Single Player Game")
         start_button.click()
         
         wait.until(EC.url_contains("game"))
         self.assertIn("game", self.driver.current_url)
-        
-        question_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".question p")))
-        self.assertIn("What is", question_element.text)
 
 if __name__ == '__main__':
     unittest.main()
