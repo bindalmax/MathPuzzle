@@ -8,15 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --accent-color: #3498db;
-            --secondary-color: #27ae60;
-            --bg-color: #f0f2f5;
+            --primary-color: #4f46e5; /* Vibrant Indigo */
+            --accent-color: #0ea5e9;  /* Bright Sky Blue */
+            --secondary-color: #10b981; /* Fresh Emerald */
+            --bg-color: #f8fafc;      /* Soft Slate Background */
             --card-bg: #ffffff;
-            --text-color: #2c3e50;
-            --error-color: #e74c3c;
-            --chalkboard-green: #1e3d2b;
-            --paper-grid: #e1e8ed;
+            --text-color: #1e293b;    /* Deep Slate Text */
+            --error-color: #f43f5e;   /* Rose Red */
+            --chalkboard-bg: #334155; /* Refined Slate Chalkboard */
+            --paper-grid: #e2e8f0;    /* Visible Grid lines */
+            --vibrant-purple: #8b5cf6;
+            --vibrant-orange: #f59e0b;
+            --header-gradient: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
         }
         * { box-sizing: border-box; }
         body {
@@ -27,7 +30,7 @@
             background-image:
                 linear-gradient(var(--paper-grid) 1px, transparent 1px),
                 linear-gradient(90deg, var(--paper-grid) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-size: 25px 25px;
             color: var(--text-color);
             margin: 0;
             padding: 10px;
@@ -38,77 +41,224 @@
             max-width: 1000px;
             margin: 20px auto;
             background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            border: 2px solid var(--primary-color);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(79, 70, 229, 0.1);
+            border: 1px solid var(--paper-grid);
             position: relative;
             overflow: hidden;
         }
-        /* Decorative Math Symbols */
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(3deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
         .math-decor {
             position: absolute;
-            font-size: 4rem;
-            color: rgba(44, 62, 80, 0.08); /* Increased opacity from 0.03 to 0.08 */
+            font-size: 4.5rem;
+            color: rgba(79, 70, 229, 0.07);
             pointer-events: none;
             z-index: 0;
             font-family: 'Fira Code', monospace;
-            white-space: nowrap;
+            animation: float 8s ease-in-out infinite;
         }
-        .decor-1 { top: -10px; left: -10px; transform: rotate(-15deg); }
-        .decor-2 { bottom: -10px; right: -10px; transform: rotate(15deg); }
-        .decor-3 { top: 20%; right: -20px; transform: rotate(45deg); font-size: 3rem; }
-        .decor-4 { bottom: 30%; left: -30px; transform: rotate(-30deg); font-size: 5rem; }
-        .decor-5 { top: 50%; right: 10%; transform: rotate(10deg); font-size: 2.5rem; opacity: 0.05; }
+        .decor-1 { top: 20px; left: 20px; animation-delay: 0s; }
+        .decor-2 { bottom: 20px; right: 20px; animation-delay: 2s; }
+        .decor-3 { top: 40%; right: 10px; animation-delay: 4s; font-size: 3rem; }
+        .decor-4 { bottom: 40%; left: 10px; animation-delay: 6s; font-size: 3.5rem; }
+
+        .sound-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 12px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .control-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+        .icon-btn {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-size: 1.4rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .icon-btn.active { color: white; border: none; }
+        .icon-btn.sound-btn.active { background: var(--secondary-color); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
+        .icon-btn.music-btn.active { background: var(--vibrant-purple); box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4); }
+
+        .icon-btn:not(.active)::after {
+            content: "";
+            position: absolute;
+            width: 80%;
+            height: 2px;
+            background: var(--error-color);
+            transform: rotate(-45deg);
+            border-radius: 4px;
+        }
 
         h1, h2, h3 {
-            color: var(--primary-color);
-            font-weight: 700;
+            color: #0f172a;
+            font-weight: 800;
             margin-top: 0;
         }
 
         button, input, select {
-            min-height: 48px;
+            min-height: 50px;
             font-size: 16px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
             font-family: inherit;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        button {
-            cursor: pointer;
-            background: var(--accent-color);
+        button:not(.icon-btn) {
+            background: var(--header-gradient);
             color: white;
             border: none;
             font-weight: 700;
-            box-shadow: 0 4px 0 #2980b9;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
         }
-        button:hover {
-            background: #2980b9;
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #2980b9;
+        button:not(.icon-btn):hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
         }
-        button:active {
-            transform: translateY(4px);
-            box-shadow: none;
+        button:not(.icon-btn):active {
+            transform: translateY(1px);
         }
-
-        .error { color: var(--error-color); font-weight: bold; }
 
         {% block extra_style %}{% endblock %}
     </style>
+    <script>
+        const SoundEngine = {
+            audioCtx: null,
+            enabled: localStorage.getItem('sound_enabled') !== 'false',
+            musicEnabled: localStorage.getItem('music_enabled') === 'true',
+            musicInterval: null,
+
+            init() {
+                if (!this.audioCtx) {
+                    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+
+            playNote(freq, type, duration, vol = 0.1) {
+                if (!this.enabled && type !== 'music') return;
+                this.init();
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+
+                osc.type = type === 'music' ? 'triangle' : type;
+                osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(vol, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + duration);
+            },
+
+            playSuccess() { this.playNote(523.25, 'sine', 0.3); setTimeout(() => this.playNote(659.25, 'sine', 0.3), 100); },
+            playError() { this.playNote(150, 'sawtooth', 0.4); },
+            playClick() { this.playNote(800, 'sine', 0.05); },
+
+            updateUI() {
+                const sBtn = document.getElementById('sound-toggle');
+                const mBtn = document.getElementById('music-toggle');
+                if (sBtn) sBtn.classList.toggle('active', this.enabled);
+                if (mBtn) mBtn.classList.toggle('active', this.musicEnabled);
+            },
+
+            toggleSound() {
+                this.enabled = !this.enabled;
+                localStorage.setItem('sound_enabled', this.enabled);
+                this.updateUI();
+            },
+
+            toggleMusic() {
+                this.musicEnabled = !this.musicEnabled;
+                localStorage.setItem('music_enabled', this.musicEnabled);
+                this.updateUI();
+                if (this.musicEnabled) this.startMusic();
+                else this.stopMusic();
+            },
+
+            startMusic() {
+                if (!this.musicEnabled) return;
+                this.init();
+                this.stopMusic();
+
+                const melody = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+                let step = 0;
+
+                this.musicInterval = setInterval(() => {
+                    if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    this.playNote(melody[step], 'music', 0.8, 0.02);
+                    step = (step + 1) % melody.length;
+                }, 800);
+            },
+
+            stopMusic() {
+                if (this.musicInterval) {
+                    clearInterval(this.musicInterval);
+                    this.musicInterval = null;
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            SoundEngine.updateUI();
+            const startHandler = () => {
+                if (SoundEngine.musicEnabled) SoundEngine.startMusic();
+                window.removeEventListener('click', startHandler);
+            };
+            window.addEventListener('click', startHandler);
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </head>
 <body>
     <div class="main-container">
-        <!-- Increased quantity of math decorations -->
+        <div class="sound-controls">
+            <div class="control-group">
+                <span class="control-label">Music</span>
+                <button id="music-toggle" class="icon-btn music-btn" onclick="SoundEngine.toggleMusic()" title="Toggle Background Music">🎵</button>
+            </div>
+            <div class="control-group">
+                <span class="control-label">SFX</span>
+                <button id="sound-toggle" class="icon-btn sound-btn" onclick="SoundEngine.toggleSound()" title="Toggle Sound Effects">🔊</button>
+            </div>
+        </div>
+
         <div class="math-decor decor-1">∫ π Σ</div>
         <div class="math-decor decor-2">√ x² ∞</div>
         <div class="math-decor decor-3">λ φ Δ</div>
         <div class="math-decor decor-4">f(x) sin θ</div>
-        <div class="math-decor decor-5">e = mc²</div>
 
         <div style="position:relative; z-index: 1;">
             {% block content %}{% endblock %}

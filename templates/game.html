@@ -8,6 +8,7 @@
         const playerName = {{ session.get('player_name', 'Player') | tojson }};
         const roomId = {{ session.get('room_id', '') | tojson }};
         const isMultiplayer = {{ session.get('multiplayer', False) | tojson }};
+        let currentScore = {{ score }};
 
         const socket = io();
 
@@ -20,6 +21,13 @@
             let newHtml = '';
             sortedPlayers.forEach(([name, score]) => {
                 const isMe = (name === playerName);
+
+                // Trigger sound if my own score increased
+                if (isMe && score > currentScore) {
+                    SoundEngine.playSuccess();
+                    currentScore = score;
+                }
+
                 newHtml += `<li id="score-item-${name}" style="padding: 8px 0; border-bottom: 1px solid #ddd; ${isMe ? 'font-weight:bold; color:var(--accent-color);' : ''}">
                     <span style="font-family:'Fira Code', monospace;">${isMe ? '★ ' : ''}${name}</span>: ${score} pts
                 </li>`;
@@ -57,6 +65,18 @@
                     }
                 });
             }
+
+            // Audio for non-multiplayer correct answer detection
+            // Note: Since we use form POST, the page reloads. We can detect score change via session on load.
+            const sessionScore = {{ score }};
+            const prevScore = parseInt(sessionStorage.getItem('last_known_score') || '0');
+            if (sessionScore > prevScore) {
+                SoundEngine.playSuccess();
+            } else if (document.referrer.includes('submit_answer') && sessionScore === prevScore) {
+                // If we just submitted and score didn't change, it was wrong
+                SoundEngine.playError();
+            }
+            sessionStorage.setItem('last_known_score', sessionScore);
         };
     </script>
 {% endblock %}
@@ -74,10 +94,10 @@
     {% endif %}
 
     <header style="margin-bottom: 30px;">
-        <h1>Solve the Puzzle</h1>
-        <div style="display: flex; justify-content: center; gap: 20px; font-size: 1.1rem; color: #666;">
+        <h1 style="color:var(--accent-color);">Solve the Puzzle</h1>
+        <div style="display: flex; justify-content: center; gap: 20px; font-size: 1.2rem; background: #fff; padding: 10px; border-radius: 30px; border: 2px solid #eee; width: fit-content; margin: 0 auto;">
             <span>Score: <strong style="color:var(--secondary-color);">{{ score }}</strong></span>
-            <span>|</span>
+            <span style="color:#ccc;">|</span>
             {% if mode == 'time' %}
                 <span>Time: <strong id="time-left">{{ time_left }}</strong>s</span>
             {% else %}
@@ -94,15 +114,15 @@
         {% if choices %}
             <div class="choice-container">
                 {% for choice in choices %}
-                    <button type="submit" name="answer" value="{{ choice }}" class="choice-btn">{{ choice }}</button>
+                    <button type="submit" name="answer" value="{{ choice }}" class="choice-btn" onclick="SoundEngine.playClick()">{{ choice }}</button>
                 {% endfor %}
             </div>
         {% else %}
             <div style="margin-bottom: 25px;">
                 <input type="number" name="answer" placeholder="Enter solution..." step="any" required autofocus
-                       style="width:100%; max-width:320px; text-align:center; font-size: 1.5rem; height: 60px; border-width: 3px;">
+                       style="width:100%; max-width:320px; text-align:center; font-size: 1.8rem; height: 70px; border-width: 3px; border-color: var(--accent-color);">
             </div>
-            <button type="submit" style="width:100%; max-width:320px; height: 55px; font-size: 1.2rem;">Verify Answer</button>
+            <button type="submit" style="width:100%; max-width:320px; height: 60px; font-size: 1.3rem;" onclick="SoundEngine.playClick()">Verify Answer</button>
         {% endif %}
     </form>
 
