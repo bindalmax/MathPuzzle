@@ -15,15 +15,14 @@
             <h2>Start New Game</h2>
             <form action="{{ url_for('index') }}" method="post">
                 <div>
-                    <label for="player_name">Enter your name:</label><br>
-                    <input type="text" id="player_name" name="player_name" required aria-required="true">
+                    <label for="player_name">Enter your GamerId:</label><br>
+                    <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard">
                 </div>
                 <br>
                 <fieldset style="border:none; padding:0;">
                     <legend style="font-weight:bold;">Game Type:</legend>
                     <input type="radio" id="single" name="game_type" value="single" onchange="toggleGameType()">
                     <label for="single">Single Player</label>
-                    <!-- Multiplayer is now default -->
                     <input type="radio" id="multiplayer" name="game_type" value="multiplayer" checked onchange="toggleGameType()">
                     <label for="multiplayer">Multiplayer</label>
                 </fieldset>
@@ -34,7 +33,6 @@
                     <select id="category" name="category" style="width:100%;">
                         <option value="basic">Basic Arithmetic</option>
                         <option value="decimal">Decimals and Fractions</option>
-                        <!-- Percentage is now default -->
                         <option value="percentage" selected>Percentages</option>
                         <option value="profit">Profit and Loss</option>
                         <option value="algebra">Algebra</option>
@@ -43,7 +41,6 @@
                     <label for="difficulty">Choose a difficulty:</label><br>
                     <select id="difficulty" name="difficulty" style="width:100%;">
                         <option value="easy">Easy</option>
-                        <!-- Medium is now default -->
                         <option value="medium" selected>Medium</option>
                         <option value="hard">Hard</option>
                     </select><br><br>
@@ -58,7 +55,6 @@
                     <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
                 </div>
                 <br>
-                <!-- Updated button text to match default multiplayer -->
                 <button type="submit" id="start_btn" style="width:100%;">Create Multiplayer Lobby</button>
             </form>
         </section>
@@ -77,7 +73,7 @@
                             </div>
                             <form action="{{ url_for('index') }}" method="post">
                                 <input type="hidden" name="join_room_id" value="{{ room_id }}">
-                                <input type="text" name="player_name" placeholder="Your name" required aria-label="Your name to join">
+                                <input type="text" name="player_name" placeholder="Your GamerId" required aria-label="GamerId to join">
                                 <button type="submit" style="margin-top:5px; width:100%;">Join Lobby</button>
                             </form>
                         </li>
@@ -90,7 +86,7 @@
     </div>
 
     <div style="margin-top: 30px;">
-        <a href="{{ url_for('leaderboard') }}" style="text-decoration:none; color:var(--primary-color); font-weight:bold;">View Global Leaderboard</a>
+        <a href="{{ url_for('leaderboard') }}" style="text-decoration:none; color:var(--primary-color); font-weight:bold;">View Global Hall of Fame</a>
     </div>
 
     <script>
@@ -117,7 +113,6 @@
             btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
         }
 
-        // Ensure UI state matches defaults on page load
         window.onload = function() {
             toggleGameType();
             updateModeLabel();

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Math Game - Leaderboard{% endblock %}
+{% block title %}Math Game - Hall of Fame{% endblock %}
 
 {% block extra_style %}
     .filters {
@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Global Leaderboard</h1>
+    <h1>Global Hall of Fame</h1>
 
     <section class="filters">
         <form method="get" action="{{ url_for('leaderboard') }}">
@@ -51,7 +51,7 @@
                     <select name="sort_by" id="sort_by" style="width:100%;">
                         <option value="score" {{ 'selected' if sort_by == 'score' }}>Score</option>
                         <option value="time" {{ 'selected' if sort_by == 'time' }}>Time Taken</option>
-                        <option value="name" {{ 'selected' if sort_by == 'name' }}>Player Name</option>
+                        <option value="name" {{ 'selected' if sort_by == 'name' }}>GamerId</option>
                     </select>
                 </div>
             </div>
@@ -63,7 +63,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Player</th>
+                    <th>GamerId</th>
                     <th>Score</th>
                     <th>Category</th>
                     <th>Difficulty</th>
@@ -81,7 +81,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" style="text-align:center; padding: 30px;">No scores found. Be the first to play!</td>
+                    <td colspan="5" style="text-align:center; padding: 30px;">No Gamer scores found. Start a new session!</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -89,6 +89,6 @@
     </div>
 
     <div style="margin-top: 30px;">
-        <a href="{{ url_for('index') }}" style="text-decoration:none; background:#607D8B; color:white; padding:10px 20px; border-radius:5px;">Back to Home</a>
+        <a href="{{ url_for('index') }}" style="text-decoration:none; background:#607D8B; color:white; padding:10px 20px; border-radius:5px;">Back to Lobby</a>
     </div>
 {% endblock %}
