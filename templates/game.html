@@ -64,7 +64,7 @@
 {% block content %}
     {% if session.get('multiplayer') %}
     <aside class="live-scores">
-        <h3>Live Leaderboard</h3>
+        <h3>Gamer Scores</h3>
         <ul id="score-list">
             <li id="score-item-{{ session.get('player_name') }}" style="font-weight:bold; color:var(--accent-color);">
                 ★ {{ session.get('player_name') }} (You): {{ score }} pts

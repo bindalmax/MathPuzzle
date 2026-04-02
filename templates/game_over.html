@@ -63,22 +63,22 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Game Over!</h1>
+    <h1>Session Complete!</h1>
 
     {% if error %}
         <p class="error" role="alert">{{ error }}</p>
     {% else %}
-        <p style="font-size: 1.2rem; margin-bottom:0;">Your final score is:</p>
+        <p style="font-size: 1.2rem; margin-bottom:0;">Final Gamer Score:</p>
         <div class="final-score"><strong>{{ score }}</strong></div>
 
         {% if multiplayer_results %}
             <section class="multiplayer-results">
-                <h3 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">Multiplayer Results</h3>
+                <h3 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 5px;">Gamer Leaderboard</h3>
                 <div class="table-container">
                     <table style="min-width: 100%;">
                         <thead>
                             <tr style="background: #f0f0f0;">
-                                <th style="padding:10px; text-align:left;">Player</th>
+                                <th style="padding:10px; text-align:left;">GamerId</th>
                                 <th style="padding:10px; text-align:left;">Score</th>
                             </tr>
                         </thead>
@@ -92,13 +92,13 @@
                         </tbody>
                     </table>
                 </div>
-                <p style="font-size: 0.9rem; color: #666; font-style: italic;">Score table updates in real-time as others finish.</p>
+                <p style="font-size: 0.9rem; color: #666; font-style: italic;">Scores update in real-time.</p>
             </section>
         {% endif %}
     {% endif %}
 
     <nav class="nav-links">
-        <a href="{{ url_for('index') }}">Play Again</a>
-        <a href="{{ url_for('leaderboard') }}" class="secondary">Global Leaderboard</a>
+        <a href="{{ url_for('index') }}">New Session</a>
+        <a href="{{ url_for('leaderboard') }}" class="secondary">Global Hall of Fame</a>
     </nav>
 {% endblock %}

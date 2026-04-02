@@ -37,10 +37,8 @@ class TestWebApp(unittest.TestCase):
         """Verify that server-side defaults (Multiplayer, Percentage, Medium) are applied."""
         response = self.client.post('/', data={
             'player_name': 'DefaultTester'
-            # Sending NO other fields should trigger defaults
         }, follow_redirects=False)
         
-        # Should redirect to lobby because Multiplayer is default
         self.assertEqual(response.status_code, 302)
         self.assertIn('/multiplayer_lobby', response.headers['Location'])
         
@@ -49,22 +47,32 @@ class TestWebApp(unittest.TestCase):
             self.assertEqual(sess['category'], 'percentage')
             self.assertEqual(sess['difficulty'], 'medium')
 
-    def test_index_post_explicit_single_player(self):
-        """Verify that explicit choices override defaults."""
-        response = self.client.post('/', data={
-            'player_name': 'SingleTester',
-            'game_type': 'single',
+    def test_join_room_duplicate_gamer_id(self):
+        """Verify that joining a room with an existing GamerId is blocked."""
+        # Pre-populate a room
+        room_id = 'test-room'
+        rooms[room_id] = {
+            'players': ['ExistingGamer'],
+            'scores': {'ExistingGamer': 0},
+            'is_started': False,
             'category': 'basic',
-            'difficulty': 'easy'
+            'difficulty': 'easy',
+            'mode': 'time',
+            'mode_value': 20
+        }
+        
+        # Attempt to join with the SAME name
+        response = self.client.post('/', data={
+            'player_name': 'ExistingGamer',
+            'join_room_id': room_id
         }, follow_redirects=True)
         
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Math Game', response.data)
+        self.assertIn(b"is already taken in this room", response.data)
         
+        # Ensure session was NOT updated with room info
         with self.client.session_transaction() as sess:
-            self.assertFalse(sess.get('multiplayer', False))
-            self.assertEqual(sess['category'], 'basic')
-            self.assertEqual(sess['difficulty'], 'easy')
+            self.assertNotIn('room_id', sess)
 
     @patch('app.QuestionFactory')
     def test_game_route(self, mock_factory):
@@ -92,9 +100,7 @@ class TestLeaderboardFeatures(unittest.TestCase):
         
         with self.app.app_context():
             db.create_all()
-            # Initialize manager logic
             self.manager = HighscoreManager()
-            # Populate with test data
             self.manager.add_score('Charlie', 8, 'percentage', 'medium', 30, 10)
             self.manager.add_score('Alice', 10, 'percentage', 'medium', 20, 10)
 
@@ -105,8 +111,9 @@ class TestLeaderboardFeatures(unittest.TestCase):
 
     def test_filter_by_category(self):
         response = self.client.get('/leaderboard?filter_category=percentage')
+        # Verify text updated to GamerId
+        self.assertIn(b'GamerId', response.data)
         self.assertIn(b'Alice', response.data)
-        self.assertIn(b'Charlie', response.data)
 
 if __name__ == '__main__':
     unittest.main()

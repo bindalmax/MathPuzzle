@@ -35,14 +35,20 @@ rooms = {}
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        session['player_name'] = request.form['player_name']
+        player_name = request.form['player_name'].strip()
         
+        # Handle joining an existing room
         join_room_id = request.form.get('join_room_id')
         if join_room_id:
             if join_room_id in rooms:
                 if rooms[join_room_id].get('is_started'):
                      return render_template('index.html', error="Game already started", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
                 
+                # Uniqueness Check: Don't allow duplicate GamerIds in the same lobby
+                if player_name in rooms[join_room_id]['players']:
+                    return render_template('index.html', error=f"GamerId '{player_name}' is already taken in this room.", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
+
+                session['player_name'] = player_name
                 session['multiplayer'] = True
                 session['room_id'] = join_room_id
                 session['category'] = rooms[join_room_id]['category']
@@ -53,7 +59,8 @@ def index():
             else:
                 return render_template('index.html', error="Room not found", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
 
-        # Set Defaults
+        # New Room or Single Player
+        session['player_name'] = player_name
         session['category'] = request.form.get('category', 'percentage')
         session['difficulty'] = request.form.get('difficulty', 'medium')
         session['mode'] = request.form.get('mode', 'time')
@@ -87,6 +94,7 @@ def index():
         session['multiplayer'] = False
         return redirect(url_for('game'))
     
+    # Only show rooms that haven't started
     visible_rooms = {k: v for k, v in rooms.items() if not v.get('is_started')}
     return render_template('index.html', active_rooms=visible_rooms)
 
@@ -153,7 +161,6 @@ def submit_answer():
                 if room_id in rooms and player_name in rooms[room_id]['scores']:
                     rooms[room_id]['scores'][player_name] = session['score']
                     rooms[room_id]['last_activity'] = time.time()
-                    # Ensure full room state is emitted
                     socketio.emit('score_update', 
                                   {'players': rooms[room_id]['scores']}, 
                                   room=room_id)
@@ -189,7 +196,6 @@ def game_over():
                 rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
                 rooms[room_id]['last_activity'] = time.time()
                 room_results = rooms[room_id]['results']
-                # Final broadcast of all scores
                 socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
 
     session.pop('start_time', None)
@@ -284,7 +290,6 @@ def handle_join(data):
         if name and name not in rooms[room]['players']:
             rooms[room]['players'].append(name)
             rooms[room]['scores'][name] = 0
-        # Send full list of scores to the new joiner
         emit('score_update', {'players': rooms[room]['scores']}, room=room)
         emit('update_players', rooms[room]['players'], room=room)
 
@@ -316,5 +321,4 @@ def handle_disconnect():
             room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
-    # Using specific port 5005
     socketio.run(app, debug=True, host='0.0.0.0', port=5005, ssl_context='adhoc', allow_unsafe_werkzeug=True)
