@@ -19,9 +19,11 @@
 - Only update when code functionality changes, not for explanations.
 
 ## Testing Requirements (Code Changes Only)
-- **Unit Tests**: Update `test_math_game.py` for console logic changes.
-- **Web App Tests**: Update `test_app.py` for Flask app changes.
-- **UI Automation Tests**: Update `test_ui_automation.py` for any changes to the web UI.
+- **Always adapt the full test pyramid when any code change is made.** This includes:
+    - **Unit Tests**: Update `test_math_game.py` for console logic changes.
+    - **Web App Tests**: Update `test_app.py` for Flask app changes.
+    - **UI Automation Tests**: Update `test_ui_automation.py` for any changes to the web UI.
+    - **Multiplayer E2E Tests**: Update `test_multiplayer.py` for multiplayer-specific UI/logic changes.
 - Add new test cases for new features.
 - Ensure tests are comprehensive (target: 28+ tests + UI tests).
 - **IMPORTANT**: As the AI cannot execute tests directly, provide the command for the user to run them: `python run_tests.py`

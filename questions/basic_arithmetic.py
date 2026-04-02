@@ -32,8 +32,6 @@ class BasicArithmeticQuestion(Question):
             question = f"What is {num1} / {num2}? "
             answer = num1 // num2
 
-        if difficulty in ['medium', 'hard']:
-            choices = self.generate_choices(answer, is_integer=True)
-            return question, answer, choices
-        else:
-            return question, answer, None
+        # MCQ for all difficulties
+        choices = self.generate_choices(answer, is_integer=True)
+        return question, answer, choices
