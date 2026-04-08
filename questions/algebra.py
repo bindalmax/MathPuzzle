@@ -13,7 +13,6 @@ class AlgebraQuestion(Question):
             b = x + a
             question = f"Solve for x: x + {a} = {b}"
             answer = x
-            return question, answer, None
 
         elif difficulty == 'medium':
             eq_type = random.choice(['subtraction', 'multiplication', 'division'])
@@ -31,35 +30,19 @@ class AlgebraQuestion(Question):
                 question = f"Solve for x: {a}x = {b}"
                 answer = x
             else: # division
-                # Equation: x / a = b
-                # We want integer answer x.
-                # Pick b (result) and a (divisor).
                 b = random.randint(2, 10)
                 a = random.randint(2, 10)
                 x = a * b
                 question = f"Solve for x: x / {a} = {b}"
                 answer = x
-            
-            choices = self.generate_choices(answer, is_integer=True)
-            return question, answer, choices
 
         elif difficulty == 'hard':
             eq_type = random.choice(['fraction', 'two_var'])
 
             if eq_type == 'fraction':
-                # Equation: (num/den)x + a = b
-                # We want integer x
                 x = random.randint(4, 12)
-                # Ensure x is divisible by den for cleaner arithmetic? 
-                # Not strictly necessary if we calculate b correctly, but helps avoid float issues in verification if we were verifying.
-                # But here we construct b from x.
-                
                 coeff_num = random.randint(1, 3)
                 coeff_den = random.randint(2, 4)
-                
-                # To ensure (num/den)*x is integer (optional but nice), let's retry x
-                # x = random.randint(1, 5) * coeff_den 
-                # Keeping original logic for now which didn't ensure integer intermediate, but b is fraction.
                 
                 coeff = Fraction(coeff_num, coeff_den)
                 a = random.randint(1, 5)
@@ -76,9 +59,9 @@ class AlgebraQuestion(Question):
                 else:
                     question = f"If x + y = {sum_xy} and y - x = {diff_xy}, what is x? "
                 answer = x
-            
-            choices = self.generate_choices(answer, is_integer=True)
-            return question, answer, choices
-
         else:
             raise NotImplementedError(f"Algebra questions for {difficulty} difficulty are not yet implemented.")
+
+        # MCQ for all difficulties
+        choices = self.generate_choices(answer, is_integer=True)
+        return question, answer, choices

@@ -6,13 +6,14 @@ class PercentageQuestion(Question):
     def generate(self, difficulty):
         question = ""
         answer = 0
+        is_integer = True
 
         if difficulty == 'easy':
             percent = random.choice([10, 20, 25, 50, 75])
             number = random.randint(1, 20) * 10
             answer = (percent / 100) * number
-            # Easy mode returns no choices
-            return f"What is {percent}% of {number}? ", answer, None
+            question = f"What is {percent}% of {number}? "
+            is_integer = (answer == int(answer))
         
         elif difficulty == 'medium':
             q_type = random.choice(['percentage_of', 'what_percent'])
@@ -32,9 +33,7 @@ class PercentageQuestion(Question):
                 
                 answer = percent
                 question = f"What percent of {whole} is {part}? "
-
-            choices = self.generate_choices(answer, is_integer=True)
-            return question, answer, choices
+            is_integer = True
 
         elif difficulty == 'hard':
             q_type = random.choice(['percentage_of', 'what_percent', 'increase_decrease'])
@@ -62,9 +61,11 @@ class PercentageQuestion(Question):
                     new_value = original * (1 - percent / 100)
                     question = f"If {original} is decreased by {percent}%, what is the new value? "
                     answer = round(new_value, 2)
-            
-            choices = self.generate_choices(answer, is_integer=False)
-            return question, answer, choices
+            is_integer = False
 
         else:
             raise NotImplementedError(f"Percentage questions for {difficulty} difficulty are not yet implemented.")
+
+        # MCQ for all difficulties
+        choices = self.generate_choices(answer, is_integer=is_integer)
+        return question, answer, choices

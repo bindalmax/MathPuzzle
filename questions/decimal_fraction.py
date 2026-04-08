@@ -38,8 +38,6 @@ class DecimalFractionQuestion(Question):
                     question = f"What is {f1} - {f2}? (Answer as decimal, round to 2 places) "
                 
                 answer = round(float(result_fraction), 2)
-            
-            return question, answer, None
 
         elif difficulty == 'medium':
             q_type = random.choice(['decimal', 'fraction', 'mixed'])
@@ -177,6 +175,6 @@ class DecimalFractionQuestion(Question):
         else:
             raise NotImplementedError(f"Decimal and Fraction questions for {difficulty} difficulty are not yet implemented.")
 
-        # If difficulty is medium or hard, generate choices
+        # MCQ for all difficulties
         choices = self.generate_choices(answer, is_integer=False)
         return question, answer, choices
