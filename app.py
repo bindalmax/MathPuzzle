@@ -8,9 +8,12 @@ import uuid
 
 app = Flask(__name__)
 
+# Environment Configuration
+FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
+
 # Security: Enforce a secret key in production
 SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY and os.environ.get('FLASK_ENV') == 'production':
+if not SECRET_KEY and FLASK_ENV == 'production':
     raise RuntimeError("SECRET_KEY must be set in production environment")
 app.secret_key = SECRET_KEY or 'dev-secret-key-change-in-production'
 
@@ -37,14 +40,12 @@ def index():
     if request.method == 'POST':
         player_name = request.form['player_name'].strip()
         
-        # Handle joining an existing room
         join_room_id = request.form.get('join_room_id')
         if join_room_id:
             if join_room_id in rooms:
                 if rooms[join_room_id].get('is_started'):
                      return render_template('index.html', error="Game already started", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
                 
-                # Uniqueness Check: Don't allow duplicate GamerIds in the same lobby
                 if player_name in rooms[join_room_id]['players']:
                     return render_template('index.html', error=f"GamerId '{player_name}' is already taken in this room.", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
 
@@ -59,7 +60,7 @@ def index():
             else:
                 return render_template('index.html', error="Room not found", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
 
-        # New Room or Single Player
+        # Set Defaults
         session['player_name'] = player_name
         session['category'] = request.form.get('category', 'percentage')
         session['difficulty'] = request.form.get('difficulty', 'medium')
@@ -94,7 +95,6 @@ def index():
         session['multiplayer'] = False
         return redirect(url_for('game'))
     
-    # Only show rooms that haven't started
     visible_rooms = {k: v for k, v in rooms.items() if not v.get('is_started')}
     return render_template('index.html', active_rooms=visible_rooms)
 
@@ -321,4 +321,16 @@ def handle_disconnect():
             room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5005, ssl_context='adhoc', allow_unsafe_werkzeug=True)
+    port = int(os.environ.get('PORT', 5005))
+    
+    if FLASK_ENV == 'development':
+        cert_file = 'cert.pem'
+        key_file = 'key.pem'
+        if os.path.exists(cert_file) and os.path.exists(key_file):
+            ssl_ctx = (cert_file, key_file)
+        else:
+            ssl_ctx = 'adhoc'
+        socketio.run(app, debug=True, host='0.0.0.0', port=port, ssl_context=ssl_ctx, allow_unsafe_werkzeug=True)
+    else:
+        # Cloud/Production: SSL is usually handled by the Load Balancer
+        socketio.run(app, debug=False, host='0.0.0.0', port=port)
