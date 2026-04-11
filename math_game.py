@@ -44,12 +44,35 @@ class Game:
                     for label, choice in choice_map.items():
                         print(f"{label}) {choice}")
                     
-                    user_input = input("Your choice (A, B, C, D): ").upper()
+                    user_input_raw = input("Your choice (A, B, C, D) or answer: ").strip()
+                    user_input = user_input_raw.upper()
+                    # Allow players to quit even during MCQs
+                    if user_input_raw.lower() == 'quit':
+                        self.game_over.set()
+                        break
                     if user_input in choice_map:
                         user_answer = choice_map[user_input]
                     else:
-                        print("Invalid choice.")
-                        # Let it be handled by the answer check as wrong
+                        # Allow entering the answer value directly (e.g., '15' or '15.0')
+                        matched = False
+                        for choice in choices:
+                            try:
+                                # Try numeric comparison when possible
+                                if isinstance(choice, (int, float)):
+                                    if float(user_input_raw) == float(choice):
+                                        user_answer = choice
+                                        matched = True
+                                        break
+                            except ValueError:
+                                pass
+                            # Fallback to string comparison
+                            if str(choice).lower() == user_input_raw.lower():
+                                user_answer = choice
+                                matched = True
+                                break
+                        if not matched:
+                            print("Invalid choice.")
+                            # Let it be handled by the answer check as wrong
                 else:
                     # Open-ended question
                     user_input = input("Your answer: ")
