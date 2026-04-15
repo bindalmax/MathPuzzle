@@ -1,5 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import bleach
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
 import time
@@ -10,12 +14,35 @@ app = Flask(__name__)
 
 # Environment Configuration
 FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
+# Disable CSRF in non-production environments (makes testing & development easier)
+app.config['WTF_CSRF_ENABLED'] = (FLASK_ENV == 'production')
 
-# Security: Enforce a secret key in production
+# Security: Hardened Secret Key management
 SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY and FLASK_ENV == 'production':
-    raise RuntimeError("SECRET_KEY must be set in production environment")
-app.secret_key = SECRET_KEY or 'dev-secret-key-change-in-production'
+if not SECRET_KEY:
+    if FLASK_ENV == 'production':
+        raise RuntimeError("SECRET_KEY must be set in production environment")
+    SECRET_KEY = 'dev-secret-key-change-in-production'
+app.secret_key = SECRET_KEY
+
+# CSRF Protection
+csrf = CSRFProtect(app)
+
+# Rate Limiting
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+# During automated tests, toggle the limiter off to avoid 429s from E2E/UI test suites
+@app.before_request
+def _adjust_rate_limiter_for_tests():
+    try:
+        limiter.enabled = not app.config.get('TESTING', False)
+    except Exception:
+        # If limiter isn't available for any reason, skip toggling
+        pass
 
 # Database Configuration
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///math_game.db')
@@ -32,14 +59,31 @@ highscore_manager = HighscoreManager(app)
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*')
 socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threading')
 
+# Register REST API Blueprint
+from api_blueprint.api import api_bp
+app.register_blueprint(api_bp)
+# Exempt API blueprint from CSRF protection in non-production/testing environments only
+# Allow disabling CSRF for API endpoints via environment variable when running test servers
+# This is safer than turning off CSRF globally in production.
+if os.environ.get('DISABLE_API_CSRF', '0') == '1' or not app.config.get('WTF_CSRF_ENABLED', True):
+    csrf.exempt(api_bp)
+
 # rooms[room_id] = { ... }
 rooms = {}
 
+def sanitize_input(text):
+    """Sanitize user input to prevent XSS."""
+    return bleach.clean(text.strip())
+
 @app.route('/', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def index():
     if request.method == 'POST':
-        player_name = request.form['player_name'].strip()
+        player_name = sanitize_input(request.form.get('player_name', 'Player'))
         
+        if len(player_name) > 20:
+            return render_template('index.html', error="GamerId too long (max 20 chars)", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
+
         join_room_id = request.form.get('join_room_id')
         if join_room_id:
             if join_room_id in rooms:
@@ -47,7 +91,7 @@ def index():
                      return render_template('index.html', error="Game already started", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
                 
                 if player_name in rooms[join_room_id]['players']:
-                    return render_template('index.html', error=f"GamerId '{player_name}' is already taken in this room.", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
+                    return render_template('index.html', error=f"GamerId '{player_name}' is already taken in this room", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
 
                 session['player_name'] = player_name
                 session['multiplayer'] = True
@@ -127,7 +171,7 @@ def game():
             question, answer, choices = factory.create_question()
             session['current_answer'] = answer
         except NotImplementedError:
-            return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented for the '{session['difficulty']}' difficulty yet!")
+            return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented yet!")
 
     context = {
         'question': question,
@@ -144,6 +188,7 @@ def game():
     return render_template('game.html', **context)
 
 @app.route('/submit_answer', methods=['POST'])
+@limiter.limit("2 per second")
 def submit_answer():
     if 'start_time' not in session:
         return redirect(url_for('index'))
@@ -279,7 +324,7 @@ def start_multiplayer_game():
 
 @socketio.on('join')
 def handle_join(data):
-    name = data.get('name')
+    name = sanitize_input(data.get('name', 'Player'))
     room = data.get('room')
     sid = request.sid
     
@@ -321,16 +366,14 @@ def handle_disconnect():
             room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
+    with app.app_context():
+        from database import db
+        db.create_all()
     port = int(os.environ.get('PORT', 5005))
-    
     if FLASK_ENV == 'development':
         cert_file = 'cert.pem'
         key_file = 'key.pem'
-        if os.path.exists(cert_file) and os.path.exists(key_file):
-            ssl_ctx = (cert_file, key_file)
-        else:
-            ssl_ctx = 'adhoc'
+        ssl_ctx = (cert_file, key_file) if os.path.exists(cert_file) else 'adhoc'
         socketio.run(app, debug=True, host='0.0.0.0', port=port, ssl_context=ssl_ctx, allow_unsafe_werkzeug=True)
     else:
-        # Cloud/Production: SSL is usually handled by the Load Balancer
         socketio.run(app, debug=False, host='0.0.0.0', port=port)

@@ -46,12 +46,15 @@ def main():
     if target in ['integration', 'all']:
         run_and_store('integration', os.path.join(base_dir, 'integration'))
 
+    if target in ['api', 'all']:
+        run_and_store('api', os.path.join(base_dir, 'api'))
+
     if target in ['e2e', 'all']:
         run_and_store('e2e', os.path.join(base_dir, 'e2e'))
 
     # Per-category summary
     print("\n=== TEST SUMMARY ===")
-    for name in ['unit', 'integration', 'e2e']:
+    for name in ['unit', 'integration', 'api', 'e2e']:
         res = results.get(name)
         if res is None:
             print(f"{name.upper()}: No tests found or not run")

@@ -1,0 +1,342 @@
+{
+  "info": {
+    "_postman_id": "mathpuzzle-api-v1",
+    "name": "MathPuzzle API",
+    "description": "REST API for MathPuzzle game - Mobile & Web clients",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Metadata",
+      "item": [
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "categories"]
+            },
+            "description": "Get list of all available question categories"
+          }
+        },
+        {
+          "name": "Get Difficulties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/difficulties",
+              "host": ["{{base_url}}"],
+              "path": ["api", "difficulties"]
+            },
+            "description": "Get list of all difficulty levels"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Single Player",
+      "item": [
+        {
+          "name": "1. Get Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.status === 'success') {",
+                  "    pm.collectionVariables.set('question_id', jsonData.data.question_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"basic_arithmetic\",\n  \"difficulty\": \"easy\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/question",
+              "host": ["{{base_url}}"],
+              "path": ["api", "question"]
+            },
+            "description": "Get a new question for the specified category and difficulty"
+          }
+        },
+        {
+          "name": "2. Submit Answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_id\": \"{{question_id}}\",\n  \"answer\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/answer",
+              "host": ["{{base_url}}"],
+              "path": ["api", "answer"]
+            },
+            "description": "Submit an answer to a question and get feedback"
+          }
+        },
+        {
+          "name": "3. Save Score",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"player_name\": \"Alice\",\n  \"score\": 150,\n  \"category\": \"basic_arithmetic\",\n  \"difficulty\": \"hard\",\n  \"time_taken\": 45.5,\n  \"questions_attempted\": 15\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/score",
+              "host": ["{{base_url}}"],
+              "path": ["api", "score"]
+            },
+            "description": "Save a player's score to the leaderboard"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard",
+      "item": [
+        {
+          "name": "Get Leaderboard (All)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard"]
+            },
+            "description": "Get top 50 scores across all categories and difficulties"
+          }
+        },
+        {
+          "name": "Get Leaderboard (Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard?category=basic_arithmetic&difficulty=easy&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "basic_arithmetic"
+                },
+                {
+                  "key": "difficulty",
+                  "value": "easy"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get filtered leaderboard by category and difficulty"
+          }
+        },
+        {
+          "name": "Get Leaderboard (Pagination)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/leaderboard?limit=50&offset=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "leaderboard"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Get next page of leaderboard (51-100)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Multiplayer",
+      "item": [
+        {
+          "name": "1. Create Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.status === 'success') {",
+                  "    pm.collectionVariables.set('room_id', jsonData.data.room_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"player_name\": \"Alice\",\n  \"category\": \"basic_arithmetic\",\n  \"difficulty\": \"easy\",\n  \"mode\": \"time\",\n  \"mode_value\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/multiplayer/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "multiplayer", "create"]
+            },
+            "description": "Create a new multiplayer game room"
+          }
+        },
+        {
+          "name": "2. Join Room",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/multiplayer/join/{{room_id}}?player_name=Bob",
+              "host": ["{{base_url}}"],
+              "path": ["api", "multiplayer", "join", "{{room_id}}"],
+              "query": [
+                {
+                  "key": "player_name",
+                  "value": "Bob"
+                }
+              ]
+            },
+            "description": "Join an existing multiplayer room using room_id"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Examples",
+      "item": [
+        {
+          "name": "Invalid Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"invalid_category\",\n  \"difficulty\": \"easy\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/question",
+              "host": ["{{base_url}}"],
+              "path": ["api", "question"]
+            },
+            "description": "Example error response for invalid category"
+          }
+        },
+        {
+          "name": "Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/question",
+              "host": ["{{base_url}}"],
+              "path": ["api", "question"]
+            },
+            "description": "Example error response for missing parameters"
+          }
+        },
+        {
+          "name": "Invalid Answer (Question Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_id\": \"invalid-uuid\",\n  \"answer\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/answer",
+              "host": ["{{base_url}}"],
+              "path": ["api", "answer"]
+            },
+            "description": "Example error response when question is not found"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5005",
+      "type": "string"
+    },
+    {
+      "key": "question_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "room_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

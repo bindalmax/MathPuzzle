@@ -16,6 +16,11 @@ from app import app, socketio, rooms
 class TestMultiplayerE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        app.config['TESTING'] = True
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        with app.app_context():
+            from database import db
+            db.create_all()
         # Run the Flask app with SocketIO in a separate thread
         cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': 5005, 'debug': False, 'allow_unsafe_werkzeug': True})
         cls.server_thread.daemon = True

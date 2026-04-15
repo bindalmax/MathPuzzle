@@ -1,0 +1,3 @@
+"""
+MathPuzzle Application Package
+"""
