@@ -14,6 +14,7 @@ class TestWebApp(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
+        self.app.config['WTF_CSRF_ENABLED'] = False
         # Force in-memory database for integration tests to ensure isolation from Postgres/Local DB
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.client = self.app.test_client()
@@ -95,6 +96,7 @@ class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
+        self.app.config['WTF_CSRF_ENABLED'] = False
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.client = self.app.test_client()
         
