@@ -75,9 +75,12 @@ class QuestionFactory:
         from .profit_loss import ProfitLossQuestion
         from .algebra import AlgebraQuestion
 
+        # Support both short keys and API-friendly names
         categories = {
             "basic": BasicArithmeticQuestion,
+            "basic_arithmetic": BasicArithmeticQuestion,
             "decimal": DecimalFractionQuestion,
+            "decimal_fraction": DecimalFractionQuestion,
             "percentage": PercentageQuestion,
             "profit_loss": ProfitLossQuestion,
             "algebra": AlgebraQuestion,

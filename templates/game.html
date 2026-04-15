@@ -22,7 +22,6 @@
             sortedPlayers.forEach(([name, score]) => {
                 const isMe = (name === playerName);
 
-                // Trigger sound if my own score increased
                 if (isMe && score > currentScore) {
                     SoundEngine.playSuccess();
                     currentScore = score;
@@ -66,14 +65,11 @@
                 });
             }
 
-            // Audio for non-multiplayer correct answer detection
-            // Note: Since we use form POST, the page reloads. We can detect score change via session on load.
             const sessionScore = {{ score }};
             const prevScore = parseInt(sessionStorage.getItem('last_known_score') || '0');
             if (sessionScore > prevScore) {
                 SoundEngine.playSuccess();
             } else if (document.referrer.includes('submit_answer') && sessionScore === prevScore) {
-                // If we just submitted and score didn't change, it was wrong
                 SoundEngine.playError();
             }
             sessionStorage.setItem('last_known_score', sessionScore);
@@ -110,21 +106,29 @@
         <p>{{ question }}</p>
     </div>
 
-    <form id="answer-form" action="{{ url_for('submit_answer') }}" method="post">
+    <!-- Added choices container here to wrap the form better for CSRF -->
+    <div class="answer-section">
         {% if choices %}
             <div class="choice-container">
                 {% for choice in choices %}
-                    <button type="submit" name="answer" value="{{ choice }}" class="choice-btn" onclick="SoundEngine.playClick()">{{ choice }}</button>
+                    <form action="{{ url_for('submit_answer') }}" method="post" style="display:contents;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="answer" value="{{ choice }}">
+                        <button type="submit" class="choice-btn" onclick="SoundEngine.playClick()">{{ choice }}</button>
+                    </form>
                 {% endfor %}
             </div>
         {% else %}
-            <div style="margin-bottom: 25px;">
-                <input type="number" name="answer" placeholder="Enter solution..." step="any" required autofocus
-                       style="width:100%; max-width:320px; text-align:center; font-size: 1.8rem; height: 70px; border-width: 3px; border-color: var(--accent-color);">
-            </div>
-            <button type="submit" style="width:100%; max-width:320px; height: 60px; font-size: 1.3rem;" onclick="SoundEngine.playClick()">Verify Answer</button>
+            <form id="answer-form" action="{{ url_for('submit_answer') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div style="margin-bottom: 25px;">
+                    <input type="number" name="answer" placeholder="Enter solution..." step="any" required autofocus
+                           style="width:100%; max-width:320px; text-align:center; font-size: 1.8rem; height: 70px; border-width: 3px; border-color: var(--accent-color);">
+                </div>
+                <button type="submit" style="width:100%; max-width:320px; height: 60px; font-size: 1.3rem;" onclick="SoundEngine.playClick()">Verify Answer</button>
+            </form>
         {% endif %}
-    </form>
+    </div>
 
     <footer style="margin-top: 50px; border-top: 1px dashed #ccc; padding-top: 20px;">
         <a href="{{ url_for('game_over') }}" style="color:var(--error-color); font-weight:bold; text-decoration:none; font-size: 0.9rem;">
