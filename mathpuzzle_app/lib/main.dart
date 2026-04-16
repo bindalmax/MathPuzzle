@@ -7,6 +7,7 @@ import 'services/websocket_service.dart';
 import 'providers/game_provider.dart';
 import 'providers/multiplayer_provider.dart';
 import 'screens/home_screen.dart';
+import 'config.dart'; // Import AppConfig
 
 // Allows connecting to local HTTPS with self-signed certs
 class MyHttpOverrides extends HttpOverrides {
@@ -25,11 +26,8 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 10.0.2.2 is the Mac's localhost from the Android Emulator
-  String apiBaseUrl = 'https://127.0.0.1:5005';
-  if (!kIsWeb && Platform.isAndroid) {
-    apiBaseUrl = 'https://10.0.2.2:5005';
-  }
+  // apiBaseUrl is externalized in lib/config.dart
+  String apiBaseUrl = AppConfig.apiBaseUrl;
   
   print('App Starting...');
   print('API Base URL: $apiBaseUrl');
