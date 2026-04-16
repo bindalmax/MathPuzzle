@@ -102,6 +102,7 @@ class QuestionResource(Resource):
             return api_success({
                 'question': question,
                 'choices': choices,
+                'answer': answer,
                 'question_id': question_id,
                 'category': category,
                 'difficulty': difficulty
