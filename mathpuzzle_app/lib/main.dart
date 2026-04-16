@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/api_service.dart';
@@ -6,17 +8,52 @@ import 'providers/game_provider.dart';
 import 'providers/multiplayer_provider.dart';
 import 'screens/home_screen.dart';
 
-void main() {
-  const String apiBaseUrl = 'http://127.0.0.1:5000';
+// Allows connecting to local HTTPS with self-signed certs
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
+void main() async {
+  // Global override for local development HTTPS
+  if (!kReleaseMode) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 10.0.2.2 is the Mac's localhost from the Android Emulator
+  String apiBaseUrl = 'https://127.0.0.1:5005';
+  if (!kIsWeb && Platform.isAndroid) {
+    apiBaseUrl = 'https://10.0.2.2:5005';
+  }
+  
+  print('App Starting...');
+  print('API Base URL: $apiBaseUrl');
+
   final apiService = ApiService(apiBaseUrl);
-  final webSocketService = WebSocketService(apiBaseUrl.replaceFirst('http', 'ws'));
+  final webSocketService = WebSocketService(apiBaseUrl.replaceFirst('https', 'wss'));
+  
+  // Connectivity Check
+  try {
+    print('Testing connection to backend...');
+    await apiService.getLeaderboard(limit: 1);
+    print('Backend connection SUCCESS');
+  } catch (e) {
+    print('Backend connection FAILED: $e');
+    print('Tip: Ensure Flask is running on port 5005 with HTTPS');
+  }
+
   webSocketService.connect();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => GameProvider(apiService: apiService)),
-        ChangeNotifierProvider(create: (_) => MultiplayerProvider(webSocketService: webSocketService)),
+        ChangeNotifierProvider(create: (_) => MultiplayerProvider(webSocketService: webSocketService, apiService: apiService)),
       ],
       child: MyApp(apiService: apiService, baseUrl: apiBaseUrl),
     ),
@@ -33,7 +70,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Math Puzzle',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+        useMaterial3: true,
+      ),
       home: HomeScreen(apiService: apiService, baseUrl: baseUrl),
     );
   }

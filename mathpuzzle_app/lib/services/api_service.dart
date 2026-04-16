@@ -82,4 +82,35 @@ class ApiService {
       throw NetworkException('Network error while posting score: $e');
     }
   }
+
+  Future<Map<String, dynamic>> createRoom({
+    required String playerName,
+    required String category,
+    required String difficulty,
+    String mode = 'time',
+    int modeValue = 20,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/multiplayer/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'player_name': playerName,
+          'category': category,
+          'difficulty': difficulty,
+          'mode': mode,
+          'mode_value': modeValue,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        return jsonDecode(response.body)['data'];
+      } else {
+        throw ServerException('Failed to create room: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw NetworkException('Network error while creating room: $e');
+    }
+  }
 }
