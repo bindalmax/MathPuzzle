@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../providers/game_provider.dart';
+import '../providers/multiplayer_provider.dart';
 
 class GameScreen extends StatefulWidget {
   final String category;
@@ -9,6 +10,7 @@ class GameScreen extends StatefulWidget {
   final String playerName;
   final String mode;
   final int modeValue;
+  final bool isMultiplayer;
 
   const GameScreen({
     required this.category, 
@@ -16,6 +18,7 @@ class GameScreen extends StatefulWidget {
     required this.playerName, 
     this.mode = 'time', 
     this.modeValue = 20, 
+    this.isMultiplayer = false,
     super.key
   });
 
@@ -37,7 +40,16 @@ class _GameScreenState extends State<GameScreen> {
     _questionsLeft = widget.mode == 'questions' ? widget.modeValue : 0;
     _stopwatch.start();
     
-    Future.microtask(() => context.read<GameProvider>().fetchQuestion(widget.category, widget.difficulty));
+    final gameProvider = context.read<GameProvider>();
+    final mpProvider = context.read<MultiplayerProvider>();
+
+    // Synchronize multiplayer state
+    gameProvider.updateMultiplayerInfo(
+      isMultiplayer: widget.isMultiplayer,
+      roomId: mpProvider.roomId,
+    );
+
+    Future.microtask(() => gameProvider.fetchQuestion(widget.category, widget.difficulty));
     
     if (widget.mode == 'time') {
       _startTimer();
@@ -65,6 +77,14 @@ class _GameScreenState extends State<GameScreen> {
          widget.playerName, 
          _stopwatch.elapsed.inSeconds.toDouble()
        );
+       
+       // If multiplayer, fetch game results after game ends
+       if (widget.isMultiplayer && provider.isGameOver) {
+         final mpProvider = context.read<MultiplayerProvider>();
+         if (mpProvider.roomId != null) {
+           mpProvider.fetchGameResults(mpProvider.roomId!);
+         }
+       }
     }
   }
 
@@ -96,13 +116,25 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
+    final mpProvider = context.watch<MultiplayerProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Math Puzzle'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
+        actions: widget.isMultiplayer 
+          ? [
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.leaderboard),
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
+                ),
+              )
+            ] 
+          : null,
       ),
+      endDrawer: widget.isMultiplayer ? _buildLiveScoreboard(mpProvider) : null,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -112,8 +144,53 @@ class _GameScreenState extends State<GameScreen> {
             : provider.error != null
                 ? _buildErrorState(provider)
                 : provider.isGameOver
-                    ? _buildGameOver(provider)
+                    ? _buildGameOver(provider, mpProvider) // Pass mpProvider to buildGameOver
                     : _buildGameContent(provider),
+      ),
+    );
+  }
+
+  Widget _buildLiveScoreboard(MultiplayerProvider mpProvider) {
+    // Sort players by score
+    final sortedPlayers = mpProvider.playerScores.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Drawer(
+      child: Column(
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Colors.indigo),
+            child: Center(
+              child: Text(
+                'Live Scores',
+                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: sortedPlayers.length,
+              itemBuilder: (context, index) {
+                final player = sortedPlayers[index];
+                final isMe = player.key == widget.playerName;
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: isMe ? Colors.orange : Colors.grey[300],
+                    child: Text('${index + 1}'),
+                  ),
+                  title: Text(
+                    player.key + (isMe ? ' (You)' : ''),
+                    style: TextStyle(fontWeight: isMe ? FontWeight.bold : FontWeight.normal),
+                  ),
+                  trailing: Text(
+                    '${player.value} pts',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -272,7 +349,19 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Widget _buildGameOver(GameProvider provider) {
+  // Updated _buildGameOver to accept mpProvider and display multiplayer results
+  Widget _buildGameOver(GameProvider provider, MultiplayerProvider mpProvider) {
+    // Use playerScores for real-time updates, or multiplayerGameResults as fallback
+    final scoresToDisplay = (mpProvider.playerScores.isNotEmpty) 
+        ? mpProvider.playerScores 
+        : mpProvider.multiplayerGameResults;
+
+    List<MapEntry<String, int>> sortedResults = [];
+    if (widget.isMultiplayer && scoresToDisplay != null && scoresToDisplay.isNotEmpty) {
+      sortedResults = scoresToDisplay.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -281,8 +370,54 @@ class _GameScreenState extends State<GameScreen> {
           const SizedBox(height: 20),
           const Text('Game Over!', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.indigo)),
           const SizedBox(height: 10),
+          
+          // Display individual score
           Text('Your Score: ${provider.score}', style: const TextStyle(fontSize: 24)),
           Text('Questions Attempted: ${provider.questionsAttempted}', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+          
+          // Display multiplayer results if available
+          if (widget.isMultiplayer) ...[
+            const SizedBox(height: 30),
+            const Text('Multiplayer Results:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            
+            if (sortedResults.isNotEmpty)
+              ...sortedResults.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  var playerResult = entry.value;
+                  bool isMe = playerResult.key == widget.playerName;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('${index + 1}. ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(playerResult.key, style: TextStyle(fontSize: 18, fontWeight: isMe ? FontWeight.bold : FontWeight.normal)),
+                        const SizedBox(width: 8),
+                        Text('${playerResult.value} pts', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                      ],
+                    ),
+                  );
+                }).toList()
+            else if (mpProvider.error != null)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text('Could not load results: ${mpProvider.error}', style: const TextStyle(color: Colors.red)),
+              )
+            else
+              const Column(
+                children: [
+                  SizedBox(height: 10),
+                  SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                  SizedBox(height: 10),
+                  Text('Waiting for other players...', style: TextStyle(fontStyle: FontStyle.italic)),
+                ],
+              ),
+            
+            const SizedBox(height: 10),
+            const Text('Scores update in real-time', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
+          ],
+
           const SizedBox(height: 40),
           ElevatedButton(
             style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
@@ -296,4 +431,5 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
+
 }

@@ -18,6 +18,8 @@ from .resources import (
     LeaderboardResource,
     MultiplaryCreateResource,
     MultiplayerJoinResource,
+    MultiplayerRoomsResource,
+    MultiplayerResultsResource,
     CategoriesResource,
     DifficultiesResource
 )
@@ -31,3 +33,5 @@ api.add_resource(ScoreResource, '/score')
 api.add_resource(LeaderboardResource, '/leaderboard')
 api.add_resource(MultiplaryCreateResource, '/multiplayer/create')
 api.add_resource(MultiplayerJoinResource, '/multiplayer/join/<string:room_id>')
+api.add_resource(MultiplayerRoomsResource, '/multiplayer/rooms')
+api.add_resource(MultiplayerResultsResource, '/multiplayer/results/<string:room_id>')
