@@ -2,122 +2,158 @@
 
 {% block title %}MathPuzzle - Welcome{% endblock %}
 
+{% block extra_style %}
+    .login-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: #eef2ff;
+        border-radius: 8px;
+        border: 1px solid #c7d2fe;
+    }
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: bold;
+        color: #3730a3;
+    }
+    .google-btn {
+        display: inline-flex;
+        align-items: center;
+        background: white;
+        color: #374151;
+        padding: 8px 16px;
+        border-radius: 4px;
+        border: 1px solid #d1d5db;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .google-btn:hover { background: #f9fafb; }
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        function handleCredentialResponse(response) {
+            fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: response.credential })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert('Login failed: ' + data.message);
+                }
+            });
+        }
+    </script>
+{% endblock %}
+
 {% block content %}
     <h1>Welcome to the Math Game!</h1>
+
+    <div class="login-section">
+        {% if session.get('user_id') %}
+            <div class="user-info">
+                <span>Logged in as: <strong>{{ session.get('player_name') }}</strong></span>
+                <a href="{{ url_for('logout') }}" style="font-size: 0.8rem; color: #ef4444;">Logout</a>
+            </div>
+        {% else %}
+            <p style="margin-bottom: 10px;">Sign in to save your career stats:</p>
+            <div id="g_id_onload"
+                 data-client_id="{{ config.get('GOOGLE_CLIENT_ID', '') }}"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard"></div>
+        {% endif %}
+    </div>
+
+    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
 
     {% if error %}
         <p class="error" role="alert">{{ error }}</p>
     {% endif %}
 
-    <div class="home-grid">
-        <!-- Setup Game -->
-        <section class="setup-box">
-            <h2>Start New Game</h2>
-            <form action="{{ url_for('index') }}" method="post">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div>
-                    <label for="player_name">Enter your GamerId:</label><br>
-                    <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard">
-                </div>
-                <br>
-                <fieldset style="border:none; padding:0;">
-                    <legend style="font-weight:bold;">Game Type:</legend>
-                    <input type="radio" id="single" name="game_type" value="single" onchange="toggleGameType()">
-                    <label for="single">Single Player</label>
-                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" checked onchange="toggleGameType()">
-                    <label for="multiplayer">Multiplayer</label>
-                </fieldset>
-                <br>
+    <form action="/" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <label for="player_name">GamerId:</label>
+        <input type="text" id="player_name" name="player_name" 
+               value="{{ session.get('player_name', 'Player') }}" 
+               required {{ 'readonly' if session.get('user_id') }}
+               style="{{ 'background-color: #f3f4f6;' if session.get('user_id') }}">
 
-                <div id="game-options">
-                    <label for="category">Choose a category:</label><br>
-                    <select id="category" name="category" style="width:100%;">
-                        <option value="basic">Basic Arithmetic</option>
-                        <option value="decimal">Decimals and Fractions</option>
-                        <option value="percentage" selected>Percentages</option>
-                        <option value="profit">Profit and Loss</option>
-                        <option value="algebra">Algebra</option>
-                    </select><br><br>
+        <label for="game_type">Game Type:</label>
+        <select id="game_type" name="game_type">
+            <option value="single">Single Player</option>
+            <option value="multiplayer" selected>Multiplayer</option>
+        </select>
 
-                    <label for="difficulty">Choose a difficulty:</label><br>
-                    <select id="difficulty" name="difficulty" style="width:100%;">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard</option>
-                    </select><br><br>
+        <div id="room-selection" style="display: none; margin-top: 10px; padding: 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 5px;">
+            <label for="join_room_id">Join Active Room (Optional):</label>
+            <select id="join_room_id" name="join_room_id">
+                <option value="">-- Create New Room --</option>
+                {% for room_id, room in active_rooms.items() %}
+                    <option value="{{ room_id }}">{{ room_id }} ({{ room.creator }}'s Lobby - {{ room.players|length }} players)</option>
+                {% endfor %}
+            </select>
+        </div>
 
-                    <label for="mode">Choose a game mode:</label><br>
-                    <select id="mode" name="mode" onchange="updateModeLabel()" style="width:100%;">
-                        <option value="time">Time Mode</option>
-                        <option value="questions">Question Count Mode</option>
-                    </select><br><br>
+        <label for="category">Category:</label>
+        <select id="category" name="category">
+            <option value="basic_arithmetic">Basic Arithmetic</option>
+            <option value="decimal_fraction">Decimals & Fractions</option>
+            <option value="percentage">Percentages</option>
+            <option value="profit_loss">Profit & Loss</option>
+            <option value="algebra">Algebra</option>
+        </select>
 
-                    <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
-                    <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
-                </div>
-                <br>
-                <button type="submit" id="start_btn" style="width:100%;">Create Multiplayer Lobby</button>
-            </form>
-        </section>
+        <label for="difficulty">Difficulty:</label>
+        <select id="difficulty" name="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
 
-        <!-- Join Existing Lobby -->
-        <section class="setup-box">
-            <h2>Join Active Lobby</h2>
-            {% if active_rooms %}
-                <ul class="room-list">
-                    {% for room_id, details in active_rooms.items() %}
-                        <li class="room-item">
-                            <div>
-                                <strong>Room: {{ room_id }}</strong><br>
-                                <small>{{ details.category | capitalize }} - {{ details.difficulty | capitalize }} ({{ details.mode }})</small><br>
-                                <span>Players: {{ details.players | length }}</span>
-                            </div>
-                            <form action="{{ url_for('index') }}" method="post">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="join_room_id" value="{{ room_id }}">
-                                <input type="text" name="player_name" placeholder="Your GamerId" required aria-label="GamerId to join">
-                                <button type="submit" style="margin-top:5px; width:100%;">Join Lobby</button>
-                            </form>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No active lobbies. Create one to play with friends!</p>
-            {% endif %}
-        </section>
-    </div>
+        <label for="mode">Game Mode:</label>
+        <select id="mode" name="mode">
+            <option value="time">Time Mode</option>
+            <option value="questions">Question Count Mode</option>
+        </select>
+
+        <div id="mode-value-container">
+            <label for="mode_value" id="mode-label">Time (seconds):</label>
+            <input type="number" id="mode_value" name="mode_value" value="20" min="5" max="300">
+        </div>
+
+        <button type="submit" class="start-btn">Go to Arena</button>
+    </form>
 
     <div style="margin-top: 30px;">
-        <a href="{{ url_for('leaderboard') }}" style="text-decoration:none; color:var(--primary-color); font-weight:bold;">View Global Hall of Fame</a>
+        <a href="{{ url_for('leaderboard') }}" style="text-decoration: none; color: var(--primary-color); font-weight: bold;">View Hall of Fame</a>
     </div>
 
     <script>
-        function updateModeLabel() {
-            const mode = document.getElementById('mode').value;
-            const label = document.getElementById('mode_label');
-            const input = document.getElementById('mode_value');
-            if (mode === 'time') {
-                label.textContent = "Time in seconds (5-300):";
-                input.min = 5;
-                input.max = 300;
-                input.value = 20;
+        const gameTypeSelect = document.getElementById('game_type');
+        const roomSelection = document.getElementById('room-selection');
+        const modeSelect = document.getElementById('mode');
+        const modeLabel = document.getElementById('mode-label');
+
+        gameTypeSelect.addEventListener('change', () => {
+            roomSelection.style.display = gameTypeSelect.value === 'multiplayer' ? 'block' : 'none';
+        });
+
+        modeSelect.addEventListener('change', () => {
+            if (modeSelect.value === 'time') {
+                modeLabel.textContent = 'Time (seconds):';
             } else {
-                label.textContent = "Number of questions (1-100):";
-                input.min = 1;
-                input.max = 100;
-                input.value = 10;
+                modeLabel.textContent = 'Number of Questions:';
             }
-        }
-
-        function toggleGameType() {
-            const isMultiplayer = document.getElementById('multiplayer').checked;
-            const btn = document.getElementById('start_btn');
-            btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
-        }
-
-        window.onload = function() {
-            toggleGameType();
-            updateModeLabel();
-        };
+        });
     </script>
 {% endblock %}

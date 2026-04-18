@@ -33,6 +33,9 @@ if not SECRET_KEY:
     SECRET_KEY = 'dev-secret-key-change-in-production'
 app.secret_key = SECRET_KEY
 
+# Google SSO Configuration
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
+
 # CSRF Protection
 csrf = CSRFProtect(app)
 
@@ -185,7 +188,8 @@ def game():
         'question': question,
         'score': session['score'],
         'mode': mode,
-        'choices': choices
+        'choices': choices,
+        'is_multiplayer': session.get('multiplayer', False)
     }
     
     if mode == 'time':
@@ -230,6 +234,7 @@ def submit_answer():
 def game_over():
     score = session.get('score', 0)
     player_name = session.get('player_name', 'Player')
+    user_id = session.get('user_id') # Link to user if logged in
     
     room_results = None
     
@@ -240,7 +245,7 @@ def game_over():
         time_taken = time.time() - session['start_time']
         questions_answered = session.get('questions_answered', 0)
         
-        highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
+        highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered, user_id=user_id)
 
         if session.get('multiplayer'):
             room_id = session.get('room_id')
@@ -257,7 +262,7 @@ def game_over():
     if session.get('multiplayer'):
         room_id = session.get('room_id')
         if not room_results and room_id in rooms:
-             room_results = rooms[room_id].get('results', rooms[room_id]['scores'])
+             room_results = rooms[room_id].get('results', rooms[room_id]['scores'])\
 
     return render_template('game_over.html', score=score, multiplayer_results=room_results)
 
@@ -298,7 +303,7 @@ def quit_game():
         room_id = session.get('room_id')
         player_name = session.get('player_name')
         if room_id in rooms:
-            if player_name in rooms[room_id]['players']:
+            if player_name in rooms[room_id]['players']:\
                 rooms[room_id]['players'].remove(player_name)
             if player_name in rooms[room_id]['scores']:
                 del rooms[room_id]['scores'][player_name]
@@ -307,6 +312,11 @@ def quit_game():
                 
     session.clear()
     return render_template('quit.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 @app.route('/multiplayer_lobby', methods=['GET', 'POST'])
 def multiplayer_lobby():

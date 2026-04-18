@@ -3,7 +3,76 @@ import 'package:mathpuzzle_app/services/websocket_service.dart';
 import 'package:mathpuzzle_app/models/question.dart';
 import 'package:mathpuzzle_app/models/highscore.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
+
+class MockGoogleSignInAccount implements GoogleSignInAccount {
+  @override
+  String get displayName => 'Mock User';
+  @override
+  String get email => 'mock@example.com';
+  @override
+  String get id => 'mock-id-123';
+  @override
+  String? get photoUrl => null;
+  @override
+  String? get serverAuthCode => null;
+
+  @override
+  GoogleSignInAuthentication get authentication => MockGoogleSignInAuthentication();
+
+  @override
+  Future<Map<String, String>> get authHeaders async => {};
+
+  @override
+  Future<void> clearAuthCache() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class MockGoogleSignInAuthentication implements GoogleSignInAuthentication {
+  @override
+  String? get accessToken => 'mock-access-token';
+  @override
+  String? get idToken => 'mock-id-token';
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class MockGoogleSignIn implements GoogleSignIn {
+  bool shouldReturnUser = true;
+
+  @override
+  Future<GoogleSignInAccount?> signIn() async {
+    return shouldReturnUser ? MockGoogleSignInAccount() : null;
+  }
+
+  @override
+  Future<GoogleSignInAccount?> signOut() async => null;
+  @override
+  Future<GoogleSignInAccount?> disconnect() async => null;
+  @override
+  Future<bool> isSignedIn() async => false;
+  @override
+  Future<GoogleSignInAccount?> signInSilently({bool suppressErrors = true, bool reAuthenticate = false}) async => null;
+  
+  @override
+  Stream<GoogleSignInAccount?> get onCurrentUserChanged => Stream.value(null);
+  
+  @override
+  GoogleSignInAccount? get currentUser => null;
+
+  @override
+  List<String> get scopes => [];
+
+  @override
+  String? get hostedDomain => null;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class MockApiService implements ApiService {
   @override
@@ -22,7 +91,7 @@ class MockApiService implements ApiService {
   @override
   Future<List<Highscore>> getLeaderboard({String? category, String? difficulty, int? limit}) async {
     return [
-      Highscore(name: 'Alice', score: 100, category: 'basic_arithmetic', difficulty: 'easy', timeTaken: 10.0, questionsAttempted: 10),
+      Highscore(name: 'Alice', score: 100, category: 'basic_arithmetic', difficulty: 'easy', timeTaken: 10.0),
     ];
   }
 
@@ -35,6 +104,7 @@ class MockApiService implements ApiService {
     double? timeTaken,
     int? questionsAttempted,
     String? roomId,
+    int? userId,
   }) async {
     // Do nothing
   }
@@ -77,6 +147,15 @@ class MockApiService implements ApiService {
   Future<Map<String, int>> getGameResults(String roomId) async {
     return {'Alice': 10, 'Bob': 8};
   }
+
+  @override
+  Future<Map<String, dynamic>> authenticateGoogle(String idToken) async {
+    return {
+      'user_id': 1,
+      'display_name': 'Mock User',
+      'email': 'mock@example.com',
+    };
+  }
 }
 
 class MockWebSocketService implements WebSocketService {
@@ -87,7 +166,7 @@ class MockWebSocketService implements WebSocketService {
   IO.Socket? socket;
 
   @override
-  bool get isConnected => true; // Always connected for mock
+  bool get isConnected => true; 
 
   final Map<String, List<Function>> _listeners = {};
 
@@ -97,30 +176,24 @@ class MockWebSocketService implements WebSocketService {
 
   @override
   void connect() {
-    // Simulate connection
   }
 
   @override
   void disconnect() {
-    // Simulate disconnect
   }
 
   @override
   void joinRoom(String roomId, String playerName) {
-    // Mock joinRoom
   }
 
   @override
   void startGame(String roomId, String playerName) {
-    // Mock startGame
   }
 
   @override
   void updateScore(String roomId, String playerName, int score) {
-    // Mock updateScore
   }
 
-  // Helper for tests to trigger events
   void triggerEvent(String event, dynamic data) {
     if (_listeners.containsKey(event)) {
       for (var callback in _listeners[event]!) {
@@ -130,7 +203,6 @@ class MockWebSocketService implements WebSocketService {
   }
 }
 
-// A helper class to mock the IO.Socket behavior for listeners
 class MockSocket implements IO.Socket {
   final MockWebSocketService service;
   @override
@@ -149,7 +221,6 @@ class MockSocket implements IO.Socket {
 
   @override
   void emit(String event, [dynamic data]) {
-    // No-op for mock
   }
 
   @override

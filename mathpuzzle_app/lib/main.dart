@@ -6,6 +6,7 @@ import 'services/api_service.dart';
 import 'services/websocket_service.dart';
 import 'providers/game_provider.dart';
 import 'providers/multiplayer_provider.dart';
+import 'providers/auth_provider.dart'; // Import AuthProvider
 import 'screens/home_screen.dart';
 import 'config.dart'; // Import AppConfig
 
@@ -50,6 +51,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider(apiService: apiService)), // Add AuthProvider
         ChangeNotifierProvider(create: (_) => GameProvider(apiService: apiService, webSocketService: webSocketService)),
         ChangeNotifierProvider(create: (_) => MultiplayerProvider(webSocketService: webSocketService, apiService: apiService)),
       ],

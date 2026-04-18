@@ -92,6 +92,38 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'What is 5 + 5?', response.data)
 
+    def test_index_readonly_when_logged_in(self):
+        """Verify that GamerId is readonly when user is logged in via session."""
+        with self.client.session_transaction() as sess:
+            sess['user_id'] = 1
+            sess['player_name'] = 'PersistentUser'
+
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'readonly', response.data)
+        self.assertIn(b'value="PersistentUser"', response.data)
+
+    def test_api_google_auth_mock(self):
+        """Verify the API Google Auth endpoint with mock token."""
+        # Enable development mode fallback for testing
+        os.environ['FLASK_ENV'] = 'development'
+        
+        response = self.client.post('/api/auth/google', json={
+            'id_token': 'mock-123'
+        })
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data['status'], 'success')
+        self.assertEqual(data['data']['display_name'], 'Mock mock-123')
+        
+        # Verify user created in DB
+        from database import User
+        with self.app.app_context():
+            user = User.query.filter_by(google_id='google-mock-123').first()
+            self.assertIsNotNone(user)
+
+
 class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
         self.app = app

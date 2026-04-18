@@ -60,6 +60,7 @@ class ApiService {
     double? timeTaken,
     int? questionsAttempted,
     String? roomId,
+    int? userId,
   }) async {
     try {
       final response = await http.post(
@@ -73,6 +74,7 @@ class ApiService {
           'time_taken': timeTaken,
           'questions_attempted': questionsAttempted,
           'room_id': roomId,
+          'user_id': userId,
         }),
       );
 
@@ -136,18 +138,15 @@ class ApiService {
     }
   }
 
-  // New method to fetch available rooms
   Future<List<Map<String, dynamic>>> getAvailableRooms() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/api/multiplayer/rooms'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data']['rooms'];
-        // Ensure data is a list, handle cases where it might be null or not a list
         if (data is List) {
           return List<Map<String, dynamic>>.from(data);
         } else {
-          // If data is null or not a list, return empty list
           return [];
         }
       } else {
@@ -159,14 +158,12 @@ class ApiService {
     }
   }
 
-  // New method to fetch game results
   Future<Map<String, int>> getGameResults(String roomId) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/api/multiplayer/results/$roomId'));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data']['results'];
-        // Ensure the scores are integers, handle potential null or non-integer values
         Map<String, int> results = {};
         if (data is Map) {
           data.forEach((key, value) {
@@ -180,6 +177,25 @@ class ApiService {
     } catch (e) {
       if (e is ServerException) rethrow;
       throw NetworkException('Network error while fetching game results: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> authenticateGoogle(String idToken) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/google'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'id_token': idToken}),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body)['data'];
+      } else {
+        throw ServerException('Google authentication failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw NetworkException('Network error during Google auth: $e');
     }
   }
 }

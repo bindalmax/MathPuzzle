@@ -10,7 +10,8 @@ dependencies:
   http: ^1.2.1 # For API requests
   provider: ^6.1.2 # For state management
   socket_io_client: ^3.1.4 # For WebSocket
-  shared_preferences: ^2.2.3 # For local storage
+  shared_preferences: ^2.5.5 # For local storage
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:

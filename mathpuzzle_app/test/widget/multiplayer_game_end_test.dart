@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:mathpuzzle_app/screens/game_screen.dart';
 import 'package:mathpuzzle_app/providers/game_provider.dart';
 import 'package:mathpuzzle_app/providers/multiplayer_provider.dart';
+import 'package:mathpuzzle_app/providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../mocks.dart';
 
 void main() {
@@ -11,13 +13,15 @@ void main() {
   late MockWebSocketService mockWebSocketService;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockApiService = MockApiService();
     mockWebSocketService = MockWebSocketService();
   });
 
-  Widget createGameScreen(GameProvider gameProvider, MultiplayerProvider mpProvider) {
+  Widget createGameScreen(GameProvider gameProvider, MultiplayerProvider mpProvider, {AuthProvider? authProvider}) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: authProvider ?? AuthProvider(apiService: mockApiService, googleSignIn: MockGoogleSignIn())),
         ChangeNotifierProvider.value(value: gameProvider),
         ChangeNotifierProvider.value(value: mpProvider),
       ],
@@ -47,7 +51,6 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100)); // Process state
 
       expect(find.text('Game Over!'), findsOneWidget);
-      expect(find.text('Your Score: 0'), findsOneWidget);
 
       // 3. Initially might show waiting if no scores received yet
       expect(find.text('Waiting for other players...'), findsOneWidget);

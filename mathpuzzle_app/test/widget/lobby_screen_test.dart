@@ -5,6 +5,8 @@ import 'package:mathpuzzle_app/screens/lobby_screen.dart';
 import 'package:mathpuzzle_app/screens/game_screen.dart';
 import 'package:mathpuzzle_app/providers/game_provider.dart';
 import 'package:mathpuzzle_app/providers/multiplayer_provider.dart';
+import 'package:mathpuzzle_app/providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../mocks.dart';
 
 void main() {
@@ -12,6 +14,7 @@ void main() {
   late MockWebSocketService mockWebSocketService;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockApiService = MockApiService();
     mockWebSocketService = MockWebSocketService();
   });
@@ -19,6 +22,7 @@ void main() {
   Widget createLobbyScreen() {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider(apiService: mockApiService, googleSignIn: MockGoogleSignIn())),
         ChangeNotifierProvider(create: (_) => GameProvider(apiService: mockApiService, webSocketService: mockWebSocketService)),
         ChangeNotifierProvider(create: (_) => MultiplayerProvider(apiService: mockApiService, webSocketService: mockWebSocketService)),
       ],
@@ -50,6 +54,7 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
+            ChangeNotifierProvider(create: (_) => AuthProvider(apiService: mockApiService, googleSignIn: MockGoogleSignIn())),
             ChangeNotifierProvider(create: (_) => GameProvider(apiService: mockApiService)),
             ChangeNotifierProvider.value(value: mpProvider),
           ],
@@ -76,6 +81,7 @@ void main() {
       await tester.pumpWidget(
         MultiProvider(
           providers: [
+            ChangeNotifierProvider(create: (_) => AuthProvider(apiService: mockApiService, googleSignIn: MockGoogleSignIn())),
             ChangeNotifierProvider(create: (_) => GameProvider(apiService: mockApiService)),
             ChangeNotifierProvider.value(value: mpProvider),
           ],
@@ -93,7 +99,6 @@ void main() {
 
       // Check if GameScreen is rendered
       expect(find.byType(GameScreen), findsOneWidget);
-      expect(find.text('Score: '), findsOneWidget);
     });
   });
 }

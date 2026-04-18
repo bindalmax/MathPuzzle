@@ -9,6 +9,7 @@ class GameProvider with ChangeNotifier {
   final WebSocketService? webSocketService;
   
   String? _roomId;
+  int? _userId; // Added for User integration
   bool _isMultiplayer = false;
 
   Question? _currentQuestion;
@@ -37,9 +38,10 @@ class GameProvider with ChangeNotifier {
   bool get isMultiplayer => _isMultiplayer;
   bool? get lastAnswerCorrect => _lastAnswerCorrect;
 
-  void updateMultiplayerInfo({required bool isMultiplayer, String? roomId}) {
+  void updateMultiplayerInfo({required bool isMultiplayer, String? roomId, int? userId}) {
     _isMultiplayer = isMultiplayer;
     _roomId = roomId;
+    _userId = userId;
   }
 
   // Initial load: Fetch two questions to fill buffer
@@ -146,6 +148,7 @@ class GameProvider with ChangeNotifier {
         timeTaken: timeTaken,
         questionsAttempted: _questionsAttempted,
         roomId: _roomId,
+        userId: _userId, // Pass the user ID to link the score
       );
     } catch (e) {
       print('Failed to save score: $e');

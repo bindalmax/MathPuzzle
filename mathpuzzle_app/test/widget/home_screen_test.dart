@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:mathpuzzle_app/screens/home_screen.dart';
 import 'package:mathpuzzle_app/providers/game_provider.dart';
 import 'package:mathpuzzle_app/providers/multiplayer_provider.dart';
+import 'package:mathpuzzle_app/providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../mocks.dart';
 
 void main() {
@@ -11,13 +13,18 @@ void main() {
   late MockWebSocketService mockWebSocketService;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockApiService = MockApiService();
     mockWebSocketService = MockWebSocketService();
   });
 
-  Widget createHomeScreen() {
+  Widget createHomeScreen({AuthProvider? authProvider}) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => authProvider ?? AuthProvider(
+          apiService: mockApiService,
+          googleSignIn: MockGoogleSignIn(),
+        )),
         ChangeNotifierProvider(create: (_) => GameProvider(apiService: mockApiService, webSocketService: mockWebSocketService)),
         ChangeNotifierProvider(create: (_) => MultiplayerProvider(apiService: mockApiService, webSocketService: mockWebSocketService)),
       ],
@@ -40,6 +47,24 @@ void main() {
       expect(find.text('Difficulty:'), findsOneWidget);
       expect(find.text('Start Single Player Game'), findsOneWidget);
     });
+
+    testWidgets('Shows login info when authenticated', (WidgetTester tester) async {
+      // Mock initial prefs to simulate being logged in
+      SharedPreferences.setMockInitialValues({
+        'auth_user_id': 1,
+        'auth_display_name': 'TestUser',
+        'auth_email': 'test@example.com',
+      });
+      
+      await tester.pumpWidget(createHomeScreen());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Logged in as: TestUser'), findsOneWidget);
+      expect(find.text('Hi, TestUser'), findsOneWidget);
+      // Entry field for GamerId should be hidden or locked
+      expect(find.text('Enter your GamerId:'), findsNothing);
+    });
+
 
     testWidgets('Toggles between Single and Multi game types', (WidgetTester tester) async {
       await tester.pumpWidget(createHomeScreen());

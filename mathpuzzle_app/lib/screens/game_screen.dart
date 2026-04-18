@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../providers/game_provider.dart';
 import '../providers/multiplayer_provider.dart';
+import '../providers/auth_provider.dart'; // Import AuthProvider
 
 class GameScreen extends StatefulWidget {
   final String category;
@@ -57,11 +58,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
     final gameProvider = context.read<GameProvider>();
     final mpProvider = context.read<MultiplayerProvider>();
+    final authProvider = context.read<AuthProvider>();
 
-    // Synchronize multiplayer state
+    // Synchronize multiplayer state and user info
     gameProvider.updateMultiplayerInfo(
       isMultiplayer: widget.isMultiplayer,
       roomId: mpProvider.roomId,
+      userId: authProvider.userId, // Link score to user if authenticated
     );
 
     Future.microtask(() => gameProvider.fetchQuestion(widget.category, widget.difficulty));

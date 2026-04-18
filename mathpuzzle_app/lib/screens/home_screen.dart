@@ -4,6 +4,8 @@ import '../services/api_service.dart';
 import '../models/highscore.dart';
 import '../widgets/leaderboard_widget.dart';
 import '../providers/multiplayer_provider.dart';
+import '../providers/auth_provider.dart'; // Import AuthProvider
+import '../providers/game_provider.dart'; // Ensure correct relative path
 import 'game_screen.dart';
 import 'lobby_screen.dart'; // Import LobbyScreen
 
@@ -53,8 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
     
     // Navigate to lobby if roomId is set and we are not currently joining
     if (mpProvider.roomId != null && mpProvider.isConnected && !mpProvider.isJoining) {
-      // Check if we are already showing the LobbyScreen to avoid duplicate pushes
-      // In a real app, you might use a more robust routing solution
       _navigateToLobby(mpProvider);
     }
   }
@@ -107,7 +107,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onStartButtonPressed() {
-    String playerName = _nameController.text.trim();
+    final authProvider = context.read<AuthProvider>();
+    String playerName = authProvider.isAuthenticated 
+        ? authProvider.displayName! 
+        : _nameController.text.trim();
+
     if (playerName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a GamerId')));
       return;
@@ -135,12 +139,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final mpProvider = context.watch<MultiplayerProvider>();
+    final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Math Puzzle'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
+        actions: [
+          if (authProvider.isAuthenticated)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Text('Hi, ${authProvider.displayName}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          IconButton(
+            icon: Icon(authProvider.isAuthenticated ? Icons.logout : Icons.login),
+            onPressed: () {
+              if (authProvider.isAuthenticated) {
+                authProvider.signOut();
+              } else {
+                authProvider.signInWithGoogle();
+              }
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(color: Colors.grey[100]),
@@ -167,14 +191,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Text('Start New Game', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 15),
-                      TextField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Enter your GamerId:',
-                          border: OutlineInputBorder(),
-                          hintText: 'e.g. MathWizard',
+                      
+                      if (!authProvider.isAuthenticated)
+                        TextField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Enter your GamerId:',
+                            border: OutlineInputBorder(),
+                            hintText: 'e.g. MathWizard',
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo[50],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.indigo[200]!),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.person, color: Colors.indigo),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Logged in as: ${authProvider.displayName}',
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                        
                       const SizedBox(height: 20),
                       
                       // Game Type Selector
@@ -273,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: mpProvider.isJoining 
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : Text(_gameType == 'multiplayer' ? 'Create Multiplayer Lobby' : 'Start Single Player Game'),
                       ),
                     ],
@@ -303,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Display available rooms
                       if (mpProvider.availableRooms.isNotEmpty)
-                        ...mpProvider.availableRooms.map((room) => _buildRoomListItem(room, mpProvider)).toList()
+                        ...mpProvider.availableRooms.map((room) => _buildRoomListItem(room, mpProvider, authProvider)).toList()
                       else if (mpProvider.error == null && !mpProvider.isJoining)
                         const Text('No active lobbies found.', style: TextStyle(color: Colors.grey)),
                       
@@ -321,7 +367,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         onSubmitted: (val) {
                            if (val.isNotEmpty && !mpProvider.isJoining) {
-                              mpProvider.joinRoom(val, _nameController.text.trim());
+                              String name = authProvider.isAuthenticated ? authProvider.displayName! : _nameController.text.trim();
+                              mpProvider.joinRoom(val, name);
                            }
                         },
                       ),
@@ -351,17 +398,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRoomListItem(Map<String, dynamic> room, MultiplayerProvider mpProvider) {
+  Widget _buildRoomListItem(Map<String, dynamic> room, MultiplayerProvider mpProvider, AuthProvider authProvider) {
+    String name = authProvider.isAuthenticated ? authProvider.displayName! : _nameController.text.trim();
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       child: ListTile(
         title: Text('Room: ${room['room_id']}'),
         subtitle: Text('Creator: ${room['creator']} | ${room['players_count']} players | ${room['category']} (${room['difficulty']})'),
         trailing: ElevatedButton(
-          onPressed: mpProvider.isJoining ? null : () => mpProvider.joinRoom(room['room_id'], _nameController.text.trim()),
+          onPressed: mpProvider.isJoining ? null : () => mpProvider.joinRoom(room['room_id'], name),
           child: const Text('Join'),
         ),
-        onTap: mpProvider.isJoining ? null : () => mpProvider.joinRoom(room['room_id'], _nameController.text.trim()),
+        onTap: mpProvider.isJoining ? null : () => mpProvider.joinRoom(room['room_id'], name),
       ),
     );
   }

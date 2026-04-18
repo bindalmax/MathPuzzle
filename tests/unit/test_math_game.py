@@ -16,7 +16,7 @@ from questions.percentage import PercentageQuestion
 from questions.profit_loss import ProfitLossQuestion
 from questions.algebra import AlgebraQuestion
 from highscore_manager import HighscoreManager
-from database import db
+from database import db, User
 
 class TestHighscoreManager(unittest.TestCase):
     def setUp(self):
@@ -46,6 +46,50 @@ class TestHighscoreManager(unittest.TestCase):
         self.assertEqual(scores[0]['name'], 'Player1')
         self.assertEqual(scores[0]['score'], 10)
         self.assertEqual(scores[0]['time_taken'], 5.0)
+
+    def test_add_score_with_user(self):
+        # Create a user
+        user = User(google_id='google123', email='test@example.com', display_name='TestUser')
+        db.session.add(user)
+        db.session.commit()
+        
+        # Add score linked to user
+        self.manager.add_score('TestUser', 20, 'basic', 'hard', user_id=user.id)
+        
+        scores = self.manager.load()
+        self.assertEqual(len(scores), 1)
+        self.assertEqual(scores[0]['name'], 'TestUser')
+        
+        # Verify foreign key in database
+        from database import Highscore
+        db_score = Highscore.query.first()
+        self.assertEqual(db_score.user_id, user.id)
+        self.assertEqual(db_score.user.display_name, 'TestUser')
+
+class TestUserModel(unittest.TestCase):
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db.init_app(self.app)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
+
+    def test_create_user(self):
+        user = User(google_id='abc', email='abc@example.com', display_name='ABC')
+        db.session.add(user)
+        db.session.commit()
+        
+        saved_user = User.query.filter_by(google_id='abc').first()
+        self.assertIsNotNone(saved_user)
+        self.assertEqual(saved_user.display_name, 'ABC')
+
 
 class TestQuestionFactory(unittest.TestCase):
     def test_creates_basic_arithmetic_question(self):
