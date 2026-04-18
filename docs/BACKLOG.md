@@ -17,3 +17,4 @@
 ### Infrastructure & Deployment
 - Set up a CI/CD pipeline using GitHub Actions for automated testing and builds.
 - Add analytics endpoints to track gameplay metrics and user engagement.
+- Add unit and UI tests.

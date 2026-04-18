@@ -26,12 +26,15 @@ class GameScreen extends StatefulWidget {
   _GameScreenState createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _answerController = TextEditingController();
   Timer? _timer;
   late int _timeLeft;
   late int _questionsLeft;
   final Stopwatch _stopwatch = Stopwatch();
+  
+  late AnimationController _animationController;
+  late Animation<double> _shakeAnimation;
 
   @override
   void initState() {
@@ -40,6 +43,18 @@ class _GameScreenState extends State<GameScreen> {
     _questionsLeft = widget.mode == 'questions' ? widget.modeValue : 0;
     _stopwatch.start();
     
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    
+    _shakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 10.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 10.0, end: -10.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -10.0, end: 10.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 10.0, end: 0.0), weight: 1),
+    ]).animate(_animationController);
+
     final gameProvider = context.read<GameProvider>();
     final mpProvider = context.read<MultiplayerProvider>();
 
@@ -92,6 +107,7 @@ class _GameScreenState extends State<GameScreen> {
   void dispose() {
     _timer?.cancel();
     _answerController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -117,6 +133,11 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final mpProvider = context.watch<MultiplayerProvider>();
+
+    // Trigger shake if wrong answer
+    if (provider.lastAnswerCorrect == false) {
+      _animationController.forward(from: 0.0);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -144,14 +165,13 @@ class _GameScreenState extends State<GameScreen> {
             : provider.error != null
                 ? _buildErrorState(provider)
                 : provider.isGameOver
-                    ? _buildGameOver(provider, mpProvider) // Pass mpProvider to buildGameOver
+                    ? _buildGameOver(provider, mpProvider)
                     : _buildGameContent(provider),
       ),
     );
   }
 
   Widget _buildLiveScoreboard(MultiplayerProvider mpProvider) {
-    // Sort players by score
     final sortedPlayers = mpProvider.playerScores.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -229,7 +249,6 @@ class _GameScreenState extends State<GameScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // Header: Score and Timer/Remaining
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
@@ -239,13 +258,25 @@ class _GameScreenState extends State<GameScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text('Score: ', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                  Text('${provider.score}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 300),
+                    style: TextStyle(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.bold, 
+                      color: provider.lastAnswerCorrect == true ? Colors.green : Colors.green[800]
+                    ),
+                    child: Text('${provider.score}'),
+                  ),
                   const SizedBox(width: 20),
                   const Text('|', style: TextStyle(color: Colors.grey)),
                   const SizedBox(width: 20),
                   if (widget.mode == 'time') ...[
                     Text('Time: ', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
-                    Text('${_timeLeft}s', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange)),
+                    Text('${_timeLeft}s', style: TextStyle(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.bold, 
+                      color: _timeLeft < 10 ? Colors.red : Colors.orange
+                    )),
                   ] else ...[
                     Text('Left: ', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
                     Text('$_questionsLeft', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue)),
@@ -254,28 +285,66 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 20),
+          
+          if (widget.mode == 'time')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: _timeLeft / widget.modeValue,
+                  minHeight: 10,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    _timeLeft < 10 ? Colors.red : Colors.indigo
+                  ),
+                ),
+              ),
+            ),
+
           const SizedBox(height: 40),
 
-          // Question Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
-              ],
-            ),
-            child: Text(
-              provider.currentQuestion?.text ?? '',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+          AnimatedBuilder(
+            animation: _shakeAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(_shakeAnimation.value, 0),
+                child: child,
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: provider.lastAnswerCorrect == true 
+                    ? Colors.green[50] 
+                    : provider.lastAnswerCorrect == false 
+                        ? Colors.red[50] 
+                        : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: provider.lastAnswerCorrect == true 
+                      ? Colors.green 
+                      : provider.lastAnswerCorrect == false 
+                          ? Colors.red 
+                          : Colors.transparent,
+                  width: 2
+                ),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                ],
+              ),
+              child: Text(
+                provider.currentQuestion?.text ?? '',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           const SizedBox(height: 40),
 
-          // Answer Section
           if (provider.currentQuestion!.choices.isNotEmpty)
             _buildChoices(provider.currentQuestion!.choices)
           else
@@ -349,9 +418,7 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  // Updated _buildGameOver to accept mpProvider and display multiplayer results
   Widget _buildGameOver(GameProvider provider, MultiplayerProvider mpProvider) {
-    // Use playerScores for real-time updates, or multiplayerGameResults as fallback
     final scoresToDisplay = (mpProvider.playerScores.isNotEmpty) 
         ? mpProvider.playerScores 
         : mpProvider.multiplayerGameResults;
@@ -366,16 +433,21 @@ class _GameScreenState extends State<GameScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.emoji_events, size: 100, color: Colors.orange),
+          TweenAnimationBuilder(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: const Duration(seconds: 1),
+            builder: (context, double value, child) {
+              return Transform.scale(scale: value, child: child);
+            },
+            child: const Icon(Icons.emoji_events, size: 100, color: Colors.orange),
+          ),
           const SizedBox(height: 20),
           const Text('Game Over!', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.indigo)),
           const SizedBox(height: 10),
           
-          // Display individual score
           Text('Your Score: ${provider.score}', style: const TextStyle(fontSize: 24)),
           Text('Questions Attempted: ${provider.questionsAttempted}', style: const TextStyle(fontSize: 18, color: Colors.grey)),
           
-          // Display multiplayer results if available
           if (widget.isMultiplayer) ...[
             const SizedBox(height: 30),
             const Text('Multiplayer Results:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -386,16 +458,23 @@ class _GameScreenState extends State<GameScreen> {
                   int index = entry.key;
                   var playerResult = entry.value;
                   bool isMe = playerResult.key == widget.playerName;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('${index + 1}. ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text(playerResult.key, style: TextStyle(fontSize: 18, fontWeight: isMe ? FontWeight.bold : FontWeight.normal)),
-                        const SizedBox(width: 8),
-                        Text('${playerResult.value} pts', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
-                      ],
+                  return TweenAnimationBuilder(
+                    tween: Tween<double>(begin: 0, end: 1),
+                    duration: Duration(milliseconds: 300 + (index * 100)),
+                    builder: (context, double value, child) {
+                      return Opacity(opacity: value, child: child);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('${index + 1}. ', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(playerResult.key, style: TextStyle(fontSize: 18, fontWeight: isMe ? FontWeight.bold : FontWeight.normal)),
+                          const SizedBox(width: 8),
+                          Text('${playerResult.value} pts', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                        ],
+                      ),
                     ),
                   );
                 }).toList()
@@ -431,5 +510,4 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
-
 }

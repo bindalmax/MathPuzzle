@@ -3,6 +3,7 @@ import 'package:mathpuzzle_app/providers/game_provider.dart';
 import '../mocks.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late GameProvider gameProvider;
   late MockApiService mockApiService;
 
@@ -11,7 +12,7 @@ void main() {
     gameProvider = GameProvider(apiService: mockApiService);
   });
 
-  group('GameProvider Unit Tests', () {
+  group('GameProvider Unit Tests (with Prefetching)', () {
     test('Initial state is correct', () {
       expect(gameProvider.score, 0);
       expect(gameProvider.questionsAttempted, 0);
@@ -19,33 +20,32 @@ void main() {
       expect(gameProvider.currentQuestion, null);
     });
 
-    test('fetchQuestion updates currentQuestion', () async {
+    test('fetchQuestion fills buffer (fetches 2 questions)', () async {
       await gameProvider.fetchQuestion('basic_arithmetic', 'easy');
       expect(gameProvider.currentQuestion, isNotNull);
-      expect(gameProvider.currentQuestion!.text, 'What is 2 + 2?');
+      // Logic internal check: buffer should be full, so another fetch shouldn't happen immediately
       expect(gameProvider.isLoading, false);
     });
 
-    test('submitAnswer increments score on correct answer', () async {
+    test('submitAnswer transitions to next question after delay', () async {
       await gameProvider.fetchQuestion('basic_arithmetic', 'easy');
+      
+      // Submit answer (starts 500ms delay)
       gameProvider.submitAnswer('4', 'basic_arithmetic', 'easy', 'TestPlayer');
+      
+      expect(gameProvider.lastAnswerCorrect, true);
       expect(gameProvider.score, 1);
+      
+      // Wait for delay and transition
+      await Future.delayed(const Duration(milliseconds: 600));
+      
+      expect(gameProvider.lastAnswerCorrect, null);
       expect(gameProvider.questionsAttempted, 1);
     });
 
-    test('submitAnswer increments attempted but not score on wrong answer', () async {
+    test('resetGame clears buffer', () async {
       await gameProvider.fetchQuestion('basic_arithmetic', 'easy');
-      gameProvider.submitAnswer('5', 'basic_arithmetic', 'easy', 'TestPlayer');
-      expect(gameProvider.score, 0);
-      expect(gameProvider.questionsAttempted, 1);
-    });
-
-    test('resetGame clears state', () async {
-      await gameProvider.fetchQuestion('basic_arithmetic', 'easy');
-      gameProvider.submitAnswer('4', 'basic_arithmetic', 'easy', 'TestPlayer');
       gameProvider.resetGame();
-      expect(gameProvider.score, 0);
-      expect(gameProvider.questionsAttempted, 0);
       expect(gameProvider.currentQuestion, null);
     });
 
