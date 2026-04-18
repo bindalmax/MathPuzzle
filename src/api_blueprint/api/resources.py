@@ -6,12 +6,15 @@ Implements endpoints for questions, answers, scoring, and multiplayer game manag
 from flask import request, session
 from flask_restful import Resource, reqparse
 from questions import QuestionFactory
-from database import db, Highscore
+from database import db, Highscore, User
 from highscore_manager import HighscoreManager
 from sqlalchemy.exc import IntegrityError
 from room_storage import rooms # Import shared rooms dictionary
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 import uuid
 import time
+import os
 from .errors import api_success, api_error
 
 
@@ -190,7 +193,8 @@ class ScoreResource(Resource):
             "category": "basic_arithmetic",
             "difficulty": "easy",
             "time_taken": 45.5,
-            "questions_attempted": 10
+            "questions_attempted": 10,
+            "user_id": 1  # Optional
         }
         
         Response:
@@ -221,6 +225,7 @@ class ScoreResource(Resource):
             time_taken = float(data.get('time_taken', 0))
             questions_attempted = int(data.get('questions_attempted', 0))
             room_id = data.get('room_id')
+            user_id = data.get('user_id')
             
             # Validate inputs
             if not player_name or len(player_name) > 80:
@@ -246,7 +251,8 @@ class ScoreResource(Resource):
                 category=category,
                 difficulty=difficulty,
                 time_taken=time_taken,
-                questions_attempted=questions_attempted
+                questions_attempted=questions_attempted,
+                user_id=user_id
             )
             
             db.session.add(highscore)
@@ -586,3 +592,79 @@ class MultiplayerResultsResource(Resource):
             
         except Exception as e:
             return api_error(f'Error fetching game results: {str(e)}', 500, 'FETCH_ERROR')
+
+
+class GoogleAuthResource(Resource):
+    """POST /api/auth/google - Authenticate with Google ID Token"""
+    
+    def post(self):
+        """
+        Verify Google ID token and return user profile.
+        
+        Request Body:
+        {
+            "id_token": "google_id_token_string"
+        }
+        
+        Response:
+        {
+            "status": "success",
+            "data": {
+                "user_id": 1,
+                "display_name": "John Doe",
+                "email": "john@example.com"
+            }
+        }
+        """
+        try:
+            data = request.get_json()
+            token = data.get('id_token')
+            
+            if not token:
+                return api_error('ID Token is required', 400, 'MISSING_TOKEN')
+            
+            # In a real app, verify with Google. 
+            # For this local/demo context, we'll try to verify but provide a fallback if no Client ID is set.
+            GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+            
+            try:
+                idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+                
+                # ID token is valid. Get user's Google ID from the 'sub' claim.
+                google_id = idinfo['sub']
+                email = idinfo.get('email')
+                name = idinfo.get('name', email.split('@')[0] if email else 'User')
+            except Exception as e:
+                # Fallback for development if token is "mock-token" or similar
+                if os.environ.get('FLASK_ENV') == 'development' and token.startswith('mock-'):
+                    google_id = f"google-{token}"
+                    email = f"{token}@example.com"
+                    name = f"Mock {token}"
+                else:
+                    return api_error(f'Invalid ID Token: {str(e)}', 401, 'INVALID_TOKEN')
+
+            # Check if user exists
+            user = User.query.filter_by(google_id=google_id).first()
+            
+            if not user:
+                # Create new user
+                user = User(
+                    google_id=google_id,
+                    email=email,
+                    display_name=name
+                )
+                db.session.add(user)
+                db.session.commit()
+            
+            # Store in session for Web clients
+            session['user_id'] = user.id
+            session['player_name'] = user.display_name
+            
+            return api_success({
+                'user_id': user.id,
+                'display_name': user.display_name,
+                'email': user.email
+            }), 200
+            
+        except Exception as e:
+            return api_error(f'Authentication error: {str(e)}', 500, 'AUTH_ERROR')

@@ -11,7 +11,7 @@ from attempt_logger import AttemptLogger
 from flask import Flask, render_template, request, redirect, url_for, session, abort, send_from_directory, make_response, jsonify
 
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import bleach
@@ -50,10 +50,8 @@ if not SECRET_KEY:
     SECRET_KEY = 'dev-secret-key-change-in-production'
 app.secret_key = SECRET_KEY
 
-from flask_wtf.csrf import CSRFProtect, CSRFError
-# ... existing imports ...
-
-# ... existing app initialization ...
+# Google SSO Configuration
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
 
 # CSRF Protection
 csrf = CSRFProtect(app)
@@ -317,7 +315,8 @@ def game():
         'mode': 'questions' if session.get('is_startup_challenge') else mode,
         'choices': choices,
         'startup_value': session.get('startup_value'),
-        'is_startup_challenge': session.get('is_startup_challenge')
+        'is_startup_challenge': session.get('is_startup_challenge'),
+        'is_multiplayer': session.get('multiplayer', False)
     }
     
     if session.get('is_startup_challenge'):
@@ -403,6 +402,7 @@ def submit_answer():
 def game_over():
     score = session.get('score', 0)
     player_name = session.get('player_name', 'Player')
+    user_id = session.get('user_id') # Link to user if logged in
     
     room_results = None
     startup_data = None
@@ -440,7 +440,7 @@ def game_over():
             score = ceo_score
             category = "startup_challenge"
 
-        highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
+        highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered, user_id=user_id)
 
         if session.get('multiplayer'):
             room_id = session.get('room_id')
@@ -554,6 +554,11 @@ def quit_game():
                 
     session.clear()
     return render_template('quit.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 @app.route('/multiplayer_lobby', methods=['GET', 'POST'])
 def multiplayer_lobby():
