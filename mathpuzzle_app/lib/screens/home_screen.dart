@@ -5,6 +5,7 @@ import '../models/highscore.dart';
 import '../widgets/leaderboard_widget.dart';
 import '../providers/multiplayer_provider.dart';
 import 'game_screen.dart';
+import 'lobby_screen.dart'; // Import LobbyScreen
 
 class HomeScreen extends StatefulWidget {
   final ApiService apiService;
@@ -30,6 +31,70 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadLeaderboard();
+    
+    // Setup listener for navigation
+    final mpProvider = context.read<MultiplayerProvider>();
+    mpProvider.addListener(_handleMultiplayerStateChange);
+    
+    // Fetch available rooms
+    Future.microtask(() => mpProvider.fetchAvailableRooms());
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _handleMultiplayerStateChange() {
+    if (!mounted) return;
+    
+    final mpProvider = context.read<MultiplayerProvider>();
+    
+    // Navigate to lobby if roomId is set and we are not currently joining
+    if (mpProvider.roomId != null && mpProvider.isConnected && !mpProvider.isJoining) {
+      // Check if we are already showing the LobbyScreen to avoid duplicate pushes
+      // In a real app, you might use a more robust routing solution
+      _navigateToLobby(mpProvider);
+    }
+  }
+
+  bool _isNavigatingToLobby = false;
+
+  void _navigateToLobby(MultiplayerProvider mpProvider) async {
+    if (_isNavigatingToLobby) return;
+    _isNavigatingToLobby = true;
+
+    // Find the room details if it was joined from the list
+    final roomDetails = mpProvider.availableRooms.firstWhere(
+      (r) => r['room_id'] == mpProvider.roomId,
+      orElse: () => {
+        'category': _selectedCategory,
+        'difficulty': _selectedDifficulty,
+        'mode': _gameMode,
+        'mode_value': _modeValue,
+      },
+    );
+
+    print('HomeScreen: Navigating to Lobby ${mpProvider.roomId}');
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LobbyScreen(
+          category: roomDetails['category'] ?? _selectedCategory,
+          difficulty: roomDetails['difficulty'] ?? _selectedDifficulty,
+          mode: roomDetails['mode'] ?? _gameMode,
+          modeValue: roomDetails['mode_value'] ?? _modeValue,
+        ),
+      ),
+    );
+
+    // Cleanup on return
+    _isNavigatingToLobby = false;
+    if (mpProvider.roomId != null) {
+      mpProvider.leaveRoom(); 
+    }
   }
 
   void _loadLeaderboard() async {
@@ -64,13 +129,13 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       // Multiplayer logic
       context.read<MultiplayerProvider>().createRoom(playerName, _selectedCategory, _selectedDifficulty);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating Multiplayer Lobby...')));
-      // Navigation to Lobby would happen based on Provider state change (future improvement)
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final mpProvider = context.watch<MultiplayerProvider>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Math Puzzle'),
@@ -112,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 20),
                       
-                      // Game Type
+                      // Game Type Selector
                       const Text('Game Type:', style: TextStyle(fontWeight: FontWeight.bold)),
                       Row(
                         children: [
@@ -121,7 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               title: const Text('Single'),
                               value: 'single',
                               groupValue: _gameType,
-                              onChanged: (val) => setState(() => _gameType = val!),
+                              onChanged: (val) {
+                                setState(() => _gameType = val!);
+                              },
                             ),
                           ),
                           Expanded(
@@ -129,14 +196,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               title: const Text('Multi'),
                               value: 'multiplayer',
                               groupValue: _gameType,
-                              onChanged: (val) => setState(() => _gameType = val!),
+                              onChanged: (val) {
+                                setState(() => _gameType = val!);
+                                // Pre-connect WebSocket if selecting multi
+                                if (!mpProvider.isConnected) {
+                                  mpProvider.webSocketService.connect(); 
+                                }
+                              },
                             ),
                           ),
                         ],
                       ),
                       const Divider(),
 
-                      // Category
+                      // Category Selector
                       const Text('Category:'),
                       DropdownButton<String>(
                         isExpanded: true,
@@ -152,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Difficulty
+                      // Difficulty Selector
                       const Text('Difficulty:'),
                       DropdownButton<String>(
                         isExpanded: true,
@@ -166,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Mode
+                      // Game Mode Selector
                       const Text('Game Mode:'),
                       DropdownButton<String>(
                         isExpanded: true,
@@ -179,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 15),
 
-                      // Mode Value
+                      // Mode Value Slider
                       Text(_gameMode == 'time' ? 'Time in seconds (5-300):' : 'Number of questions (1-100):'),
                       Slider(
                         value: _modeValue.toDouble(),
@@ -193,13 +266,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: _onStartButtonPressed,
+                        onPressed: mpProvider.isJoining ? null : _onStartButtonPressed,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigo,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child: Text(_gameType == 'multiplayer' ? 'Create Multiplayer Lobby' : 'Start Single Player Game'),
+                        child: mpProvider.isJoining 
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(_gameType == 'multiplayer' ? 'Create Multiplayer Lobby' : 'Start Single Player Game'),
                       ),
                     ],
                   ),
@@ -208,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
               
               const SizedBox(height: 20),
               
-              // Join Lobby Card (Mockup)
+              // Join Lobby Card
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -219,8 +294,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Text('Join Active Lobby', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
-                      // Since we don't have real-time room list in API yet, show a placeholder
-                      const Text('No active lobbies found.', style: TextStyle(color: Colors.grey)),
+                      
+                      if (mpProvider.error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: Text(mpProvider.error!, style: const TextStyle(color: Colors.red)),
+                        ),
+
+                      // Display available rooms
+                      if (mpProvider.availableRooms.isNotEmpty)
+                        ...mpProvider.availableRooms.map((room) => _buildRoomListItem(room, mpProvider)).toList()
+                      else if (mpProvider.error == null && !mpProvider.isJoining)
+                        const Text('No active lobbies found.', style: TextStyle(color: Colors.grey)),
+                      
+                      if (mpProvider.isJoining)
+                        const Center(child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20.0),
+                          child: CircularProgressIndicator(),
+                        )),
+
                       const SizedBox(height: 10),
                       TextField(
                         decoration: const InputDecoration(
@@ -228,10 +320,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           border: OutlineInputBorder(),
                         ),
                         onSubmitted: (val) {
-                           if (val.isNotEmpty) {
-                              context.read<MultiplayerProvider>().joinRoom(val, _nameController.text);
+                           if (val.isNotEmpty && !mpProvider.isJoining) {
+                              mpProvider.joinRoom(val, _nameController.text.trim());
                            }
                         },
+                      ),
+                      const SizedBox(height: 10),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Refresh Rooms'),
+                        onPressed: mpProvider.isJoining ? null : mpProvider.fetchAvailableRooms,
                       ),
                     ],
                   ),
@@ -249,6 +347,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildRoomListItem(Map<String, dynamic> room, MultiplayerProvider mpProvider) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      child: ListTile(
+        title: Text('Room: ${room['room_id']}'),
+        subtitle: Text('Creator: ${room['creator']} | ${room['players_count']} players | ${room['category']} (${room['difficulty']})'),
+        trailing: ElevatedButton(
+          onPressed: mpProvider.isJoining ? null : () => mpProvider.joinRoom(room['room_id'], _nameController.text.trim()),
+          child: const Text('Join'),
+        ),
+        onTap: mpProvider.isJoining ? null : () => mpProvider.joinRoom(room['room_id'], _nameController.text.trim()),
       ),
     );
   }

@@ -9,6 +9,7 @@ from questions import QuestionFactory
 from database import db, Highscore
 from highscore_manager import HighscoreManager
 from sqlalchemy.exc import IntegrityError
+from room_storage import rooms # Import shared rooms dictionary
 import uuid
 import time
 from .errors import api_success, api_error
@@ -219,6 +220,7 @@ class ScoreResource(Resource):
             difficulty = str(data['difficulty']).lower()
             time_taken = float(data.get('time_taken', 0))
             questions_attempted = int(data.get('questions_attempted', 0))
+            room_id = data.get('room_id')
             
             # Validate inputs
             if not player_name or len(player_name) > 80:
@@ -226,6 +228,16 @@ class ScoreResource(Resource):
             
             if score < 0:
                 return api_error('Score cannot be negative', 400, 'INVALID_SCORE')
+            
+            # Update multiplayer room if provided
+            if room_id and room_id in rooms:
+                rooms[room_id]['scores'][player_name] = score
+                rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
+                rooms[room_id]['last_activity'] = time.time()
+                
+                # Broadcast update to all players in the room
+                from app import socketio
+                socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
             
             # Create and save highscore
             highscore = Highscore(
@@ -405,19 +417,19 @@ class MultiplaryCreateResource(Resource):
             # Generate room ID
             room_id = str(uuid.uuid4())[:8]
             
-            # Store in session (TODO: move to Redis for scalability)
-            if 'multiplayer_rooms' not in session:
-                session['multiplayer_rooms'] = {}
-            
-            session['multiplayer_rooms'][room_id] = {
+            # Store in shared rooms storage
+            rooms[room_id] = {
                 'players': [player_name],
                 'scores': {player_name: 0},
+                'active_connections': set(),
                 'category': category,
                 'difficulty': difficulty,
                 'mode': mode,
                 'mode_value': mode_value,
                 'is_started': False,
+                'results': {},
                 'creator': player_name,
+                'question_pool': [],
                 'created_at': time.time()
             }
             
@@ -461,10 +473,10 @@ class MultiplayerJoinResource(Resource):
             if not player_name or len(player_name) > 80:
                 return api_error('Valid player_name required (1-80 chars)', 400, 'INVALID_NAME')
             
-            if 'multiplayer_rooms' not in session or room_id not in session['multiplayer_rooms']:
+            if room_id not in rooms:
                 return api_error('Room not found', 404, 'ROOM_NOT_FOUND')
             
-            room = session['multiplayer_rooms'][room_id]
+            room = rooms[room_id]
             
             if room['is_started']:
                 return api_error('Game has already started', 400, 'GAME_STARTED')
@@ -486,3 +498,91 @@ class MultiplayerJoinResource(Resource):
         
         except Exception as e:
             return api_error(f'Error joining room: {str(e)}', 500, 'JOIN_ERROR')
+
+# Multiplayer Rooms Resource (Added for Room Discovery)
+class MultiplayerRoomsResource(Resource):
+    """GET /api/multiplayer/rooms - List active multiplayer rooms"""
+    
+    def get(self):
+        """
+        List available multiplayer rooms that have not started.
+        
+        Response:
+        {
+            "status": "success",
+            "data": {
+                "rooms": [
+                    {
+                        "room_id": "abcdef12",
+                        "creator": "Player1",
+                        "category": "percentage",
+                        "difficulty": "medium",
+                        "mode": "time",
+                        "mode_value": 30,
+                        "players_count": 2
+                    },
+                    ...
+                ]
+            }
+        }
+        """
+        try:
+            active_rooms_data = []
+            # Filter rooms that are not started from global storage
+            for room_id, room_data in rooms.items():
+                if not room_data.get('is_started', False):
+                    active_rooms_data.append({
+                        'room_id': room_id,
+                        'creator': room_data.get('creator', 'Unknown'),
+                        'category': room_data.get('category', 'unknown'),
+                        'difficulty': room_data.get('difficulty', 'unknown'),
+                        'mode': room_data.get('mode', 'unknown'),
+                        'mode_value': room_data.get('mode_value', 0),
+                        'players_count': len(room_data.get('players', []))
+                    })
+            
+            # Sort rooms by creation time (optional, but good for discovery)
+            active_rooms_data.sort(key=lambda x: rooms.get(x['room_id'], {}).get('created_at', 0))
+            
+            return api_success({'rooms': active_rooms_data}), 200
+            
+        except Exception as e:
+            return api_error(f'Error fetching rooms: {str(e)}', 500, 'FETCH_ERROR')
+
+# Multiplayer Results Resource (Added for Game Over Results)
+class MultiplayerResultsResource(Resource):
+    """GET /api/multiplayer/results/<room_id> - Get multiplayer game results"""
+    
+    def get(self, room_id):
+        """
+        Retrieve the final results for a multiplayer game room.
+        
+        Response:
+        {
+            "status": "success",
+            "data": {
+                "results": {
+                    "Player1": 50,
+                    "Player2": 45,
+                    ...
+                }
+            }
+        }
+        """
+        try:
+            if room_id not in rooms:
+                return api_error('Room not found', 404, 'ROOM_NOT_FOUND')
+            
+            room = rooms[room_id]
+            
+            if not room.get('is_started'):
+                return api_error('Game has not started yet', 400, 'GAME_NOT_STARTED')
+            
+            # Return the stored results (or current scores if game just ended)
+            # The 'results' key is populated in game_over route in app.py
+            final_results = room.get('results', room.get('scores', {}))
+            
+            return api_success({'results': final_results}), 200
+            
+        except Exception as e:
+            return api_error(f'Error fetching game results: {str(e)}', 500, 'FETCH_ERROR')

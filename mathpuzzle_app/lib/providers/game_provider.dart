@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/question.dart';
 import '../services/api_service.dart';
+import '../services/websocket_service.dart';
 
 class GameProvider with ChangeNotifier {
   final ApiService apiService;
+  final WebSocketService? webSocketService;
+  
+  String? _roomId;
+  bool _isMultiplayer = false;
+
   Question? _currentQuestion;
   int _score = 0;
   int _questionsAttempted = 0;
@@ -11,7 +17,10 @@ class GameProvider with ChangeNotifier {
   String? _error;
   bool _isGameOver = false;
 
-  GameProvider({required this.apiService});
+  GameProvider({
+    required this.apiService,
+    this.webSocketService,
+  });
 
   Question? get currentQuestion => _currentQuestion;
   int get score => _score;
@@ -19,6 +28,13 @@ class GameProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isGameOver => _isGameOver;
+  bool get isMultiplayer => _isMultiplayer;
+
+  void updateMultiplayerInfo({required bool isMultiplayer, String? roomId}) {
+    _isMultiplayer = isMultiplayer;
+    _roomId = roomId;
+    // Don't notifyListeners here to avoid unnecessary builds during screen transitions
+  }
 
   Future<void> fetchQuestion(String category, String difficulty) async {
     _isLoading = true;
@@ -60,18 +76,19 @@ class GameProvider with ChangeNotifier {
     if (isCorrect) {
       _score++;
       print('DEBUG: Correct! New Score: $_score');
+      
+      // Emit score update for multiplayer
+      if (_isMultiplayer && webSocketService != null && _roomId != null) {
+        webSocketService!.updateScore(_roomId!, playerName, _score);
+      }
     } else {
       print('DEBUG: Incorrect!');
     }
-    
-    // Notify listeners so the score updates in UI before/during next fetch
-    notifyListeners();
 
-    // Always fetch a new question to keep the game moving (like web)
+    notifyListeners();
     fetchQuestion(category, difficulty);
   }
 
-  // Explicitly end the game (called by Timer or Question Limit in UI)
   void endGame(String category, String difficulty, String playerName, double timeTaken) async {
     if (_isGameOver) return;
     _isGameOver = true;
@@ -85,6 +102,7 @@ class GameProvider with ChangeNotifier {
         difficulty: difficulty,
         timeTaken: timeTaken,
         questionsAttempted: _questionsAttempted,
+        roomId: _roomId,
       );
     } catch (e) {
       print('Failed to save score: $e');

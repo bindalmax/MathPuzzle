@@ -1,3 +1,9 @@
+import os
+import sys
+
+# Add src directory to path for imports
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+
 from flask import Flask, render_template, request, redirect, url_for, session, abort
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
 from flask_wtf.csrf import CSRFProtect
@@ -6,11 +12,13 @@ from flask_limiter.util import get_remote_address
 import bleach
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
+from room_storage import rooms
 import time
-import os
 import uuid
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'templates'),
+            static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'static'))
 
 # Environment Configuration
 FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
@@ -68,8 +76,8 @@ app.register_blueprint(api_bp)
 if os.environ.get('DISABLE_API_CSRF', '0') == '1' or not app.config.get('WTF_CSRF_ENABLED', True):
     csrf.exempt(api_bp)
 
-# rooms[room_id] = { ... }
-rooms = {}
+# Global rooms dictionary removed, now imported from room_storage
+
 
 def sanitize_input(text):
     """Sanitize user input to prevent XSS."""
@@ -330,6 +338,8 @@ def handle_join(data):
     
     if room and room in rooms:
         join_room(room)
+        session['room_id'] = room
+        session['player_name'] = name
         rooms[room]['active_connections'].add(sid)
         rooms[room]['last_activity'] = time.time()
         if name and name not in rooms[room]['players']:
@@ -338,14 +348,32 @@ def handle_join(data):
         emit('score_update', {'players': rooms[room]['scores']}, room=room)
         emit('update_players', rooms[room]['players'], room=room)
 
+@socketio.on('update_score')
+def handle_update_score(data):
+    room = data.get('room')
+    name = data.get('name')
+    score = data.get('score')
+    
+    if room and room in rooms and name in rooms[room]['scores']:
+        rooms[room]['scores'][name] = score
+        rooms[room]['last_activity'] = time.time()
+        emit('score_update', {'players': rooms[room]['scores']}, room=room)
+
 @socketio.on('start_game_request')
 def handle_start_game_request(data=None):
     room_id = session.get('room_id')
     if not room_id and data:
         room_id = data.get('room')
     
+    player_name = session.get('player_name')
+    if not player_name and data:
+        player_name = data.get('name')
+
+    print(f"Start game request for room {room_id} by {player_name}")
+    
     if room_id and room_id in rooms:
-        if rooms[room_id]['creator'] == session.get('player_name'):
+        # Check if the requester is the creator
+        if rooms[room_id]['creator'] == player_name:
             factory = QuestionFactory(rooms[room_id]['category'], rooms[room_id]['difficulty'])
             pool = []
             for _ in range(50): 
@@ -356,7 +384,11 @@ def handle_start_game_request(data=None):
             rooms[room_id]['question_pool'] = pool
             rooms[room_id]['is_started'] = True
             rooms[room_id]['last_activity'] = time.time()
-            emit('game_start_signal', room=room_id, to=room_id)
+            print(f"Emitting game_start_signal to room {room_id}")
+            # Use socketio.emit to ensure broadcast to the room
+            socketio.emit('game_start_signal', {'room': room_id}, room=room_id)
+        else:
+            print(f"Unauthorized start request: {player_name} is not {rooms[room_id]['creator']}")
 
 @socketio.on('disconnect')
 def handle_disconnect():

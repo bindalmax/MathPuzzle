@@ -50,7 +50,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => GameProvider(apiService: apiService)),
+        ChangeNotifierProvider(create: (_) => GameProvider(apiService: apiService, webSocketService: webSocketService)),
         ChangeNotifierProvider(create: (_) => MultiplayerProvider(webSocketService: webSocketService, apiService: apiService)),
       ],
       child: MyApp(apiService: apiService, baseUrl: apiBaseUrl),
