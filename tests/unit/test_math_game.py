@@ -5,8 +5,10 @@ from unittest.mock import patch, MagicMock
 from flask import Flask
 from fractions import Fraction # Import Fraction for DecimalFractionQuestion tests
 
-# Add project root to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Add project root and src to path for imports
+root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root_path)
+sys.path.append(os.path.join(root_path, 'src'))
 
 from math_game import Game
 from questions import QuestionFactory

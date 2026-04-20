@@ -174,12 +174,15 @@ def game():
         else:
             return redirect(url_for('game_over'))
     else:
-        factory = QuestionFactory(session['category'], session['difficulty'])
+        factory = QuestionFactory(session.get('category', 'basic'), session.get('difficulty', 'medium'))
         try:
             question, answer, choices = factory.create_question()
             session['current_answer'] = answer
-        except NotImplementedError:
-            return render_template('game_over.html', error=f"The '{session['category']}' category is not implemented yet!")
+        except (NotImplementedError, ValueError) as e:
+            return render_template('game_over.html', error=f"Error generating question: {str(e)}")
+        except Exception as e:
+            app.logger.error(f"Unexpected error in /game: {str(e)}")
+            return render_template('game_over.html', error="An unexpected error occurred. Please try again.")
 
     context = {
         'question': question,
@@ -379,7 +382,8 @@ def handle_start_game_request(data=None):
             for _ in range(50): 
                 try:
                     pool.append(factory.create_question())
-                except:
+                except Exception as e:
+                    app.logger.error(f"Failed to pre-generate question in pool: {str(e)}")
                     break
             rooms[room_id]['question_pool'] = pool
             rooms[room_id]['is_started'] = True

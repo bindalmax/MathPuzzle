@@ -383,7 +383,8 @@ sudo docker build -t mathpuzzle:latest .
 # FLASK_ENV=production
 # DATABASE_URL=postgresql://mathuser:password@your-rds-endpoint:5432/mathpuzzle
 # SECRET_KEY=<generated-secret-key>
-# ALLOWED_ORIGINS=https://yourdomain.com
+# FOR NOW (IP Only): ALLOWED_ORIGINS=http://your-ec2-ip
+# LATER (With Domain): ALLOWED_ORIGINS=https://yourdomain.com
 
 sudo docker run -d \
   --name mathpuzzle \
@@ -403,7 +404,12 @@ sudo nano /etc/nginx/sites-available/mathpuzzle
 # Add:
 server {
     listen 80;
-    server_name yourdomain.com;
+    
+    # FOR NOW (IP Only): use your public IP
+    # server_name 1.2.3.4; 
+    
+    # LATER (With Domain): use your domain
+    # server_name yourdomain.com;
 
     location / {
         proxy_pass http://127.0.0.1:5000;
@@ -421,15 +427,17 @@ server {
 
 # Enable site
 sudo ln -s /etc/nginx/sites-available/mathpuzzle /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
+sudo nginx -t && sudo systemctl restart nginx
 ```
 
 **Step 8: Setup SSL with Let's Encrypt**:
 
 ```bash
+# IF YOU HAVE A DOMAIN:
 sudo certbot --nginx -d yourdomain.com
-# Follow prompts to enable HTTPS redirect
+
+# IF YOU DON'T HAVE A DOMAIN (FOR NOW):
+# SKIP THIS STEP. Your app will be accessible via http://your-public-ip
 ```
 
 **Step 9: Setup Systemd Service for Auto-restart**:
@@ -456,13 +464,19 @@ RestartSec=10
 WantedBy=multi-user.target
 
 # Enable service
-sudo systemctl enable mathpuzzle.service
-sudo systemctl start mathpuzzle.service
+sudo systemctl enable mathpuzzle.service && sudo systemctl start mathpuzzle.service
 ```
 
 **Result**: App is LIVE in 1-2 hours, FREE for 12 months!
 
 ---
+
+## 🛠️ Post-Domain Tasks (When you get a domain)
+
+1. **Update A Record**: Point domain to EC2 Public IP in your registrar.
+2. **Update .env**: Change `ALLOWED_ORIGINS` to `https://yourdomain.com` and restart Docker.
+3. **Update Nginx**: Change `server_name` in `/etc/nginx/sites-available/mathpuzzle` and restart Nginx.
+4. **Run Certbot**: Execute `sudo certbot --nginx -d yourdomain.com` to enable HTTPS.
 
 ## 🔐 Security Setup
 

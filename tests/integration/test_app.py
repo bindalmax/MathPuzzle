@@ -4,8 +4,10 @@ import os
 import sys
 import time
 
-# Add project root to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Add project root and src to path for imports
+root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root_path)
+sys.path.append(os.path.join(root_path, 'src'))
 
 from app import app, HighscoreManager, socketio, rooms
 from database import db

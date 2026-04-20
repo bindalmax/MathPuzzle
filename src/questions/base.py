@@ -82,6 +82,7 @@ class QuestionFactory:
             "decimal": DecimalFractionQuestion,
             "decimal_fraction": DecimalFractionQuestion,
             "percentage": PercentageQuestion,
+            "profit": ProfitLossQuestion,
             "profit_loss": ProfitLossQuestion,
             "algebra": AlgebraQuestion,
         }
