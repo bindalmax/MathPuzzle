@@ -89,7 +89,7 @@ def serve_sw():
 
 @app.route('/manifest.json')
 def serve_manifest():
-    return send_from_directory(app.static_folder, 'manifest.json', mimetype='application/json')
+    return send_from_directory(app.static_folder, 'manifest.json', mimetype='application/manifest+json')
 
 @app.route('/', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")
