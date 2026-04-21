@@ -264,6 +264,27 @@ def game_over():
 
     return render_template('game_over.html', score=score, multiplayer_results=room_results)
 
+@app.route('/restart')
+def restart():
+    """Restart the game with same settings as previous session."""
+    if 'player_name' not in session:
+        return redirect(url_for('index'))
+    
+    # Reset game state variables in session
+    session['score'] = 0
+    session['questions_answered'] = 0
+    session['question_index'] = 0
+    session['start_time'] = time.time()
+    
+    # If multiplayer, we return to the lobby (or index if room is gone)
+    if session.get('multiplayer'):
+        room_id = session.get('room_id')
+        if room_id in rooms:
+            return redirect(url_for('multiplayer_lobby'))
+        return redirect(url_for('index'))
+        
+    return redirect(url_for('game'))
+
 @app.route('/leaderboard')
 def leaderboard():
     scores = highscore_manager.load()

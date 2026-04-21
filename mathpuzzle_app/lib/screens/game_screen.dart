@@ -498,13 +498,44 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
           ],
 
           const SizedBox(height: 40),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
-            onPressed: () {
-              provider.resetGame();
-              Navigator.pop(context);
-            }, 
-            child: const Text('Return Home')
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                icon: const Icon(Icons.refresh),
+                label: const Text('Restart Session'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                ),
+                onPressed: () {
+                  provider.resetGame();
+                  // Re-initialize game with same settings
+                  _timeLeft = widget.mode == 'time' ? widget.modeValue : 0;
+                  _questionsLeft = widget.mode == 'questions' ? widget.modeValue : 0;
+                  _stopwatch.reset();
+                  _stopwatch.start();
+                  provider.fetchQuestion(widget.category, widget.difficulty);
+                  if (widget.mode == 'time') {
+                    _startTimer();
+                  }
+                },
+              ),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Colors.black87,
+                ),
+                onPressed: () {
+                  provider.resetGame();
+                  Navigator.pop(context);
+                }, 
+                child: const Text('Return Home')
+              ),
+            ],
           )
         ],
       ),
