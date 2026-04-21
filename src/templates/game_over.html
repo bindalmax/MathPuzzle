@@ -98,7 +98,8 @@
     {% endif %}
 
     <nav class="nav-links">
-        <a href="{{ url_for('index') }}">New Session</a>
+        <a href="{{ url_for('restart') }}" class="primary">Restart Session</a>
+        <a href="{{ url_for('index') }}">New Settings</a>
         <a href="{{ url_for('leaderboard') }}" class="secondary">Global Hall of Fame</a>
     </nav>
 {% endblock %}

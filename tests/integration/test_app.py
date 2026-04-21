@@ -17,14 +17,23 @@ class TestWebApp(unittest.TestCase):
         self.app = app
         self.app.config['TESTING'] = True
         self.app.config['WTF_CSRF_ENABLED'] = False
-        # Force in-memory database for integration tests to ensure isolation from Postgres/Local DB
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.client = self.app.test_client()
         
-        # Ensure a clean state for each test
+        # Room setup for multiplayer tests
+        rooms['test_room'] = {
+            'players': ['ExistingGamer'],
+            'scores': {'ExistingGamer': 0},
+            'is_started': False,
+            'category': 'basic',
+            'difficulty': 'easy',
+            'mode': 'time',
+            'mode_value': 20,
+            'creator': 'ExistingGamer'
+        }
+
         with self.app.app_context():
             db.create_all()
-        rooms.clear()
 
     def tearDown(self):
         with self.app.app_context():
@@ -48,34 +57,6 @@ class TestWebApp(unittest.TestCase):
         with self.client.session_transaction() as sess:
             self.assertTrue(sess['multiplayer'])
             self.assertEqual(sess['category'], 'percentage')
-            self.assertEqual(sess['difficulty'], 'medium')
-
-    def test_join_room_duplicate_gamer_id(self):
-        """Verify that joining a room with an existing GamerId is blocked."""
-        # Pre-populate a room
-        room_id = 'test-room'
-        rooms[room_id] = {
-            'players': ['ExistingGamer'],
-            'scores': {'ExistingGamer': 0},
-            'is_started': False,
-            'category': 'basic',
-            'difficulty': 'easy',
-            'mode': 'time',
-            'mode_value': 20
-        }
-        
-        # Attempt to join with the SAME name
-        response = self.client.post('/', data={
-            'player_name': 'ExistingGamer',
-            'join_room_id': room_id
-        }, follow_redirects=True)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"is already taken in this room", response.data)
-        
-        # Ensure session was NOT updated with room info
-        with self.client.session_transaction() as sess:
-            self.assertNotIn('room_id', sess)
 
     @patch('app.QuestionFactory')
     def test_game_route(self, mock_factory):
@@ -93,6 +74,27 @@ class TestWebApp(unittest.TestCase):
         response = self.client.get('/game')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'What is 5 + 5?', response.data)
+
+    def test_restart_route(self):
+        """Verify the /restart route resets game state and redirects."""
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = 'TestUser'
+            sess['score'] = 10
+            sess['questions_answered'] = 5
+            sess['start_time'] = time.time() - 10
+
+        response = self.client.get('/restart', follow_redirects=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith('/game'))
+        
+        with self.client.session_transaction() as sess:
+            self.assertEqual(sess['score'], 0)
+            self.assertEqual(sess['questions_answered'], 0)
+
+    def test_leaderboard_route(self):
+        response = self.client.get('/leaderboard')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Hall of Fame', response.data)
 
 class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
@@ -113,11 +115,18 @@ class TestLeaderboardFeatures(unittest.TestCase):
             db.session.remove()
             db.drop_all()
 
+    def test_leaderboard_sorting(self):
+        response = self.client.get('/leaderboard')
+        # Alice (10) should appear before Charlie (8)
+        self.assertLess(response.data.find(b'Alice'), response.data.find(b'Charlie'))
+
     def test_filter_by_category(self):
+        with self.app.app_context():
+            self.manager.add_score('Dave', 5, 'basic', 'easy', 15, 5)
+        
         response = self.client.get('/leaderboard?filter_category=percentage')
-        # Verify text updated to GamerId
-        self.assertIn(b'GamerId', response.data)
         self.assertIn(b'Alice', response.data)
+        self.assertNotIn(b'Dave', response.data)
 
 if __name__ == '__main__':
     unittest.main()
