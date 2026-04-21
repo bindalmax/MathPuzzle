@@ -4,7 +4,7 @@ import sys
 # Add src directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort
+from flask import Flask, render_template, request, redirect, url_for, session, abort, send_from_directory
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -82,6 +82,14 @@ if os.environ.get('DISABLE_API_CSRF', '0') == '1' or not app.config.get('WTF_CSR
 def sanitize_input(text):
     """Sanitize user input to prevent XSS."""
     return bleach.clean(text.strip())
+
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory(app.static_folder, 'sw.js', mimetype='application/javascript')
+
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory(app.static_folder, 'manifest.json', mimetype='application/json')
 
 @app.route('/', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MathPuzzle{% endblock %}</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4f46e5">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -239,6 +241,15 @@
             };
             window.addEventListener('click', startHandler);
         });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("/sw.js")
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Registration failed', err));
+            });
+        }
     </script>
     {% block scripts %}{% endblock %}
 </head>
