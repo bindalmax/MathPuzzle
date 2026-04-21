@@ -139,5 +139,26 @@ class TestGame(unittest.TestCase):
         score = game.run()
         self.assertEqual(score, 3)
 
+from math_game import StartupChallengeGame
+
+class TestStartupChallengeGame(unittest.TestCase):
+    @patch('builtins.input', side_effect=['10', '20', 'quit'])
+    @patch('questions.QuestionFactory.create_question')
+    def test_startup_challenge_run(self, mock_create, mock_input):
+        # Mocking alternating questions
+        mock_create.side_effect = [
+            ("What is 10% of 100? ", 10, [5, 10, 15, 20]),
+            ("Profit? bought 80, sold 100", 20, [10, 20, 30, 40]),
+            ("What is 50% of 200? ", 100, [50, 100, 150, 200])
+        ]
+        game = StartupChallengeGame("CEO_Tester")
+        # 10,000 -> correct (10) -> 12,000 -> correct (20) -> 14,400 -> quit
+        ceo_score, title = game.run()
+        
+        self.assertEqual(game.score, 2)
+        self.assertEqual(game.startup_value, 14400.0)
+        self.assertEqual(ceo_score, 144)
+        self.assertEqual(title, "Startup Founder 💼")
+
 if __name__ == '__main__':
     unittest.main()

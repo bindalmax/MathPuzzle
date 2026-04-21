@@ -21,6 +21,47 @@ class Game:
             self.game_over.set()
             print("\nTime's up! Press Enter to see your score.")
 
+    def ask_question(self, question, answer, choices):
+        print(question)
+        user_answer = None
+        if choices:
+            choice_map = {chr(65 + i): choice for i, choice in enumerate(choices)}
+            for label, choice in choice_map.items():
+                print(f"{label}) {choice}")
+            
+            user_input_raw = input("Your choice (A, B, C, D) or answer: ").strip()
+            user_input = user_input_raw.upper()
+            if user_input_raw.lower() == 'quit':
+                return 'quit'
+            if user_input in choice_map:
+                user_answer = choice_map[user_input]
+            else:
+                matched = False
+                for choice in choices:
+                    try:
+                        if isinstance(choice, (int, float)):
+                            if float(user_input_raw) == float(choice):
+                                user_answer = choice
+                                matched = True
+                                break
+                    except ValueError:
+                        pass
+                    if str(choice).lower() == user_input_raw.lower():
+                        user_answer = choice
+                        matched = True
+                        break
+                # if not matched, user_answer remains None
+        else:
+            user_input = input("Your answer: ")
+            if user_input.lower() == 'quit':
+                return 'quit'
+            try:
+                user_answer = float(user_input)
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+                return None
+        return user_answer
+
     def run(self):
         if self.mode == 'time':
             print(f"\nStarting game for {self.player_name}! You have {self.value} seconds.")
@@ -35,55 +76,11 @@ class Game:
             try:
                 question, answer, choices = self.question_factory.create_question()
                 
-                print(question)
+                user_answer = self.ask_question(question, answer, choices)
                 
-                user_answer = None
-                if choices:
-                    # Multiple choice question
-                    choice_map = {chr(65 + i): choice for i, choice in enumerate(choices)}
-                    for label, choice in choice_map.items():
-                        print(f"{label}) {choice}")
-                    
-                    user_input_raw = input("Your choice (A, B, C, D) or answer: ").strip()
-                    user_input = user_input_raw.upper()
-                    # Allow players to quit even during MCQs
-                    if user_input_raw.lower() == 'quit':
-                        self.game_over.set()
-                        break
-                    if user_input in choice_map:
-                        user_answer = choice_map[user_input]
-                    else:
-                        # Allow entering the answer value directly (e.g., '15' or '15.0')
-                        matched = False
-                        for choice in choices:
-                            try:
-                                # Try numeric comparison when possible
-                                if isinstance(choice, (int, float)):
-                                    if float(user_input_raw) == float(choice):
-                                        user_answer = choice
-                                        matched = True
-                                        break
-                            except ValueError:
-                                pass
-                            # Fallback to string comparison
-                            if str(choice).lower() == user_input_raw.lower():
-                                user_answer = choice
-                                matched = True
-                                break
-                        if not matched:
-                            print("Invalid choice.")
-                            # Let it be handled by the answer check as wrong
-                else:
-                    # Open-ended question
-                    user_input = input("Your answer: ")
-                    if user_input.lower() == 'quit':
-                        self.game_over.set()
-                        break
-                    try:
-                        user_answer = float(user_input)
-                    except ValueError:
-                        print("Invalid input. Please enter a number.")
-                        continue # Skip to next question
+                if user_answer == 'quit':
+                    self.game_over.set()
+                    break
 
                 if self.game_over.is_set():
                     break
@@ -96,7 +93,6 @@ class Game:
 
                 questions_answered += 1
 
-                # Check if question count reached
                 if self.mode == 'questions' and questions_answered >= self.value:
                     self.game_over.set()
                     print(f"\nYou've answered {self.value} questions! Game over.")
@@ -110,6 +106,65 @@ class Game:
                 break
         return self.score
 
+class StartupChallengeGame(Game):
+    def __init__(self, player_name):
+        self.player_name = player_name
+        self.percentage_factory = QuestionFactory("percentage", "medium")
+        self.profit_loss_factory = QuestionFactory("profit_loss", "medium")
+        self.startup_value = 10000.0
+        self.total_questions = 10
+        self.score = 0
+        self.game_over = threading.Event()
+
+    def run(self):
+        print(f"\nWelcome to the Startup Challenge, {self.player_name}!")
+        print("You have $10,000 in seed funding. Grow your business by making smart mathematical decisions.")
+        
+        for i in range(1, self.total_questions + 1):
+            if i % 2 == 1:
+                factory = self.percentage_factory
+                narrative = "Market Analysis: "
+            else:
+                factory = self.profit_loss_factory
+                narrative = "Financial Planning: "
+            
+            question, answer, choices = factory.create_question()
+            print(f"\nQuestion {i}/{self.total_questions}")
+            print(f"Current Startup Value: ${self.startup_value:,.2f}")
+            print(narrative, end="")
+            
+            user_answer = self.ask_question(question, answer, choices)
+            
+            if user_answer == 'quit':
+                break
+            
+            if user_answer is not None and abs(user_answer - answer) < 0.01:
+                growth = self.startup_value * 0.2
+                self.startup_value += growth
+                self.score += 1
+                print(f"Correct! Your startup value grew by ${growth:,.2f} to ${self.startup_value:,.2f}")
+            else:
+                loss = self.startup_value * 0.1
+                self.startup_value -= loss
+                print(f"Wrong! The correct answer was {answer}. Your startup value fell by ${loss:,.2f} to ${self.startup_value:,.2f}")
+
+        ceo_score = int(self.startup_value / 100)
+        print(f"\nChallenge Complete!")
+        print(f"Final Startup Value: ${self.startup_value:,.2f}")
+        print(f"Your CEO Score: {ceo_score}")
+        
+        if ceo_score > 500:
+            title = "Unicorn CEO 🦄"
+        elif ceo_score > 200:
+            title = "Serial Entrepreneur 🚀"
+        elif ceo_score > 100:
+            title = "Startup Founder 💼"
+        else:
+            title = "Junior Founder 🌱"
+        
+        print(f"Title: {title}")
+        return ceo_score, title
+
 # --- Main Execution ---
 def main():
     player_name = input("Enter your name: ")
@@ -122,13 +177,22 @@ def main():
         print("3. Percentages")
         print("4. Profit and Loss")
         print("5. Algebra")
-        print("6. Quit Game")
+        print("6. Startup Challenge (Narrative Mode)")
+        print("7. Quit Game")
         
-        choice = input("Enter your choice (1-6): ")
+        choice = input("Enter your choice (1-7): ")
 
-        if choice == '6':
+        if choice == '7':
             print("\nThanks for playing!")
             break
+
+        if choice == '6':
+            game = StartupChallengeGame(player_name)
+            final_score, title = game.run()
+            highscore_manager.add_score(player_name, final_score, "startup_challenge", "medium")
+            highscore_manager.display(highscore_manager.load())
+            input("\nPress Enter to return to the main menu...")
+            continue
 
         category_map = {"1": "basic", "2": "decimal", "3": "percentage", "4": "profit_loss", "5": "algebra"}
         if choice not in category_map:

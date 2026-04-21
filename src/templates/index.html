@@ -26,34 +26,42 @@
                     <label for="single">Single Player</label>
                     <input type="radio" id="multiplayer" name="game_type" value="multiplayer" checked onchange="toggleGameType()">
                     <label for="multiplayer">Multiplayer</label>
+                    <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="toggleGameType()">
+                    <label for="startup_challenge">Startup Challenge 🚀</label>
                 </fieldset>
                 <br>
 
                 <div id="game-options">
-                    <label for="category">Choose a category:</label><br>
-                    <select id="category" name="category" style="width:100%;">
-                        <option value="basic">Basic Arithmetic</option>
-                        <option value="decimal">Decimals and Fractions</option>
-                        <option value="percentage" selected>Percentages</option>
-                        <option value="profit">Profit and Loss</option>
-                        <option value="algebra">Algebra</option>
-                    </select><br><br>
+                    <div id="standard-options">
+                        <label for="category">Choose a category:</label><br>
+                        <select id="category" name="category" style="width:100%;">
+                            <option value="basic">Basic Arithmetic</option>
+                            <option value="decimal">Decimals and Fractions</option>
+                            <option value="percentage" selected>Percentages</option>
+                            <option value="profit">Profit and Loss</option>
+                            <option value="algebra">Algebra</option>
+                        </select><br><br>
 
-                    <label for="difficulty">Choose a difficulty:</label><br>
-                    <select id="difficulty" name="difficulty" style="width:100%;">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard</option>
-                    </select><br><br>
+                        <label for="difficulty">Choose a difficulty:</label><br>
+                        <select id="difficulty" name="difficulty" style="width:100%;">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select><br><br>
 
-                    <label for="mode">Choose a game mode:</label><br>
-                    <select id="mode" name="mode" onchange="updateModeLabel()" style="width:100%;">
-                        <option value="time">Time Mode</option>
-                        <option value="questions">Question Count Mode</option>
-                    </select><br><br>
+                        <label for="mode">Choose a game mode:</label><br>
+                        <select id="mode" name="mode" onchange="updateModeLabel()" style="width:100%;">
+                            <option value="time">Time Mode</option>
+                            <option value="questions">Question Count Mode</option>
+                        </select><br><br>
 
-                    <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
-                    <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
+                        <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
+                        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
+                    </div>
+                    <div id="startup-info" style="display:none; padding: 15px; background: #f0f8ff; border: 1px solid #add8e6; border-radius: 8px; margin-bottom: 15px; color: #333;">
+                        <p style="margin:0 0 10px 0;"><strong>Business Simulation:</strong> Grow your startup from $10,000 to a Unicorn! 🦄</p>
+                        <p style="margin:0;"><small>10 Questions • Alternating Market Analysis & Financial Planning</small></p>
+                    </div>
                 </div>
                 <br>
                 <button type="submit" id="start_btn" style="width:100%;">Create Multiplayer Lobby</button>
@@ -111,8 +119,20 @@
 
         function toggleGameType() {
             const isMultiplayer = document.getElementById('multiplayer').checked;
+            const isStartup = document.getElementById('startup_challenge').checked;
             const btn = document.getElementById('start_btn');
-            btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
+            const standardOptions = document.getElementById('standard-options');
+            const startupInfo = document.getElementById('startup-info');
+
+            if (isStartup) {
+                btn.textContent = "Start Startup Challenge";
+                standardOptions.style.display = 'none';
+                startupInfo.style.display = 'block';
+            } else {
+                btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
+                standardOptions.style.display = 'block';
+                startupInfo.style.display = 'none';
+            }
         }
 
         window.onload = function() {

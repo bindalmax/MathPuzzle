@@ -99,5 +99,25 @@ class TestUIAutomation(unittest.TestCase):
         h1 = wait.until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
         self.assertEqual(h1.text, "Global Hall of Fame")
 
+    def test_startup_challenge_ui(self):
+        """Verify Startup Challenge radio button and UI updates."""
+        self.driver.get(self.base_url)
+        wait = WebDriverWait(self.driver, 10)
+        
+        startup_radio = wait.until(EC.element_to_be_clickable((By.ID, "startup_challenge")))
+        startup_radio.click()
+        
+        # Verify info box is visible
+        startup_info = self.driver.find_element(By.ID, "startup-info")
+        self.assertTrue(startup_info.is_displayed())
+        
+        # Verify standard options are hidden
+        standard_options = self.driver.find_element(By.ID, "standard-options")
+        self.assertFalse(standard_options.is_displayed())
+        
+        # Verify button text change
+        start_btn = self.driver.find_element(By.ID, "start_btn")
+        self.assertEqual(start_btn.text, "Start Startup Challenge")
+
 if __name__ == '__main__':
     unittest.main()

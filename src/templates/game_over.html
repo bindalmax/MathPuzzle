@@ -68,8 +68,21 @@
     {% if error %}
         <p class="error" role="alert">{{ error }}</p>
     {% else %}
-        <p style="font-size: 1.2rem; margin-bottom:0;">Final Gamer Score:</p>
-        <div class="final-score"><strong>{{ score }}</strong></div>
+        {% if is_startup_challenge %}
+            <h2 style="color: var(--secondary-color); margin-bottom: 5px;">Startup Challenge Results</h2>
+            <div style="background: #f0f8ff; border: 2px solid var(--primary-color); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                <p style="font-size: 1.2rem; margin: 0;">Final Startup Value:</p>
+                <div style="font-size: 2.5rem; color: var(--secondary-color); font-weight: bold; margin: 10px 0;">
+                    ${{ "{:,.2f}".format(startup_data.final_value) }}
+                </div>
+                <hr style="border: 0.5px dashed #ccc; margin: 15px 0;">
+                <p style="font-size: 1.1rem; margin: 0;">CEO Score: <strong>{{ startup_data.ceo_score }}</strong></p>
+                <p style="font-size: 1.5rem; margin-top: 10px; color: var(--accent-color);">Title: <strong>{{ startup_data.title }}</strong></p>
+            </div>
+        {% else %}
+            <p style="font-size: 1.2rem; margin-bottom:0;">Final Gamer Score:</p>
+            <div class="final-score"><strong>{{ score }}</strong></div>
+        {% endif %}
 
         {% if multiplayer_results %}
             <section class="multiplayer-results">

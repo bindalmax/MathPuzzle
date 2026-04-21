@@ -90,14 +90,20 @@
     {% endif %}
 
     <header style="margin-bottom: 30px;">
-        <h1 style="color:var(--accent-color);">Solve the Puzzle</h1>
+        <h1 style="color:var(--accent-color);">{{ 'Startup Challenge' if is_startup_challenge else 'Solve the Puzzle' }}</h1>
         <div style="display: flex; justify-content: center; gap: 20px; font-size: 1.2rem; background: #fff; padding: 10px; border-radius: 30px; border: 2px solid #eee; width: fit-content; margin: 0 auto;">
-            <span>Score: <strong style="color:var(--secondary-color);">{{ score }}</strong></span>
-            <span style="color:#ccc;">|</span>
-            {% if mode == 'time' %}
-                <span>Time: <strong id="time-left">{{ time_left }}</strong>s</span>
+            {% if is_startup_challenge %}
+                <span>Startup Value: <strong style="color:var(--secondary-color);">${{ "{:,.0f}".format(startup_value) }}</strong></span>
+                <span style="color:#ccc;">|</span>
+                <span>Questions Left: <strong>{{ questions_left }}</strong></span>
             {% else %}
-                <span>Remaining: <strong>{{ questions_left }}</strong></span>
+                <span>Score: <strong style="color:var(--secondary-color);">{{ score }}</strong></span>
+                <span style="color:#ccc;">|</span>
+                {% if mode == 'time' %}
+                    <span>Time: <strong id="time-left">{{ time_left }}</strong>s</span>
+                {% else %}
+                    <span>Remaining: <strong>{{ questions_left }}</strong></span>
+                {% endif %}
             {% endif %}
         </div>
     </header>

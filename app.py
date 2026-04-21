@@ -121,6 +121,20 @@ def index():
         
         game_type = request.form.get('game_type', 'multiplayer')
         
+        if game_type == 'startup_challenge':
+            session['multiplayer'] = False
+            session['is_startup_challenge'] = True
+            session['startup_value'] = 10000.0
+            session['score'] = 0
+            session['questions_answered'] = 0
+            session['total_questions'] = 10
+            session['start_time'] = time.time()
+            session['category'] = 'percentage' # Initial, will alternate
+            session['difficulty'] = 'medium'
+            session['mode'] = 'questions'
+            session['mode_value'] = 10
+            return redirect(url_for('game'))
+
         if game_type == 'multiplayer':
             session['multiplayer'] = True
             room_id = str(uuid.uuid4())[:8]
@@ -173,6 +187,20 @@ def game():
             session['current_answer'] = answer
         else:
             return redirect(url_for('game_over'))
+    elif session.get('is_startup_challenge'):
+        # Alternate between percentage and profit_loss
+        category = 'percentage' if questions_answered % 2 == 0 else 'profit_loss'
+        session['category'] = category
+        factory = QuestionFactory(category, 'medium')
+        try:
+            question, answer, choices = factory.create_question()
+            session['current_answer'] = answer
+            # Add narrative prefix
+            narrative = "Market Analysis: " if category == 'percentage' else "Financial Planning: "
+            question = narrative + question
+        except Exception as e:
+            app.logger.error(f"Error in startup challenge: {str(e)}")
+            return render_template('game_over.html', error="An unexpected error occurred.")
     else:
         factory = QuestionFactory(session.get('category', 'basic'), session.get('difficulty', 'medium'))
         try:
@@ -187,11 +215,15 @@ def game():
     context = {
         'question': question,
         'score': session['score'],
-        'mode': mode,
-        'choices': choices
+        'mode': 'questions' if session.get('is_startup_challenge') else mode,
+        'choices': choices,
+        'startup_value': session.get('startup_value'),
+        'is_startup_challenge': session.get('is_startup_challenge')
     }
     
-    if mode == 'time':
+    if session.get('is_startup_challenge'):
+        context['questions_left'] = session.get('total_questions', 10) - questions_answered
+    elif mode == 'time':
         context['time_left'] = int(mode_value - elapsed_time)
     else:
         context['questions_left'] = mode_value - questions_answered
@@ -211,6 +243,10 @@ def submit_answer():
         if abs(user_answer - correct_answer) < 0.01:
             session['score'] += 1
             
+            if session.get('is_startup_challenge'):
+                growth = session['startup_value'] * 0.2
+                session['startup_value'] += growth
+            
             if session.get('multiplayer'):
                 room_id = session.get('room_id')
                 player_name = session.get('player_name')
@@ -220,7 +256,13 @@ def submit_answer():
                     socketio.emit('score_update', 
                                   {'players': rooms[room_id]['scores']}, 
                                   room=room_id)
+        elif session.get('is_startup_challenge'):
+            loss = session['startup_value'] * 0.1
+            session['startup_value'] -= loss
     except (ValueError, TypeError):
+        if session.get('is_startup_challenge'):
+             loss = session['startup_value'] * 0.1
+             session['startup_value'] -= loss
         pass
     
     session['questions_answered'] = session.get('questions_answered', 0) + 1
@@ -235,6 +277,7 @@ def game_over():
     player_name = session.get('player_name', 'Player')
     
     room_results = None
+    startup_data = None
     
     if 'start_time' in session:
         category = session.get('category', 'unknown')
@@ -243,6 +286,27 @@ def game_over():
         time_taken = time.time() - session['start_time']
         questions_answered = session.get('questions_answered', 0)
         
+        if session.get('is_startup_challenge'):
+            final_value = session.get('startup_value', 0)
+            ceo_score = int(final_value / 100)
+            if ceo_score > 500:
+                title = "Unicorn CEO 🦄"
+            elif ceo_score > 200:
+                title = "Serial Entrepreneur 🚀"
+            elif ceo_score > 100:
+                title = "Startup Founder 💼"
+            else:
+                title = "Junior Founder 🌱"
+            
+            startup_data = {
+                'final_value': final_value,
+                'ceo_score': ceo_score,
+                'title': title
+            }
+            # Use ceo_score as the main score for highscores
+            score = ceo_score
+            category = "startup_challenge"
+
         highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered)
 
         if session.get('multiplayer'):
@@ -262,7 +326,12 @@ def game_over():
         if not room_results and room_id in rooms:
              room_results = rooms[room_id].get('results', rooms[room_id]['scores'])
 
-    return render_template('game_over.html', score=score, multiplayer_results=room_results)
+    is_startup = session.get('is_startup_challenge', False)
+    # Clear startup challenge state after game over
+    session.pop('is_startup_challenge', None)
+    session.pop('startup_value', None)
+
+    return render_template('game_over.html', score=score, multiplayer_results=room_results, startup_data=startup_data, is_startup_challenge=is_startup)
 
 @app.route('/restart')
 def restart():
