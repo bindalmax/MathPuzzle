@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mathpuzzle-ingress
+  namespace: mathpuzzle
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  tls:
+  - hosts:
+    - 127.01.0.1.sslip.io # Replace YOUR_VPS_IP with your actual IP
+    secretName: mathpuzzle-tls
+  rules:
+  - host: 127.01.0.1.sslip.io # Replace YOUR_VPS_IP with your actual IP
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mathpuzzle-service
+            port:
+              number: 80

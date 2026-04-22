@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mathpuzzle-web
+  namespace: mathpuzzle
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mathpuzzle-web
+  template:
+    metadata:
+      labels:
+        app: mathpuzzle-web
+    spec:
+      containers:
+      - name: web
+        image: ghcr.io/bindalmax/mathpuzzle:latest # TODO: Change to your GHCR image
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: DATABASE_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: SECRET_KEY
+        - name: ALLOWED_ORIGINS
+          value: "https://127.0.0.1.sslip.io" # Replace YOUR_VPS_IP with your actual IP
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mathpuzzle-service
+  namespace: mathpuzzle
+spec:
+  selector:
+    app: mathpuzzle-web
+  ports:
+  - port: 80
+    targetPort: 5000

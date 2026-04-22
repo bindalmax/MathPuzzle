@@ -25,3 +25,4 @@ test_highscores*.json
 
 # SSL Certificates
 *.pem
+k8s/secrets.yaml
