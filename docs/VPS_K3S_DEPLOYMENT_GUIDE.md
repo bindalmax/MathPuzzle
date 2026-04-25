@@ -47,47 +47,57 @@ helm install cert-manager jetstack/cert-manager --namespace cert-manager --creat
 
 ## 🛠️ Step 3: Deploy Application
 
-Deploy resources in this **exact order** to avoid errors.
+You can deploy using the automated scripts or follow the manual sequence.
 
-### 1. Create Namespace & Secrets
-First, establish the environment:
-```bash
-# Create the namespace
-kubectl apply -f k8s/namespace.yaml
+### Path A: Quick Setup (Recommended)
+1.  **Configure Secrets**:
+    ```bash
+    cp k8s/secrets.example.yaml k8s/secrets.yaml
+    # Edit k8s/secrets.yaml with your actual passwords
+    ```
+2.  **Run Setup Script**:
+    ```bash
+    ./scripts/k8s-setup.sh
+    ```
 
-# Copy and edit the secrets template
-cp k8s/secrets.example.yaml k8s/secrets.yaml
-# (Edit k8s/secrets.yaml with your actual passwords/keys)
+### Path B: Manual Sequence
+If you prefer to run commands manually, follow this **exact order**:
 
-# Apply secrets
-kubectl apply -f k8s/secrets.yaml
-```
+1.  **Namespace & Secrets**:
+    ```bash
+    kubectl apply -f k8s/namespace.yaml
+    kubectl apply -f k8s/secrets.yaml
+    ```
+2.  **Wait for Cert-Manager Readiness**:
+    ```bash
+    kubectl get pods -n cert-manager
+    # Wait until all pods show "Running"
+    ```
+3.  **Infrastructure & App**:
+    ```bash
+    kubectl apply -f k8s/postgres.yaml
+    kubectl apply -f k8s/issuer.yaml
+    kubectl apply -f k8s/app.yaml
+    kubectl apply -f k8s/ingress.yaml
+    ```
 
-### 2. Wait for Cert-Manager Readiness
-Before applying the Issuer, ensure cert-manager is fully running:
-```bash
-kubectl get pods -n cert-manager
-# Wait until all pods show "Running" (approx 30-60 seconds)
-```
+---
 
-### 3. Deploy Infrastructure (DB & SSL Issuer)
-Once cert-manager is ready:
-```bash
-# Deploy PostgreSQL
-kubectl apply -f k8s/postgres.yaml
+## 🚨 Troubleshooting: The Database Password Trap
 
-# Deploy SSL Issuer (requires cert-manager)
-kubectl apply -f k8s/issuer.yaml
-```
+If you see `FATAL: password authentication failed for user "mathuser"`, it is usually because the PostgreSQL volume was created with an old password. **Changing the Secret does NOT update the password in an existing volume.**
 
-### 4. Deploy Application & Ingress
-```bash
-# Update k8s/app.yaml with your GHCR image name
-# Update k8s/ingress.yaml with your domain (or YOUR_IP.sslip.io)
+### How to Fix (The Nuke & Reset):
+1.  **Nuke everything** (Warning: This deletes all DB data):
+    ```bash
+    ./scripts/k8s-nuke.sh
+    ```
+2.  **Correct your password** in `k8s/secrets.yaml`.
+3.  **Setup again**:
+    ```bash
+    ./scripts/k8s-setup.sh
+    ```
 
-kubectl apply -f k8s/app.yaml
-kubectl apply -f k8s/ingress.yaml
-```
 
 ---
 
@@ -99,12 +109,25 @@ To test the Kubernetes setup on your local machine:
     ```bash
     curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
     ```
-2.  **Create Cluster**:
+2.  **Create Cluster with Port Forwarding**:
+    You **must** map your local ports to the cluster load balancer:
     ```bash
     k3d cluster create math-test -p "80:80@loadbalancer" -p "443:443@loadbalancer"
     ```
-3.  **Deploy**:
-    Follow the **exact sequence** in Step 3 above. For local testing, use `127.0.0.1.sslip.io` as your domain.
+3.  **Configure for Local Access**:
+    - Update `k8s/ingress.yaml` to use host: `127.0.0.1.sslip.io`.
+    - **Note**: For local testing, comment out the `traefik.ingress.kubernetes.io/router.entrypoints: websecure` annotation in `ingress.yaml` to avoid 403 errors if SSL is not set up locally.
+4.  **Deploy**:
+    Follow the **exact sequence** in Step 3 above. 
+5.  **Access**:
+    Open `http://127.0.0.1.sslip.io` in your browser.
+
+### 🆘 Emergency Access (Bypass Ingress)
+If you cannot reach the app via the domain, you can tunnel directly to the service:
+```bash
+kubectl port-forward service/mathpuzzle-service 8080:80 -n mathpuzzle
+```
+Then access via `http://localhost:8080`.
 
 
 ---

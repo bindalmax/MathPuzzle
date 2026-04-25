@@ -5,14 +5,16 @@ metadata:
   namespace: mathpuzzle
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # UNCOMMENT the line below for Production (forces HTTPS)
+    # COMMENT the line below for Local Testing (avoids 403 errors)
+    # traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   tls:
   - hosts:
-    - 127.01.0.1.sslip.io # Replace YOUR_VPS_IP with your actual IP
+    - 127.0.0.1.sslip.io # TODO: Replace with your actual VPS IP (e.g. 1.2.3.4.sslip.io) or Domain
     secretName: mathpuzzle-tls
   rules:
-  - host: 127.01.0.1.sslip.io # Replace YOUR_VPS_IP with your actual IP
+  - host: 127.0.0.1.sslip.io # TODO: Replace with your actual VPS IP or Domain
     http:
       paths:
       - path: /

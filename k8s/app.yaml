@@ -32,7 +32,7 @@ spec:
               name: mathpuzzle-secrets
               key: SECRET_KEY
         - name: ALLOWED_ORIGINS
-          value: "https://127.0.0.1.sslip.io" # Replace YOUR_VPS_IP with your actual IP
+          value: "https://127.0.0.1.sslip.io,http://127.0.0.1.sslip.io" # Replace YOUR_VPS_IP with your actual IP
         resources:
           limits:
             memory: "512Mi"
