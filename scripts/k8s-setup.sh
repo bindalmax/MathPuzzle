@@ -36,8 +36,15 @@ kubectl wait --namespace cert-manager \
   --selector=app.kubernetes.io/instance=cert-manager \
   --timeout=90s
 
+# Determine environment (default to prod)
+ENV=${1:-prod}
+if [[ ! "$ENV" =~ ^(local|prod)$ ]]; then
+    echo "❌ Error: Invalid environment '$ENV'. Use 'local' or 'prod'."
+    exit 1
+fi
+
 # 5. Infrastructure & App
-echo "🌐 Deploying MathPuzzle (Production)..."
-kubectl apply -k "$PROJECT_ROOT/k8s/overlays/prod"
+echo "🌐 Deploying MathPuzzle ($ENV)..."
+kubectl apply -k "$PROJECT_ROOT/k8s/overlays/$ENV"
 
 echo "✅ Setup complete! Check status with: kubectl get pods -n $NAMESPACE"
