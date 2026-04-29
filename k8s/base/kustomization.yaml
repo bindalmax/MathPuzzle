@@ -4,5 +4,6 @@ resources:
   - issuer.yaml
   - app.yaml
   - ingress.yaml
+  - selfsigned-issuer.yaml
 
 namespace: mathpuzzle
