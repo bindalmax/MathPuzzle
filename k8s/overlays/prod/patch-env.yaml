@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mathpuzzle-web
+spec:
+  template:
+    spec:
+      containers:
+      - name: web
+        env:
+        - name: ALLOWED_ORIGINS
+          value: "https://2a01-4f8-1c18-a7--1.sslip.io"
