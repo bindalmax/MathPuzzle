@@ -36,16 +36,8 @@ kubectl wait --namespace cert-manager \
   --selector=app.kubernetes.io/instance=cert-manager \
   --timeout=90s
 
-# 5. Infrastructure
-echo "💾 Deploying PostgreSQL..."
-kubectl apply -f "$K8S_DIR/postgres.yaml"
-
-echo "🔑 Deploying SSL Issuer..."
-kubectl apply -f "$K8S_DIR/issuer.yaml"
-
-# 6. App & Ingress
-echo "🌐 Deploying Web App and Ingress..."
-kubectl apply -f "$K8S_DIR/app.yaml"
-kubectl apply -f "$K8S_DIR/ingress.yaml"
+# 5. Infrastructure & App
+echo "🌐 Deploying MathPuzzle (Production)..."
+kubectl apply -k "$PROJECT_ROOT/k8s/overlays/prod"
 
 echo "✅ Setup complete! Check status with: kubectl get pods -n $NAMESPACE"

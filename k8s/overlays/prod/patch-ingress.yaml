@@ -2,19 +2,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: mathpuzzle-ingress
-  namespace: mathpuzzle
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # UNCOMMENT the line below for Production (forces HTTPS)
-    # COMMENT the line below for Local Testing (avoids 403 errors)
-    # traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   tls:
   - hosts:
-    - 127.0.0.1.sslip.io # TODO: Replace with your actual VPS IP (e.g. 1.2.3.4.sslip.io) or Domain
+    - 2a01-4f8-1c18-a7--1.sslip.io
     secretName: mathpuzzle-tls
   rules:
-  - host: 127.0.0.1.sslip.io # TODO: Replace with your actual VPS IP or Domain
+  - host: 2a01-4f8-1c18-a7--1.sslip.io
     http:
       paths:
       - path: /
