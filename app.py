@@ -15,10 +15,14 @@ from highscore_manager import HighscoreManager
 from room_storage import rooms
 import time
 import uuid
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'templates'),
             static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'static'))
+
+# Handle proxy headers (Traefik) for correct rate limiting
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
 # Environment Configuration
 FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
@@ -40,8 +44,9 @@ csrf = CSRFProtect(app)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["5000 per day", "2000 per hour"],
     storage_uri="memory://",
+    strategy="fixed-window",
 )
 # During automated tests, toggle the limiter off to avoid 429s from E2E/UI test suites
 @app.before_request
@@ -240,7 +245,7 @@ def game():
     return render_template('game.html', **context)
 
 @app.route('/submit_answer', methods=['POST'])
-@limiter.limit("2 per second")
+@limiter.limit("10 per second")
 def submit_answer():
     if 'start_time' not in session:
         return redirect(url_for('index'))
