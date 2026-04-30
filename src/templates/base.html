@@ -6,6 +6,11 @@
     <title>{% block title %}MathPuzzle{% endblock %}</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4f46e5">
+    <!-- iOS support -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MathPuzzle">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap" rel="stylesheet">
     <style>

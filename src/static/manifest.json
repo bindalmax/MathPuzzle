@@ -15,8 +15,14 @@
       "purpose": "any"
     },
     {
-      "src": "/static/icons/icon-512.png",
+      "src": "/static/icons/icon-192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
@@ -24,14 +30,14 @@
   "screenshots": [
     {
       "src": "/static/icons/icon-512.png",
-      "sizes": "192x192",
+      "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "MathPuzzle Home Screen"
     },
     {
       "src": "/static/icons/icon-512.png",
-      "sizes": "192x192",
+      "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
       "label": "MathPuzzle Desktop View"
