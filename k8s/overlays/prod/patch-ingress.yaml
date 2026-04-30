@@ -8,10 +8,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - 2a01-4f8-1c18-a7--1.sslip.io
+    - sharphuman.app
     secretName: mathpuzzle-tls
   rules:
-  - host: 2a01-4f8-1c18-a7--1.sslip.io
+  - host: sharphuman.app
     http:
       paths:
       - path: /
