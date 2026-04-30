@@ -147,9 +147,10 @@ def index():
             session['multiplayer'] = True
             room_id = str(uuid.uuid4())[:8]
             session['room_id'] = room_id
+            player_name = session['player_name']
             rooms[room_id] = {
-                'players': [], 
-                'scores': {}, 
+                'players': [player_name], 
+                'scores': {player_name: 0}, 
                 'active_connections': set(),
                 'category': session['category'], 
                 'difficulty': session['difficulty'],
@@ -157,7 +158,7 @@ def index():
                 'mode_value': session['mode_value'],
                 'is_started': False,
                 'results': {},
-                'creator': session['player_name'],
+                'creator': player_name,
                 'question_pool': [],
                 'last_activity': time.time()
             }
