@@ -69,8 +69,21 @@
         </section>
 
         <!-- Join Existing Lobby -->
-        <section class="setup-box">
+        <section class="setup-box" id="join-section">
             <h2>Join Active Lobby</h2>
+            {% if prefill_room %}
+                <div class="highlight-box" style="background: #ecfdf5; border: 2px solid #10b981; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                    <p style="margin:0 0 10px 0;"><strong>You're Invited!</strong> Enter your name to join room: <code>{{ prefill_room }}</code></p>
+                    <form action="{{ url_for('index') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="join_room_id" value="{{ prefill_room }}">
+                        <input type="text" name="player_name" placeholder="Your GamerId" required autofocus style="width:100%; border-color:#10b981;">
+                        <button type="submit" style="margin-top:10px; width:100%; background:var(--secondary-color);">Join Invite Lobby</button>
+                    </form>
+                </div>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 20px 0;">
+            {% endif %}
+
             {% if active_rooms %}
                 <ul class="room-list">
                     {% for room_id, details in active_rooms.items() %}
