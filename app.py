@@ -28,6 +28,13 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
 # Disable CSRF in non-production environments (makes testing & development easier)
 app.config['WTF_CSRF_ENABLED'] = (FLASK_ENV == 'production')
+app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour instead of default
+app.config['PERMANENT_SESSION_LIFETIME'] = 7200  # 2 hours
+
+if FLASK_ENV == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Security: Hardened Secret Key management
 SECRET_KEY = os.environ.get('SECRET_KEY')
