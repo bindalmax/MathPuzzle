@@ -75,6 +75,24 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize database manager
 highscore_manager = HighscoreManager(app)
 
+# Load Version from file
+def get_version():
+    try:
+        with open('VERSION', 'r') as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return "dev"
+
+APP_VERSION = get_version()
+
+@app.context_processor
+def inject_version():
+    return dict(app_version=APP_VERSION)
+
+@app.route('/version')
+def show_version():
+    return {"version": APP_VERSION}
+
 # Security: Restrict CORS origins
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*')
 socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threading')
