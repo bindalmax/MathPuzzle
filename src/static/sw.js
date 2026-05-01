@@ -4,15 +4,19 @@ const STATIC_ASSETS = [
   '/static/css/responsive.css',
   '/static/manifest.json',
   '/static/icons/icon-192.png',
-  '/static/icons/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap'
+  '/static/icons/icon-512.png'
+];
+
+const EXTERNAL_ASSETS = [
+  'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap',
+  'https://cdn.socket.io/4.7.2/socket.io.min.js'
 ];
 
 // Install: Cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll([...STATIC_ASSETS, ...EXTERNAL_ASSETS]);
     })
   );
   self.skipWaiting();
@@ -30,32 +34,41 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: Network First for pages, Cache First for static assets
+// Fetch Strategy
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // For static assets, try cache first
-  if (STATIC_ASSETS.includes(url.pathname) || url.origin !== location.origin) {
+  // 1. Skip non-GET requests and external API calls (like QR code generator)
+  // These should not be handled by the service worker to avoid CORS issues
+  if (event.request.method !== 'GET' || url.hostname.includes('qrserver.com')) {
+    return;
+  }
+
+  // 2. Static Assets (Local or Fonts) - Cache First
+  if (STATIC_ASSETS.includes(url.pathname) || EXTERNAL_ASSETS.includes(event.request.url)) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        return cachedResponse || fetch(event.request);
+        return cachedResponse || fetch(event.request).catch(() => {
+          // If fetch fails and no cache, just return nothing (avoid throw)
+          return null;
+        });
       })
     );
     return;
   }
 
-  // For pages (e.g., /, /game), try network first
+  // 3. Application Pages - Network First (with offline fallback)
   event.respondWith(
     fetch(event.request)
       .catch(() => {
-        // If network fails, return cached page or offline message
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           
-          // Basic offline fallback for navigation
+          // Fallback for navigation requests
           if (event.request.mode === 'navigate') {
              return caches.match('/');
           }
+          return null;
         });
       })
   );
