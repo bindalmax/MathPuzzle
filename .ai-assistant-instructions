@@ -34,6 +34,10 @@
 - Focus on logic, formulas, and flow without creating new files.
 
 ## Code Changes
+- **Version Management**: Always increment the version number in the `VERSION` file after making any code changes.
+    - Increment **Minor** (e.g., 1.1.0 -> 1.2.0) for new features or significant enhancements.
+    - Increment **Patch** (e.g., 1.1.0 -> 1.1.1) for bug fixes or small UI tweaks.
+    - Increment **Major** (e.g., 1.1.0 -> 2.0.0) for breaking architectural changes or total rebrands.
 - When adding new question categories or difficulties, update both console and web implementations.
 - Maintain consistency between console and web versions.
 - Update highscore handling if data structure changes.
