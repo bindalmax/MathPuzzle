@@ -96,6 +96,15 @@ def serve_sw():
 def serve_manifest():
     return send_from_directory(app.static_folder, 'manifest.json', mimetype='application/manifest+json')
 
+@app.route('/join/<room_id>')
+def join_room_link(room_id):
+    """Deep link to join a specific room."""
+    if room_id in rooms:
+        if rooms[room_id].get('is_started'):
+            return render_template('index.html', error="That game has already started!", active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
+        return render_template('index.html', prefill_room=room_id, active_rooms={k: v for k, v in rooms.items() if not v.get('is_started')})
+    return redirect(url_for('index', error="Lobby not found or expired."))
+
 @app.route('/', methods=['GET', 'POST'])
 @limiter.limit("10 per minute")
 def index():

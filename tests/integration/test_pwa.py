@@ -29,8 +29,12 @@ class TestPWAIntegration(unittest.TestCase):
     def test_manifest_route(self):
         response = self.client.get('/manifest.json')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.mimetype, 'application/json')
+        self.assertEqual(response.mimetype, 'application/manifest+json')
         self.assertIn(b'"short_name": "MathPuzzle"', response.data)
+        self.assertIn(b'"id": "/"', response.data)
+        self.assertIn(b'"screenshots"', response.data)
+        self.assertIn(b'"form_factor": "narrow"', response.data)
+        self.assertIn(b'"form_factor": "wide"', response.data)
 
     def test_sw_route(self):
         response = self.client.get('/sw.js')

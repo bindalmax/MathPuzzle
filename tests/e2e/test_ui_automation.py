@@ -119,5 +119,33 @@ class TestUIAutomation(unittest.TestCase):
         start_btn = self.driver.find_element(By.ID, "start_btn")
         self.assertEqual(start_btn.text, "Start Startup Challenge")
 
+    def test_multiplayer_invite_ui(self):
+        """Verify invite link and QR code elements in the lobby."""
+        self.driver.get(self.base_url)
+        wait = WebDriverWait(self.driver, 10)
+        
+        self.driver.find_element(By.NAME, "player_name").send_keys("LobbyHost")
+        self.driver.find_element(By.ID, "start_btn").click()
+        
+        wait.until(EC.url_contains("multiplayer_lobby"))
+        
+        # Check for Invite Center elements
+        self.assertTrue(self.driver.find_element(By.ID, "share-btn").is_displayed())
+        self.assertTrue(self.driver.find_element(By.ID, "qr-btn").is_displayed())
+        self.assertTrue(self.driver.find_element(By.ID, "copy-btn").is_displayed())
+        
+        # Test QR Toggle
+        qr_btn = self.driver.find_element(By.ID, "qr-btn")
+        qr_container = self.driver.find_element(By.ID, "qr-container")
+        self.assertFalse(qr_container.is_displayed())
+        
+        qr_btn.click()
+        time.sleep(1) # Wait for animation/display update
+        self.assertTrue(qr_container.is_displayed())
+        
+        # Verify QR image has src from qrserver
+        qr_img = self.driver.find_element(By.ID, "qr-image")
+        self.assertIn("qrserver.com", qr_img.get_attribute("src"))
+
 if __name__ == '__main__':
     unittest.main()

@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import os
 import sys
 import time
+from flask import session
 
 # Add project root and src to path for imports
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
