@@ -47,4 +47,8 @@ fi
 echo "🌐 Deploying MathPuzzle ($ENV)..."
 kubectl apply -k "$PROJECT_ROOT/k8s/overlays/$ENV"
 
+# Force restart to pull the latest image (if using :latest tag)
+echo "🔄 Restarting deployment to ensure latest image is used..."
+kubectl rollout restart deployment mathpuzzle-web -n $NAMESPACE
+
 echo "✅ Setup complete! Check status with: kubectl get pods -n $NAMESPACE"
