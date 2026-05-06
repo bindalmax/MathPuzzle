@@ -78,9 +78,11 @@ highscore_manager = HighscoreManager(app)
 # Load Version from file
 def get_version():
     try:
-        with open('VERSION', 'r') as f:
+        version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'VERSION')
+        with open(version_path, 'r') as f:
             return f.read().strip()
     except FileNotFoundError:
+        app.logger.warning("VERSION file not found, defaulting to dev")
         return "dev"
 
 APP_VERSION = get_version()
