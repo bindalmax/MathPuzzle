@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathPuzzle - New Homepage Design Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --accent-color: #0ea5e9;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --border-light: #e5e7eb;
+            --bg-light: #f9fafb;
+            --card-bg: #ffffff;
+            --hero-gradient: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+        }
+
+        body.dark-mode {
+            --text-dark: #f3f4f6;
+            --text-light: #d1d5db;
+            --border-light: #374151;
+            --bg-light: #111827;
+            --card-bg: #1f2937;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-center {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-center a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-center a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .dark-mode-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 0.5rem;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                flex-wrap: wrap;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .nav-center {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-controls {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: var(--hero-gradient);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            margin-top: 3rem;
+        }
+
+        .hero-stat {
+            background: rgba(255,255,255,0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .hero-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .hero-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.85;
+            margin-top: 0.5rem;
+        }
+
+        .cta-primary {
+            background: white;
+            color: var(--primary-color);
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* ===== GAME MODES (TABS) ===== */
+        .game-modes {
+            margin-bottom: 3rem;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-light);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 1rem;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .tab:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== LAYOUT GRID ===== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* ===== FORM CARD ===== */
+        .form-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-hint {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .form-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-light);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .form-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .form-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* ===== BUTTON ===== */
+        .btn {
+            width: 100%;
+            padding: 0.875rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #059669;
+        }
+
+        /* ===== LOBBY SECTION ===== */
+        .lobby-section {
+            margin-top: 3rem;
+        }
+
+        .lobby-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .lobbies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .lobby-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .lobby-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
+        .lobby-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .room-id {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .player-count {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .lobby-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .lobby-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
+        .lobby-detail-icon {
+            font-size: 1.2rem;
+        }
+
+        .btn-join {
+            margin-top: auto;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ===== SETTINGS INPUT ===== */
+        .game-mode-settings {
+            background: #f0f8ff;
+            border-left: 4px solid var(--accent-color);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+        }
+
+        .game-mode-settings h4 {
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .game-mode-settings p {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-light);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 2rem;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .modal-close:hover {
+            color: var(--text-dark);
+        }
+
+        .share-section {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+        }
+
+        .share-section h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+
+        .invite-link-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .invite-link-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-dark);
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .invite-link-copy {
+            padding: 0.75rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .invite-link-copy:hover {
+            background: #4338ca;
+        }
+
+        .social-share {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 1rem;
+        }
+
+        .social-btn {
+            padding: 0.75rem;
+            border: 1px solid var(--border-light);
+            background: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .social-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .modal-content {
+                margin: 20% auto;
+                width: 95%;
+                padding: 1.5rem;
+            }
+
+            .invite-link-container {
+                flex-direction: column;
+            }
+
+            .invite-link-copy {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVIGATION -->
+    <nav>
+        <div class="nav-brand">🧮 MathPuzzle</div>
+        <ul class="nav-center">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#leaderboard">Leaderboard</a></li>
+            <li><a href="#help">Help</a></li>
+        </ul>
+        <div class="nav-controls">
+            <button class="dark-mode-toggle" id="darkModeToggle" title="Toggle dark mode" onclick="toggleDarkMode()">
+                🌙
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Master Math, Challenge Friends 🧮</h1>
+            <p>Sharpen your skills with fun puzzles, real-time multiplayer, and business simulations.</p>
+            
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value">100+</div>
+                    <div class="hero-stat-label">Active Players</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">5000+</div>
+                    <div class="hero-stat-label">Puzzles</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">Live</div>
+                    <div class="hero-stat-label">Multiplayer</div>
+                </div>
+            </div>
+
+            <button class="cta-primary" onclick="document.querySelector('.tab').focus()">
+                Start Playing Now ↓
+            </button>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <!-- GAME MODE TABS -->
+        <div class="game-modes">
+            <div class="mode-tabs">
+                <button class="tab active" data-mode="single" onclick="switchTab(this, 'single')">
+                    Single Player
+                </button>
+                <button class="tab" data-mode="multiplayer" onclick="switchTab(this, 'multiplayer')">
+                    Multiplayer
+                </button>
+                <button class="tab" data-mode="startup" onclick="switchTab(this, 'startup')">
+                    Startup Challenge 🚀
+                </button>
+            </div>
+
+            <!-- TAB CONTENT: Single Player -->
+            <div class="tab-content active" id="tab-single">
+                <div class="main-grid">
+                    <div class="form-card">
+                        <h2>Start New Game</h2>
+                        <form>
+                            <div class="form-group">
+                                <label for="player_name_sp">GamerId</label>
+                                <input type="text" id="player_name_sp" placeholder="e.g. MathWizard" required>
+                                <div class="form-hint">Appears in your game history</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="category_sp">Category</label>
+                                <select id="category_sp">
+                                    <option>📚 Basic Arithmetic</option>
+                                    <option>📊 Decimals & Fractions</option>
+                                    <option selected>📈 Percentages</option>
+                                    <option>💰 Profit & Loss</option>
+                                    <option>🔢 Algebra</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="difficulty_sp">Difficulty</label>
+                                <select id="difficulty_sp">
+                                    <option>Easy</option>
+                                    <option selected>Medium</option>
+                                    <option>Hard</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="mode_sp">Game Mode</label>
+                                <select id="mode_sp">
+                                    <option selected>⏱️ Time Mode</option>
+                                    <option>❓ Question Count</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="duration_sp">Duration: <span id="duration_value">20 sec</span></label>
+                                <input type="range" id="duration_sp" min="5" max="300" value="20" step="5" 
+                                    oninput="document.getElementById('duration_value').textContent = this.value + ' sec'">
+                                <div class="form-hint">Drag to adjust time (5-300 seconds)</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                Start Single Player Game
+                            </button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎮</div>
+                            <h3>Ready to Test Your Skills?</h3>
+                            <p>Configure your game settings and dive into a challenging solo experience.</p>
+                            <p style="font-size: 0.85rem; color: #6b7280;">Perfect for practicing before multiplayer!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Multiplayer -->
+            <div class="tab-content" id="tab-multiplayer">
+                <div class="main-grid">
+                    <div class="form-card">
+                        <h2>Create Lobby</h2>
+                        <form>
+                            <div class="form-group">
+                                <label for="player_name_mp">Your GamerId</label>
+                                <input type="text" id="player_name_mp" placeholder="e.g. MathWizard" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="category_mp">Category</label>
+                                <select id="category_mp">
+                                    <option>📚 Basic Arithmetic</option>
+                                    <option>📊 Decimals & Fractions</option>
+                                    <option selected>📈 Percentages</option>
+                                    <option>💰 Profit & Loss</option>
+                                    <option>🔢 Algebra</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="difficulty_mp">Difficulty</label>
+                                <select id="difficulty_mp">
+                                    <option>Easy</option>
+                                    <option selected>Medium</option>
+                                    <option>Hard</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="duration_mp">Duration: <span id="duration_value_mp">20 sec</span></label>
+                                <input type="range" id="duration_mp" min="5" max="300" value="20" step="5"
+                                    oninput="document.getElementById('duration_value_mp').textContent = this.value + ' sec'">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                Create Multiplayer Lobby
+                            </button>
+                        </form>
+                    </div>
+                        <h3 style="margin-bottom: 1.5rem;">Active Lobbies</h3>
+                        <div class="lobbies-grid" id="lobbies-container">
+                            <div class="lobby-card">
+                                <div class="lobby-header">
+                                    <span class="room-id">Room ABC123</span>
+                                    <span class="player-count">👥 2/4</span>
+                                </div>
+                                <div class="lobby-details">
+                                    <div class="lobby-detail">
+                                        <span class="lobby-detail-icon">📚</span>
+                                        <span>Algebra</span>
+                                    </div>
+                                    <div class="lobby-detail">
+                                        <span class="lobby-detail-icon">🎯</span>
+                                        <span>Hard</span>
+                                    </div>
+                                    <div class="lobby-detail">
+                                        <span class="lobby-detail-icon">⏱️</span>
+                                        <span>30 seconds</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="joinLobby('ABC123')">Join Lobby</button>
+                            </div>
+
+                            <div class="lobby-card">
+                                <div class="lobby-header">
+                                    <span class="room-id">Room XYZ789</span>
+                                    <span class="player-count">👥 1/2</span>
+                                </div>
+                                <div class="lobby-details">
+                                    <div class="lobby-detail">
+                                        <span class="lobby-detail-icon">📈</span>
+                                        <span>Percentages</span>
+                                    </div>
+                                    <div class="lobby-detail">
+                                        <span class="lobby-detail-icon">🎯</span>
+                                        <span>Medium</span>
+                                    </div>
+                                    <div class="lobby-detail">
+                                        <span class="lobby-detail-icon">❓</span>
+                                        <span>10 questions</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="joinLobby('XYZ789')">Join Lobby</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT: Startup Challenge -->
+            <div class="tab-content" id="tab-startup">
+                <div class="main-grid">
+                    <div class="form-card">
+                        <h2>Startup Challenge</h2>
+                        <div class="game-mode-settings">
+                            <h4>🚀 Business Simulation</h4>
+                            <p>Grow your startup from $10,000 to a Unicorn! Solve 10 strategic business puzzles.</p>
+                        </div>
+
+                        <form>
+                            <div class="form-group">
+                                <label for="player_name_startup">Your GamerId</label>
+                                <input type="text" id="player_name_startup" placeholder="e.g. EntrepreneurPro" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                Start Startup Challenge
+                            </button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🦄</div>
+                            <h3>Build Your Unicorn</h3>
+                            <p>An advanced mode combining market analysis and financial planning. Only for true entrepreneurs!</p>
+                            <p style="font-size: 0.85rem; color: #6b7280; margin-top: 1rem;">📊 Estimated playtime: 15-20 minutes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOBBIES SECTION (for all modes) -->
+        <div class="lobby-section" id="lobbies-section" style="display: none;">
+            <h2>🎮 Find a Game to Join</h2>
+            <div class="lobbies-grid" id="all-lobbies">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- BOTTOM CTA -->
+        <div style="margin-top: 4rem; padding: 2rem; background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); border-radius: 12px; color: white; text-align: center;">
+            <h2 style="color: white; margin-bottom: 1rem;">Ready to Play?</h2>
+            <p style="margin-bottom: 1.5rem;">Join thousands of math enthusiasts competing in real-time challenges.</p>
+            <a href="#" style="color: white; text-decoration: underline; font-weight: 600;">View Global Leaderboard →</a>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 MathPuzzle Challenge. <a href="#">Privacy Policy</a> • <a href="#">Terms of Service</a> • <a href="#">Contact Us</a></p>
+        <p style="margin-top: 1rem;">📱 Works offline with PWA • 🔒 100% Secure • ⚡ Lightning Fast</p>
+    </footer>
+
+    <!-- SHARE LOBBY MODAL -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎉 Lobby Created!</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <p style="color: var(--text-light); margin-bottom: 1rem;">Share this lobby with friends to play together!</p>
+                
+                <div style="padding: 1rem; background: var(--bg-light); border-radius: 8px; border-left: 4px solid var(--accent-color); margin-bottom: 1.5rem;">
+                    <p style="margin: 0; font-size: 0.9rem; color: var(--text-light);">
+                        <strong>Room ID:</strong> <span id="roomId" style="color: var(--primary-color); font-weight: 600;">ABC123</span>
+                    </p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: var(--text-light);">
+                        Players can join using this ID or the invite link below
+                    </p>
+                </div>
+            </div>
+
+            <div class="share-section">
+                <h3>📋 Invite Link</h3>
+                <div class="invite-link-container">
+                    <input type="text" id="inviteLink" class="invite-link-input" readonly value="https://mathpuzzle.game/join?room=ABC123">
+                    <button class="invite-link-copy" onclick="copyInviteLink()">Copy</button>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-light); margin: 0;">Click "Copy" to copy the link to your clipboard</p>
+            </div>
+
+            <div class="share-section">
+                <h3>📱 Share With Friends</h3>
+                <div class="social-share">
+                    <button class="social-btn" onclick="shareVia('whatsapp')" title="Share via WhatsApp">
+                        📱 WhatsApp
+                    </button>
+                    <button class="social-btn" onclick="shareVia('telegram')" title="Share via Telegram">
+                        ✈️ Telegram
+                    </button>
+                    <button class="social-btn" onclick="shareVia('twitter')" title="Share via Twitter">
+                        𝕏 Twitter
+                    </button>
+                    <button class="social-btn" onclick="shareVia('email')" title="Share via Email">
+                        📧 Email
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeModal()">
+                    Back to Lobbies
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="startGame()">
+                    Start Game! 🎮
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DARK MODE =====
+        function toggleDarkMode() {
+            const body = document.body;
+            const toggle = document.getElementById('darkModeToggle');
+            
+            body.classList.toggle('dark-mode');
+            
+            // Save preference
+            localStorage.setItem('darkMode', body.classList.contains('dark-mode'));
+            
+            // Update icon
+            toggle.textContent = body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        }
+
+        // Check for saved dark mode preference
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (savedDarkMode) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').textContent = '☀️';
+            }
+        });
+
+        // ===== TAB SWITCHING =====
+        function switchTab(element, mode) {
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active from all content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Add active to clicked tab
+            element.classList.add('active');
+
+            // Show corresponding content
+            document.getElementById(`tab-${mode}`).classList.add('active');
+        }
+
+        // ===== LOBBY CREATION & SHARING =====
+        function handleLobbyCreation(event) {
+            event.preventDefault();
+            
+            // Generate room ID
+            const roomId = generateRoomId();
+            const inviteLink = `https://mathpuzzle.game/join?room=${roomId}`;
+            
+            // Update modal with room info
+            document.getElementById('roomId').textContent = roomId;
+            document.getElementById('inviteLink').value = inviteLink;
+            
+            // Show modal
+            document.getElementById('shareModal').style.display = 'block';
+        }
+
+        function generateRoomId() {
+            return 'ROOM' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        function closeModal() {
+            document.getElementById('shareModal').style.display = 'none';
+        }
+
+        function copyInviteLink() {
+            const input = document.getElementById('inviteLink');
+            input.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }
+
+        function shareVia(platform) {
+            const inviteLink = document.getElementById('inviteLink').value;
+            const roomId = document.getElementById('roomId').textContent;
+            const message = `Join my MathPuzzle game! Room: ${roomId}`;
+            
+            const urls = {
+                whatsapp: `https://wa.me/?text=${encodeURIComponent(message + ' ' + inviteLink)}`,
+                telegram: `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(message)}`,
+                twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(inviteLink)}`,
+                email: `mailto:?subject=${encodeURIComponent('Join my MathPuzzle game!')}&body=${encodeURIComponent(message + '\n\n' + inviteLink)}`
+            };
+            
+            if (urls[platform]) {
+                window.open(urls[platform], '_blank');
+            }
+        }
+
+        function startGame() {
+            closeModal();
+            alert('Game started! In production, this would redirect to the game lobby.');
+        }
+
+        function joinLobby(roomId) {
+            alert(`Joining lobby: ${roomId}\n\nIn production, this would redirect to the game lobby.`);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('shareModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Simple demo: toggle between lobbies and empty state
+        let showLobbies = true;
+        document.querySelector('.cta-primary').addEventListener('click', function() {
+            const section = document.getElementById('lobbies-section');
+            showLobbies = !showLobbies;
+            section.style.display = showLobbies ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>
