@@ -1,8 +1,8 @@
-const CACHE_NAME = 'mathpuzzle-v1';
+const CACHE_NAME = 'mathpuzzle-v{{ app_version }}';
 const STATIC_ASSETS = [
   '/',
-  '/static/css/responsive.css',
-  '/static/manifest.json',
+  '/static/css/responsive.css?v={{ app_version }}',
+  '/static/manifest.json?v={{ app_version }}',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png'
 ];
@@ -39,19 +39,21 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // 1. Skip non-GET requests and external API calls (like QR code generator)
-  // These should not be handled by the service worker to avoid CORS issues
   if (event.request.method !== 'GET' || url.hostname.includes('qrserver.com')) {
     return;
   }
 
   // 2. Static Assets (Local or Fonts) - Cache First
-  if (STATIC_ASSETS.includes(url.pathname) || EXTERNAL_ASSETS.includes(event.request.url)) {
+  // Check both with and without query params for matching
+  const isStaticAsset = STATIC_ASSETS.some(asset => {
+      const assetUrl = new URL(asset, self.location.origin);
+      return url.pathname === assetUrl.pathname;
+  }) || EXTERNAL_ASSETS.includes(event.request.url);
+
+  if (isStaticAsset) {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        return cachedResponse || fetch(event.request).catch(() => {
-          // If fetch fails and no cache, just return nothing (avoid throw)
-          return null;
-        });
+        return cachedResponse || fetch(event.request).catch(() => null);
       })
     );
     return;
@@ -64,7 +66,6 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
           
-          // Fallback for navigation requests
           if (event.request.mode === 'navigate') {
              return caches.match('/');
           }
@@ -72,4 +73,11 @@ self.addEventListener('fetch', (event) => {
         });
       })
   );
+});
+
+// Message listener for skipWaiting
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

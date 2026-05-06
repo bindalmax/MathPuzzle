@@ -41,12 +41,22 @@ class TestPWAIntegration(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, 'application/javascript')
         self.assertIn(b'CACHE_NAME', response.data)
+        # Check for dynamic version in CACHE_NAME
+        from app import APP_VERSION
+        self.assertIn(f"mathpuzzle-v{APP_VERSION}".encode(), response.data)
+        
+        # Check for headers
+        self.assertEqual(response.headers.get('Cache-Control'), 'no-cache, no-store, must-revalidate')
+        self.assertEqual(response.headers.get('Service-Worker-Allowed'), '/')
 
     def test_homepage_pwa_tags(self):
+        from app import APP_VERSION
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
-        # Check for manifest link
-        self.assertIn(b'<link rel="manifest" href="/manifest.json">', response.data)
+        # Check for manifest link with cache buster
+        self.assertIn(f'<link rel="manifest" href="/manifest.json?v={APP_VERSION}">'.encode(), response.data)
+        # Check for CSS link with cache buster
+        self.assertIn(f'responsive.css?v={APP_VERSION}">'.encode(), response.data)
         # Check for theme-color
         self.assertIn(b'<meta name="theme-color" content="#4f46e5">', response.data)
         # Check for SW registration script

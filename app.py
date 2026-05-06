@@ -4,7 +4,7 @@ import sys
 # Add src directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, abort, send_from_directory, make_response
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -117,7 +117,13 @@ def sanitize_input(text):
 
 @app.route('/sw.js')
 def serve_sw():
-    return send_from_directory(app.static_folder, 'sw.js', mimetype='application/javascript')
+    response = make_response(render_template('sw.js', app_version=APP_VERSION))
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/manifest.json')
 def serve_manifest():
