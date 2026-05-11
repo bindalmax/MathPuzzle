@@ -44,7 +44,7 @@ class TestWebApp(unittest.TestCase):
     def test_index_get(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Welcome to the Math Game!', response.data)
+        self.assertIn(b'Master Math, Challenge Friends', response.data)
 
     def test_index_post_with_new_defaults(self):
         """Verify that server-side defaults (Multiplayer, Percentage, Medium) are applied."""

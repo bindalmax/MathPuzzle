@@ -18,3 +18,6 @@
 - Set up a CI/CD pipeline using GitHub Actions for automated testing and builds.
 - Add analytics endpoints to track gameplay metrics and user engagement.
 - Add unit and UI tests.
+
+### Bug Fixes and Minor Improvements
+- Fix decimal answer discrepancy: Ensure questions either have whole number answers or provide choices with decimal precision. Currently, users are confused when an expected answer is 17.90 but choices only show 18.

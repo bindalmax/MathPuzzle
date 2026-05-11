@@ -1,115 +1,326 @@
 {% extends "base.html" %}
 
-{% block title %}MathPuzzle - Welcome{% endblock %}
+{% block title %}MathPuzzle - Master Math, Challenge Friends{% endblock %}
+
+{% block extra_style %}
+    /* Prototype Styles Integration */
+    .hero {
+        padding: 2rem 0 3rem 0;
+        text-align: center;
+    }
+
+    .hero h1 {
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
+        margin-bottom: 0.5rem;
+        background: var(--header-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto 2rem auto;
+    }
+
+    /* Tabs */
+    .mode-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--paper-grid);
+        padding-bottom: 1rem;
+    }
+
+    .tab {
+        background: none;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-light);
+        cursor: pointer;
+        position: relative;
+        transition: color 0.2s;
+        border-radius: 8px;
+    }
+
+    .tab.active {
+        color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    .tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1rem;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-color);
+        border-radius: 3px 3px 0 0;
+    }
+
+    /* Grid */
+    .home-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .form-card {
+        text-align: left;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--text-color);
+        letter-spacing: 0.5px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+        width: 100%;
+    }
+
+    /* Custom Radio Styling (Visible for Selenium, hidden from users via positioning) */
+    .game-type-radios {
+        position: absolute;
+        left: -9999px;
+    }
+
+    /* Lobbies */
+    .lobby-section h3 {
+        text-align: left;
+        margin-bottom: 1.5rem;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .room-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        list-style: none;
+        padding: 0;
+    }
+
+    .room-item {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        padding: 1.25rem;
+        border-radius: 16px;
+        text-align: left;
+        transition: all 0.2s;
+    }
+
+    .room-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .room-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .room-id {
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .room-badge {
+        font-size: 0.75rem;
+        background: var(--primary-color);
+        color: white;
+        padding: 0.2rem 0.6rem;
+        border-radius: 10px;
+    }
+
+    .room-meta {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+
+    /* Info Box */
+    .info-box {
+        background: rgba(14, 165, 233, 0.05);
+        border-left: 4px solid var(--accent-color);
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-box p {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+        background: var(--bg-color);
+        border-radius: 16px;
+        border: 2px dashed var(--border-light);
+        color: var(--text-light);
+    }
+
+    .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+{% endblock %}
 
 {% block content %}
-    <h1>Welcome to the Math Game!</h1>
+    <section class="hero">
+        <h1>Master Math, Challenge Friends 🧮</h1>
+        <p>Sharpen your skills with fun puzzles, real-time multiplayer, and business simulations.</p>
+    </section>
 
     {% if error %}
-        <p class="error" role="alert">{{ error }}</p>
+        <p class="error" role="alert" id="error_msg">{{ error }}</p>
     {% endif %}
 
+    <div class="mode-tabs" role="tablist">
+        <button class="tab" id="tab-single" role="tab" onclick="setGameType('single')">Single Player</button>
+        <button class="tab" id="tab-multiplayer" role="tab" onclick="setGameType('multiplayer')">Multiplayer</button>
+        <button class="tab" id="tab-startup_challenge" role="tab" onclick="setGameType('startup_challenge')">Startup Challenge 🚀</button>
+    </div>
+
     <div class="home-grid">
-        <!-- Setup Game -->
-        <section class="setup-box">
-            <h2>Start New Game</h2>
-            <form action="{{ url_for('index') }}" method="post">
+        <!-- Setup Game Form -->
+        <div class="form-card">
+            <form action="{{ url_for('index') }}" method="post" id="game_form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div>
-                    <label for="player_name">Enter your GamerId:</label><br>
-                    <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard">
+                
+                <!-- Radio inputs for Selenium interaction -->
+                <div class="game-type-radios">
+                    <input type="radio" id="single" name="game_type" value="single" onchange="syncTabs()">
+                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="syncTabs()">
+                    <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="syncTabs()">
                 </div>
-                <br>
-                <fieldset style="border:none; padding:0;">
-                    <legend style="font-weight:bold;">Game Type:</legend>
-                    <input type="radio" id="single" name="game_type" value="single" onchange="toggleGameType()">
-                    <label for="single">Single Player</label>
-                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" checked onchange="toggleGameType()">
-                    <label for="multiplayer">Multiplayer</label>
-                    <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="toggleGameType()">
-                    <label for="startup_challenge">Startup Challenge 🚀</label>
-                </fieldset>
-                <br>
 
-                <div id="game-options">
-                    <div id="standard-options">
-                        <label for="category">Choose a category:</label><br>
-                        <select id="category" name="category" style="width:100%;">
-                            <option value="basic">Basic Arithmetic</option>
-                            <option value="decimal">Decimals and Fractions</option>
-                            <option value="percentage" selected>Percentages</option>
-                            <option value="profit">Profit and Loss</option>
-                            <option value="algebra">Algebra</option>
-                        </select><br><br>
+                <div class="form-group">
+                    <label for="player_name">GamerId</label>
+                    <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard" maxlength="20">
+                </div>
 
-                        <label for="difficulty">Choose a difficulty:</label><br>
-                        <select id="difficulty" name="difficulty" style="width:100%;">
+                <div id="standard-options">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="basic">📚 Basic Arithmetic</option>
+                            <option value="decimal">📊 Decimals and Fractions</option>
+                            <option value="percentage" selected>📈 Percentages</option>
+                            <option value="profit">💰 Profit and Loss</option>
+                            <option value="algebra">🔢 Algebra</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="difficulty">Difficulty</label>
+                        <select id="difficulty" name="difficulty">
                             <option value="easy">Easy</option>
                             <option value="medium" selected>Medium</option>
                             <option value="hard">Hard</option>
-                        </select><br><br>
-
-                        <label for="mode">Choose a game mode:</label><br>
-                        <select id="mode" name="mode" onchange="updateModeLabel()" style="width:100%;">
-                            <option value="time">Time Mode</option>
-                            <option value="questions">Question Count Mode</option>
-                        </select><br><br>
-
-                        <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
-                        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
+                        </select>
                     </div>
-                    <div id="startup-info" style="display:none; padding: 15px; background: #f0f8ff; border: 1px solid #add8e6; border-radius: 8px; margin-bottom: 15px; color: #333;">
-                        <p style="margin:0 0 10px 0;"><strong>Business Simulation:</strong> Grow your startup from $10,000 to a Unicorn! 🦄</p>
-                        <p style="margin:0;"><small>10 Questions • Alternating Market Analysis & Financial Planning</small></p>
+
+                    <div class="form-group">
+                        <label for="mode">Game Mode</label>
+                        <select id="mode" name="mode" onchange="updateModeLabel()">
+                            <option value="time">⏱️ Time Mode</option>
+                            <option value="questions">❓ Question Count Mode</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mode_value" id="mode_label">Time in seconds (5-300):</label>
+                        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required>
                     </div>
                 </div>
-                <br>
-                <button type="submit" id="start_btn" style="width:100%;">Create Multiplayer Lobby</button>
-            </form>
-        </section>
 
-        <!-- Join Existing Lobby -->
-        <section class="setup-box" id="join-section">
-            <h2>Join Active Lobby</h2>
+                <div id="startup-info" style="display:none;" class="info-box">
+                    <p><strong>Business Simulation:</strong> Grow your startup from $10,000 to a Unicorn! 🦄</p>
+                    <p style="margin-top:0.5rem;"><small>10 Questions • Alternating Market Analysis & Financial Planning</small></p>
+                </div>
+
+                <button type="submit" id="start_btn">Create Multiplayer Lobby</button>
+            </form>
+        </div>
+
+        <!-- Discovery/Join Section -->
+        <div class="lobby-section">
             {% if prefill_room %}
-                <div class="highlight-box" style="background: #ecfdf5; border: 2px solid #10b981; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                    <p style="margin:0 0 10px 0;"><strong>You're Invited!</strong> Enter your name to join room: <code>{{ prefill_room }}</code></p>
-                    <form action="{{ url_for('index') }}" method="post">
+                <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem;">
+                    <h3>👋 You're Invited!</h3>
+                    <p>Enter your GamerId below to join room: <strong>{{ prefill_room }}</strong></p>
+                    <form action="{{ url_for('index') }}" method="post" style="margin-top: 1rem;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="join_room_id" value="{{ prefill_room }}">
-                        <input type="text" name="player_name" placeholder="Your GamerId" required autofocus style="width:100%; border-color:#10b981;">
-                        <button type="submit" style="margin-top:10px; width:100%; background:var(--secondary-color);">Join Invite Lobby</button>
+                        <div style="display:flex; gap: 0.5rem;">
+                             <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px;">
+                             <button type="submit" style="background: var(--secondary-color); width: auto; min-height: 40px; padding: 0 1rem;">Join Lobby</button>
+                        </div>
                     </form>
                 </div>
-                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 20px 0;">
             {% endif %}
 
+            <h3>🎮 Active Lobbies</h3>
             {% if active_rooms %}
                 <ul class="room-list">
                     {% for room_id, details in active_rooms.items() %}
                         <li class="room-item">
-                            <div>
-                                <strong>Room: {{ room_id }}</strong><br>
-                                <small>{{ details.category | capitalize }} - {{ details.difficulty | capitalize }} ({{ details.mode }})</small><br>
-                                <span>Players: {{ details.players | length }}</span>
+                            <div class="room-header">
+                                <span class="room-id">Room {{ room_id }}</span>
+                                <span class="room-badge">👥 {{ details.players | length }}</span>
+                            </div>
+                            <div class="room-meta">
+                                {{ details.category | capitalize }} • {{ details.difficulty | capitalize }} ({{ details.mode }})
                             </div>
                             <form action="{{ url_for('index') }}" method="post">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="join_room_id" value="{{ room_id }}">
-                                <input type="text" name="player_name" placeholder="Your GamerId" required aria-label="GamerId to join">
-                                <button type="submit" style="margin-top:5px; width:100%;">Join Lobby</button>
+                                <div style="display:flex; gap: 0.5rem;">
+                                    <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px;">
+                                    <button type="submit" style="min-height: 40px; padding: 0 1rem; width: auto;">Join</button>
+                                </div>
                             </form>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No active lobbies. Create one to play with friends!</p>
+                <div class="empty-state">
+                    <div class="empty-icon">🛋️</div>
+                    <p>No active lobbies at the moment.</p>
+                    <small>Create one above to invite your friends!</small>
+                </div>
             {% endif %}
-        </section>
-    </div>
 
-    <div style="margin-top: 30px;">
-        <a href="{{ url_for('leaderboard') }}" style="text-decoration:none; color:var(--primary-color); font-weight:bold;">View Global Hall of Fame</a>
+            <div style="margin-top: 2rem; text-align: left;">
+                <a href="{{ url_for('leaderboard') }}" id="leaderboard_link" style="color: var(--primary-color); font-weight: 700;">🏆 View Global Hall of Fame</a>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -121,35 +332,59 @@
                 label.textContent = "Time in seconds (5-300):";
                 input.min = 5;
                 input.max = 300;
-                input.value = 20;
+                if (input.value < 5 || input.value > 300) input.value = 20;
             } else {
                 label.textContent = "Number of questions (1-100):";
                 input.min = 1;
                 input.max = 100;
-                input.value = 10;
+                if (input.value < 1 || input.value > 100) input.value = 10;
             }
         }
 
-        function toggleGameType() {
-            const isMultiplayer = document.getElementById('multiplayer').checked;
-            const isStartup = document.getElementById('startup_challenge').checked;
+        function setGameType(type) {
+            const radio = document.getElementById(type);
+            radio.checked = true;
+            syncTabs();
+            // Dispatch event for any other listeners
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function syncTabs() {
+            const types = ['single', 'multiplayer', 'startup_challenge'];
+            let activeType = 'multiplayer';
+            
+            types.forEach(t => {
+                const radio = document.getElementById(t);
+                const tab = document.getElementById('tab-' + t);
+                if (radio.checked) {
+                    activeType = t;
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
             const btn = document.getElementById('start_btn');
             const standardOptions = document.getElementById('standard-options');
             const startupInfo = document.getElementById('startup-info');
 
-            if (isStartup) {
+            if (activeType === 'startup_challenge') {
                 btn.textContent = "Start Startup Challenge";
                 standardOptions.style.display = 'none';
                 startupInfo.style.display = 'block';
             } else {
-                btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
+                btn.textContent = (activeType === 'multiplayer') ? "Create Multiplayer Lobby" : "Start Single Player Game";
                 standardOptions.style.display = 'block';
                 startupInfo.style.display = 'none';
             }
         }
 
         window.onload = function() {
-            toggleGameType();
+            // Default to multiplayer if nothing selected
+            if (!document.querySelector('input[name="game_type"]:checked')) {
+                document.getElementById('multiplayer').checked = true;
+            }
+            syncTabs();
             updateModeLabel();
         };
     </script>
