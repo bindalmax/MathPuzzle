@@ -20,6 +20,7 @@
 - Add unit and UI tests.
 
 ### Bug Fixes and Minor Improvements
+- Bug: Multiplayer question synchronization is unreliable. Race conditions cause players to receive different questions at game start. (Currently disabled in E2E tests)
 - Fix decimal answer discrepancy: Ensure questions either have whole number answers or provide choices with decimal precision. Currently, users are confused when an expected answer is 17.90 but choices only show 18.
 - Fix: Leaderboard alternate rows visibility in dark mode.
 - Improvement: Make leaderboard alignment and table width dynamic for large screens to utilize available space effectively.
