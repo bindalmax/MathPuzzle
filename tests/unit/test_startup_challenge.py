@@ -19,12 +19,12 @@ class TestStartupChallenge(unittest.TestCase):
         # Simulate correct answer (+217%)
         growth = game.startup_value * 2.17
         game.startup_value += growth
-        self.assertEqual(game.startup_value, 31700.0)
+        self.assertEqual(game.startup_value, 317000.0)
         
         # Simulate wrong answer (-50%)
         loss = game.startup_value * 0.5
         game.startup_value -= loss
-        self.assertEqual(game.startup_value, 15850.0)
+        self.assertEqual(game.startup_value, 158500.0)
 
     def test_ceo_score_calculation(self):
         game = StartupChallengeGame("TestPlayer")

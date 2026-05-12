@@ -38,7 +38,7 @@ class TestStartupChallengeIntegration(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         with self.client.session_transaction() as sess:
             self.assertTrue(sess['is_startup_challenge'])
-            self.assertEqual(sess['startup_value'], 10000.0)
+            self.assertEqual(sess['startup_value'], 100000.0)
             self.assertEqual(sess['questions_answered'], 0)
 
         # 2. Answer first question correctly
@@ -50,8 +50,8 @@ class TestStartupChallengeIntegration(unittest.TestCase):
         
         with self.client.session_transaction() as sess:
             self.assertEqual(sess['questions_answered'], 1)
-            # 10,000 + 217% = 31,700
-            self.assertEqual(sess['startup_value'], 31700.0)
+            # 100,000 * 2.51 = 251,000
+            self.assertEqual(sess['startup_value'], 251000.0)
 
         # 3. Answer second question incorrectly
         with self.client.session_transaction() as sess:
@@ -61,15 +61,15 @@ class TestStartupChallengeIntegration(unittest.TestCase):
         
         with self.client.session_transaction() as sess:
             self.assertEqual(sess['questions_answered'], 2)
-            # 31,700 - 50% = 15,850
-            self.assertEqual(sess['startup_value'], 15850.0)
+            # 251,000 - 50% = 125,500
+            self.assertEqual(sess['startup_value'], 125500.0)
 
         # 4. Check Game Over
         response = self.client.get('/game_over')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Startup Challenge Results', response.data)
-        self.assertIn(b'15,850', response.data)
-        self.assertIn(b'Bootstrap Survivalist', response.data)
+        self.assertIn(b'125,500', response.data)
+        self.assertIn(b'Rising Star', response.data)
 
 if __name__ == '__main__':
     unittest.main()
