@@ -144,11 +144,20 @@ body {
     border-radius: 8px;
     border: 1px solid var(--paper-grid);
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 table {
+    width: 100%;
     min-width: 600px;
     background: var(--card-bg);
+}
+
+@media (min-width: 1200px) {
+    .table-container {
+        max-width: 1400px;
+    }
 }
 
 th {
