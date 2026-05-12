@@ -74,6 +74,7 @@ class QuestionFactory:
         from .percentage import PercentageQuestion
         from .profit_loss import ProfitLossQuestion
         from .algebra import AlgebraQuestion
+        from .startup import StartupQuestion
 
         # Support both short keys and API-friendly names
         categories = {
@@ -85,6 +86,7 @@ class QuestionFactory:
             "profit": ProfitLossQuestion,
             "profit_loss": ProfitLossQuestion,
             "algebra": AlgebraQuestion,
+            "startup": StartupQuestion,
         }
         return categories.get(self.category)
 

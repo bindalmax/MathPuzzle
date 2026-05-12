@@ -179,7 +179,7 @@ def index():
         if game_type == 'startup_challenge':
             session['multiplayer'] = False
             session['is_startup_challenge'] = True
-            session['startup_value'] = 10000.0
+            session['startup_value'] = 100000.0
             session['score'] = 0
             session['questions_answered'] = 0
             session['total_questions'] = 10
@@ -243,17 +243,11 @@ def game():
             session['current_answer'] = answer
         else:
             return redirect(url_for('game_over'))
-    elif session.get('is_startup_challenge'):
-        # Alternate between percentage and profit_loss
-        category = 'percentage' if questions_answered % 2 == 0 else 'profit_loss'
-        session['category'] = category
-        factory = QuestionFactory(category, 'medium')
+    if session.get('is_startup_challenge'):
+        factory = QuestionFactory("startup", 'medium')
         try:
             question, answer, choices = factory.create_question()
             session['current_answer'] = answer
-            # Add narrative prefix
-            narrative = "Market Analysis: " if category == 'percentage' else "Financial Planning: "
-            question = narrative + question
         except Exception as e:
             app.logger.error(f"Error in startup challenge: {str(e)}")
             return render_template('game_over.html', error="An unexpected error occurred.")
@@ -300,7 +294,8 @@ def submit_answer():
             session['score'] += 1
             
             if session.get('is_startup_challenge'):
-                growth = session['startup_value'] * 0.2
+                # ~2.51x growth (+151%) per correct answer to reach $1B from $100K in 10 questions
+                growth = session['startup_value'] * 1.51
                 session['startup_value'] += growth
             
             if session.get('multiplayer'):
@@ -313,11 +308,11 @@ def submit_answer():
                                   {'players': rooms[room_id]['scores']}, 
                                   room=room_id)
         elif session.get('is_startup_challenge'):
-            loss = session['startup_value'] * 0.1
+            loss = session['startup_value'] * 0.5
             session['startup_value'] -= loss
     except (ValueError, TypeError):
         if session.get('is_startup_challenge'):
-             loss = session['startup_value'] * 0.1
+             loss = session['startup_value'] * 0.5
              session['startup_value'] -= loss
         pass
     
@@ -345,14 +340,19 @@ def game_over():
         if session.get('is_startup_challenge'):
             final_value = session.get('startup_value', 0)
             ceo_score = int(final_value / 100)
-            if ceo_score > 500:
-                title = "Unicorn CEO 🦄"
-            elif ceo_score > 200:
+            
+            if final_value >= 1000000000:
+                title = "Unicorn CEO 🦄 (Billionaire)"
+            elif final_value >= 100000000:
+                title = "Centimillionaire Founder 💎"
+            elif final_value >= 10000000:
                 title = "Serial Entrepreneur 🚀"
-            elif ceo_score > 100:
-                title = "Startup Founder 💼"
+            elif final_value >= 1000000:
+                title = "Successful Exit 💰"
+            elif final_value >= 100000:
+                title = "Rising Star 🌟"
             else:
-                title = "Junior Founder 🌱"
+                title = "Bootstrap Survivalist 🛠️"
             
             startup_data = {
                 'final_value': final_value,

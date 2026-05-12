@@ -16,25 +16,26 @@ class TestStartupChallenge(unittest.TestCase):
         game = StartupChallengeGame("TestPlayer")
         self.assertEqual(game.startup_value, 10000.0)
         
-        # Simulate correct answer
-        growth = game.startup_value * 0.2
+        # Simulate correct answer (+217%)
+        growth = game.startup_value * 2.17
         game.startup_value += growth
-        self.assertEqual(game.startup_value, 12000.0)
+        self.assertEqual(game.startup_value, 31700.0)
         
-        # Simulate wrong answer
-        loss = game.startup_value * 0.1
+        # Simulate wrong answer (-50%)
+        loss = game.startup_value * 0.5
         game.startup_value -= loss
-        self.assertEqual(game.startup_value, 10800.0)
+        self.assertEqual(game.startup_value, 15850.0)
 
     def test_ceo_score_calculation(self):
         game = StartupChallengeGame("TestPlayer")
-        game.startup_value = 55000.0
+        # $1.1 Billion
+        game.startup_value = 1100000000.0
         ceo_score = int(game.startup_value / 100)
-        self.assertEqual(ceo_score, 550)
         
-        if ceo_score > 500:
-            title = "Unicorn CEO 🦄"
-        self.assertEqual(title, "Unicorn CEO 🦄")
+        if game.startup_value >= 1000000000:
+            title = "Unicorn CEO 🦄 (Billionaire)"
+        
+        self.assertEqual(title, "Unicorn CEO 🦄 (Billionaire)")
 
 if __name__ == '__main__':
     unittest.main()

@@ -109,29 +109,20 @@ class Game:
 class StartupChallengeGame(Game):
     def __init__(self, player_name):
         self.player_name = player_name
-        self.percentage_factory = QuestionFactory("percentage", "medium")
-        self.profit_loss_factory = QuestionFactory("profit_loss", "medium")
-        self.startup_value = 10000.0
+        self.factory = QuestionFactory("startup", "medium")
+        self.startup_value = 100000.0
         self.total_questions = 10
         self.score = 0
         self.game_over = threading.Event()
 
     def run(self):
         print(f"\nWelcome to the Startup Challenge, {self.player_name}!")
-        print("You have $10,000 in seed funding. Grow your business by making smart mathematical decisions.")
+        print("You have $100,000 in seed funding. Grow your business by making smart mathematical decisions.")
         
         for i in range(1, self.total_questions + 1):
-            if i % 2 == 1:
-                factory = self.percentage_factory
-                narrative = "Market Analysis: "
-            else:
-                factory = self.profit_loss_factory
-                narrative = "Financial Planning: "
-            
-            question, answer, choices = factory.create_question()
+            question, answer, choices = self.factory.create_question()
             print(f"\nQuestion {i}/{self.total_questions}")
             print(f"Current Startup Value: ${self.startup_value:,.2f}")
-            print(narrative, end="")
             
             user_answer = self.ask_question(question, answer, choices)
             
@@ -139,29 +130,34 @@ class StartupChallengeGame(Game):
                 break
             
             if user_answer is not None and abs(user_answer - answer) < 0.01:
-                growth = self.startup_value * 0.2
+                # ~2.59x growth per correct answer (+159%) to reach $1M in 10 questions
+                growth = self.startup_value * 1.59
                 self.startup_value += growth
                 self.score += 1
                 print(f"Correct! Your startup value grew by ${growth:,.2f} to ${self.startup_value:,.2f}")
             else:
-                loss = self.startup_value * 0.1
+                loss = self.startup_value * 0.5
                 self.startup_value -= loss
                 print(f"Wrong! The correct answer was {answer}. Your startup value fell by ${loss:,.2f} to ${self.startup_value:,.2f}")
 
         ceo_score = int(self.startup_value / 100)
         print(f"\nChallenge Complete!")
         print(f"Final Startup Value: ${self.startup_value:,.2f}")
-        print(f"Your CEO Score: {ceo_score}")
         
-        if ceo_score > 500:
-            title = "Unicorn CEO 🦄"
-        elif ceo_score > 200:
+        if self.startup_value >= 1000000:
+            title = "Unicorn CEO 🦄 (Millionaire)"
+        elif self.startup_value >= 500000:
+            title = "Centimillionaire Founder 💎"
+        elif self.startup_value >= 100000:
             title = "Serial Entrepreneur 🚀"
-        elif ceo_score > 100:
-            title = "Startup Founder 💼"
+        elif self.startup_value >= 50000:
+            title = "Successful Exit 💰"
+        elif self.startup_value >= 25000:
+            title = "Rising Star 🌟"
         else:
-            title = "Junior Founder 🌱"
+            title = "Bootstrap Survivalist 🛠️"
         
+        print(f"Your CEO Score: {ceo_score}")
         print(f"Title: {title}")
         return ceo_score, title
 
