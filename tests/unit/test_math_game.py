@@ -152,13 +152,13 @@ class TestStartupChallengeGame(unittest.TestCase):
             ("What is 50% of 200? ", 100, [50, 100, 150, 200])
         ]
         game = StartupChallengeGame("CEO_Tester")
-        # 10,000 -> correct (10) -> 12,000 -> correct (20) -> 14,400 -> quit
+        # 100,000 -> correct (10) -> 100,000 + 159% = 259,000 -> correct (20) -> 259,000 + 159% = 670,810 -> quit
         ceo_score, title = game.run()
         
         self.assertEqual(game.score, 2)
-        self.assertEqual(game.startup_value, 14400.0)
-        self.assertEqual(ceo_score, 144)
-        self.assertEqual(title, "Startup Founder 💼")
+        self.assertAlmostEqual(game.startup_value, 670810.0)
+        self.assertEqual(ceo_score, 6708)
+        self.assertEqual(title, "Centimillionaire Founder 💎")
 
 if __name__ == '__main__':
     unittest.main()

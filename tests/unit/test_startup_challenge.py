@@ -14,7 +14,7 @@ class TestStartupChallenge(unittest.TestCase):
         # We can't easily test the run() loop without mocking input/output
         # but we can test the initial state and logic if we expose it
         game = StartupChallengeGame("TestPlayer")
-        self.assertEqual(game.startup_value, 10000.0)
+        self.assertEqual(game.startup_value, 100000.0)
         
         # Simulate correct answer (+217%)
         growth = game.startup_value * 2.17
