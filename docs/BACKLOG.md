@@ -21,3 +21,7 @@
 
 ### Bug Fixes and Minor Improvements
 - Fix decimal answer discrepancy: Ensure questions either have whole number answers or provide choices with decimal precision. Currently, users are confused when an expected answer is 17.90 but choices only show 18.
+- Fix: Leaderboard alternate rows visibility in dark mode.
+- Improvement: Make leaderboard alignment and table width dynamic for large screens to utilize available space effectively.
+- Improvement: Refine Single and Multiplayer tab UI/UX for better visual clarity and engagement.
+- Feature: Move "Active Lobbies" to a separate tab to declutter the home screen and improve discovery.
