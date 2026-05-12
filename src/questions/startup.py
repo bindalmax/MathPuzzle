@@ -3,15 +3,22 @@ import math
 from .base import Question
 
 class StartupQuestion(Question):
+    _last_category = None
+
     def generate(self, difficulty):
         # We ignore difficulty for now as startup challenge is fixed to "medium" vibe but scales
-        q_type = random.choice([
+        categories = [
             'market_analysis', 
             'resource_optimization', 
             'unit_economics', 
             'runway_management',
             'financial_planning'
-        ])
+        ]
+        
+        # Avoid repeating the last category
+        available = [c for c in categories if c != StartupQuestion._last_category]
+        q_type = random.choice(available)
+        StartupQuestion._last_category = q_type
 
         if q_type == 'market_analysis':
             # Percentage based
