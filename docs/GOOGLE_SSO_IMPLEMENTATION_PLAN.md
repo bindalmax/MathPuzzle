@@ -1,17 +1,14 @@
-# Google SSO Implementation Plan
+# Google SSO Implementation Plan (Web/PWA)
 
-This document outlines the strategy for implementing Google Single Sign-On (SSO) across the MathPuzzle Web/PWA and Flutter Mobile applications.
+This document outlines the strategy for implementing Google Single Sign-On (SSO) for the MathPuzzle Web and Progressive Web Application (PWA).
 
 ## Dependencies & Prerequisites
 - **Google Cloud Project:** Active project with "OAuth consent screen" configured.
 - **Backend (Flask):** `google-auth` and `requests` libraries.
 - **Frontend (Web):** Google Identity Services (GIS) JavaScript library.
-- **Frontend (Mobile):** `google_sign_in` Flutter plugin.
 - **Environment Variables:**
-    - `GOOGLE_CLIENT_ID` (Web)
-    - `GOOGLE_CLIENT_ID_ANDROID`
-    - `GOOGLE_CLIENT_ID_IOS`
-    - `GOOGLE_CLIENT_SECRET` (Backend)
+    - `GOOGLE_CLIENT_ID`
+    - `GOOGLE_CLIENT_SECRET`
 
 ---
 
@@ -20,68 +17,57 @@ This document outlines the strategy for implementing Google Single Sign-On (SSO)
    - Set User Type to "External".
    - Add scopes: `openid`, `https://www.googleapis.com/auth/userinfo.email`, `https://www.googleapis.com/auth/userinfo.profile`.
 2. **Credentials Creation:**
-   - **Web Client ID:** For PWA and Web version. Add Authorized JavaScript origins and redirect URIs.
-   - **Android Client ID:** Requires SHA-1 fingerprint from your signing certificate.
-   - **iOS Client ID:** Requires Bundle ID.
+   - **Web Client ID:** Create a "Web application" credential.
+   - **Authorized JavaScript origins:** Add your production domain (e.g., `https://mathpuzzle.com`) and local dev URL (`https://localhost:5005`).
+   - **Authorized redirect URIs:** Add the endpoint that will handle the login callback if using the redirect flow.
 
 ---
 
 ## Phase 2: Backend Implementation (Flask)
 1. **Token Verification Endpoint:**
    - Create `POST /api/auth/google`.
-   - Payload: `{ "id_token": "..." }`.
+   - Payload: `{ "credential": "..." }` (This is the ID Token returned by Google GIS).
    - Logic: 
      - Use `google.oauth2.id_token.verify_oauth2_token` to validate the token.
      - Extract `sub` (Google User ID), `email`, and `name`.
 2. **User Management:**
    - Check if a user with this `google_id` exists in the database.
    - If not, **auto-generate a Gamer ID** (e.g., `Gamer_` + random suffix).
-   - Create a session or issue a JWT for subsequent API calls.
+   - Create a session (e.g., via Flask-Session or JWT) for subsequent API calls.
 3. **Database Schema Update:**
    - Add `google_id` (string, indexed, unique) to the user table.
-   - Ensure Gamer ID is editable but unique.
+   - Ensure Gamer ID is unique and editable by the user.
 
 ---
 
 ## Phase 3: Web & PWA Integration
 1. **Google Identity Services (GIS):**
    - Include `<script src="https://accounts.google.com/gsi/client" async defer></script>`.
-   - Implement "One Tap" sign-in for a seamless PWA experience.
-2. **Session Sharing:**
-   - Ensure the backend sets a secure, `HttpOnly` cookie for the session.
-   - This allows the PWA (standalone) to share the session with the mobile browser.
+   - Implement **"One Tap" sign-in** for a seamless experience on return visits.
+   - Add the standard "Sign in with Google" button to the landing page.
+2. **Session Persistence in PWA:**
+   - Ensure the backend sets a secure, `HttpOnly`, `SameSite=Lax` cookie.
+   - This ensures that once the user is logged in via the browser, the PWA (standalone mode) inherits the session seamlessly.
 
 ---
 
-## Phase 4: Flutter Mobile Integration
-1. **Plugin Configuration:**
-   - Add `google_sign_in` to `pubspec.yaml`.
-   - Update `AndroidManifest.xml` and `Info.plist` with Client IDs.
-2. **Sign-In Flow:**
-   - Call `GoogleSignIn().signIn()`.
-   - Send the `idToken` from the result to the Flask `/api/auth/google` endpoint.
-   - Handle the backend response (store JWT or session).
-
----
-
-## Phase 5: Security & GDPR Compliance
+## Phase 4: Security & GDPR Compliance
 1. **Security:**
-   - **Always** verify the ID token on the backend; never trust user IDs sent directly from the client.
-   - Use CSRF protection for Web/PWA flows.
+   - **Backend Verification:** Never trust a user ID or email sent directly from the frontend. Always verify the JWT token from Google.
+   - **CSRF Protection:** Ensure state tokens or CSRF headers are used for the auth endpoint.
 2. **GDPR:**
-   - **Data Minimization:** Only store the Google User ID, Email, and Name.
-   - **Consent:** Show a privacy notice before the user completes their first login.
-   - **Deletion:** Provide a way for users to delete their account and associated highscores.
+   - **Data Minimization:** Only store the unique Google ID and basic profile info needed for the Gamer ID.
+   - **Transparency:** Update the Privacy Policy to disclose that Google is used for authentication.
+   - **Account Deletion:** Implement a "Delete My Account" feature that purges all user-linked data.
 
 ---
 
 ## Implementation Checklist
-- [ ] Create Google Cloud Project and Credentials.
+- [ ] Create Google Cloud Project and Web Credentials.
 - [ ] Add `google-auth` to `requirements.txt`.
-- [ ] Implement `id_token` verification in `app.py` or a dedicated auth service.
-- [ ] Update `Highscore` or create a new `User` model to store `google_id`.
-- [ ] Implement Gamer ID generation logic.
-- [ ] Add Google Sign-In button to `index.html`.
-- [ ] Integrate `google_sign_in` in Flutter app.
-- [ ] Verify session sharing between PWA and Browser.
+- [ ] Implement `id_token` verification logic in the Flask backend.
+- [ ] Update database schema to store `google_id`.
+- [ ] Implement auto-generation logic for Gamer IDs.
+- [ ] Integrate Google One Tap and Sign-In button in `index.html`.
+- [ ] Verify session sharing between browser and standalone PWA mode.
 - [ ] Update Privacy Policy for GDPR compliance.

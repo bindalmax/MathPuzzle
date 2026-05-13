@@ -205,11 +205,12 @@
         <button class="tab" id="tab-single" role="tab" onclick="setGameType('single')">Single Player</button>
         <button class="tab" id="tab-multiplayer" role="tab" onclick="setGameType('multiplayer')">Multiplayer</button>
         <button class="tab" id="tab-startup_challenge" role="tab" onclick="setGameType('startup_challenge')">Startup Challenge 🚀</button>
+        <button class="tab" id="tab-lobbies" role="tab" onclick="setGameType('lobbies')">Active Lobbies</button>
     </div>
 
     <div class="home-grid">
         <!-- Setup Game Form -->
-        <div class="form-card">
+        <div class="form-card" id="game-setup-section">
             <form action="{{ url_for('index') }}" method="post" id="game_form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 
@@ -218,6 +219,7 @@
                     <input type="radio" id="single" name="game_type" value="single" onchange="syncTabs()">
                     <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="syncTabs()">
                     <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="syncTabs()">
+                    <input type="radio" id="lobbies" name="game_type" value="lobbies" onchange="syncTabs()">
                 </div>
 
                 <div class="form-group">
@@ -270,7 +272,7 @@
         </div>
 
         <!-- Discovery/Join Section -->
-        <div class="lobby-section">
+        <div class="lobby-section" id="lobby-section">
             {% if prefill_room %}
                 <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem;">
                     <h3>👋 You're Invited!</h3>
@@ -350,7 +352,7 @@
         }
 
         function syncTabs() {
-            const types = ['single', 'multiplayer', 'startup_challenge'];
+            const types = ['single', 'multiplayer', 'startup_challenge', 'lobbies'];
             let activeType = 'multiplayer';
             
             types.forEach(t => {
@@ -367,15 +369,25 @@
             const btn = document.getElementById('start_btn');
             const standardOptions = document.getElementById('standard-options');
             const startupInfo = document.getElementById('startup-info');
+            const setupSection = document.getElementById('game-setup-section');
+            const lobbySection = document.getElementById('lobby-section');
 
-            if (activeType === 'startup_challenge') {
-                btn.textContent = "Start Startup Challenge";
-                standardOptions.style.display = 'none';
-                startupInfo.style.display = 'block';
+            if (activeType === 'lobbies') {
+                setupSection.style.display = 'none';
+                lobbySection.style.display = 'block';
             } else {
-                btn.textContent = (activeType === 'multiplayer') ? "Create Multiplayer Lobby" : "Start Single Player Game";
-                standardOptions.style.display = 'block';
-                startupInfo.style.display = 'none';
+                setupSection.style.display = 'block';
+                lobbySection.style.display = (activeType === 'multiplayer') ? 'block' : 'none';
+                
+                if (activeType === 'startup_challenge') {
+                    btn.textContent = "Start Startup Challenge";
+                    standardOptions.style.display = 'none';
+                    startupInfo.style.display = 'block';
+                } else {
+                    btn.textContent = (activeType === 'multiplayer') ? "Create Multiplayer Lobby" : "Start Single Player Game";
+                    standardOptions.style.display = 'block';
+                    startupInfo.style.display = 'none';
+                }
             }
         }
 
