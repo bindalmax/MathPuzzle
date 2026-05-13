@@ -108,10 +108,11 @@
                 <p style="font-size: 0.9rem; color: #666; font-style: italic;">Scores update in real-time.</p>
             </section>
         {% endif %}
-    {% endif %}
+        {% endif %}
 
-    <nav class="nav-links">
-        <a href="{{ url_for('restart') }}" class="primary">Restart Session</a>
+        {% include 'components/ad_banner.html' %}
+
+        <nav class="nav-links">        <a href="{{ url_for('restart') }}" class="primary">Restart Session</a>
         <a href="{{ url_for('index') }}">New Settings</a>
         <a href="{{ url_for('leaderboard') }}" class="secondary">Global Hall of Fame</a>
     </nav>
