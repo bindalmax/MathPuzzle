@@ -326,6 +326,39 @@
     </div>
 
     <script>
+        function generateRandomGamerId() {
+            const adjectives = ['Cool', 'Super', 'Math', 'Alpha', 'Quantum', 'Epic', 'Swift', 'Mega'];
+            const nouns = ['Wizard', 'Solver', 'Hero', 'Thinker', 'Logic', 'Geek', 'Master', 'Prime'];
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const noun = nouns[Math.floor(Math.random() * nouns.length)];
+            const num = Math.floor(100 + Math.random() * 900);
+            return `${adj}${noun}${num}`;
+        }
+
+        function setupGamerId() {
+            let gamerId = localStorage.getItem('mathpuzzle_gamer_id');
+            if (!gamerId) {
+                gamerId = generateRandomGamerId();
+                localStorage.setItem('mathpuzzle_gamer_id', gamerId);
+            }
+            
+            // Query both id="player_name" and name="player_name" to include all inputs (visible and hidden)
+            const inputs = document.querySelectorAll('#player_name, input[name="player_name"]');
+            inputs.forEach(input => {
+                input.value = gamerId;
+                input.addEventListener('input', (e) => {
+                    const newValue = e.target.value;
+                    if (newValue.trim()) {
+                        localStorage.setItem('mathpuzzle_gamer_id', newValue);
+                        // Sync all other inputs on the same page (including hidden ones)
+                        document.querySelectorAll('#player_name, input[name="player_name"]').forEach(other => {
+                            if (other !== e.target) other.value = newValue;
+                        });
+                    }
+                });
+            });
+        }
+
         function updateModeLabel() {
             const mode = document.getElementById('mode').value;
             const label = document.getElementById('mode_label');
@@ -396,6 +429,7 @@
             if (!document.querySelector('input[name="game_type"]:checked')) {
                 document.getElementById('multiplayer').checked = true;
             }
+            setupGamerId();
             syncTabs();
             updateModeLabel();
         };
