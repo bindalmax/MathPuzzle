@@ -243,6 +243,21 @@
         <p class="error" role="alert" id="error_msg">{{ error }}</p>
     {% endif %}
 
+    {% if prefill_room %}
+        <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <h3>👋 You're Invited!</h3>
+            <p>Enter your GamerId below to join room: <strong>{{ prefill_room }}</strong></p>
+            <form action="{{ url_for('index') }}" method="post" style="margin-top: 1rem;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="join_room_id" value="{{ prefill_room }}">
+                <div style="display:flex; gap: 0.5rem;">
+                        <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px;">
+                        <button type="submit" style="background: var(--secondary-color); width: auto; min-height: 40px; padding: 0 1rem;">Join Lobby</button>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
     <div class="mode-tabs" role="tablist">
         <button class="tab" id="tab-single" role="tab" onclick="setGameType('single')">🎯 Solo Challenge</button>
         <button class="tab" id="tab-multiplayer" role="tab" onclick="setGameType('multiplayer')">👥 Multiplayer</button>
@@ -259,6 +274,7 @@
         <div class="form-card" id="game-setup-section">
             <form action="{{ url_for('index') }}" method="post" id="game_form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="player_name" id="hidden_player_name">
                 
                 <!-- Radio inputs for Selenium interaction -->
                 <div class="game-type-radios">
@@ -317,20 +333,6 @@
 
         <!-- Discovery/Join Section -->
         <div class="lobby-section" id="lobby-section">
-            {% if prefill_room %}
-                <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem;">
-                    <h3>👋 You're Invited!</h3>
-                    <p>Enter your GamerId below to join room: <strong>{{ prefill_room }}</strong></p>
-                    <form action="{{ url_for('index') }}" method="post" style="margin-top: 1rem;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="join_room_id" value="{{ prefill_room }}">
-                        <div style="display:flex; gap: 0.5rem;">
-                             <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px;">
-                             <button type="submit" style="background: var(--secondary-color); width: auto; min-height: 40px; padding: 0 1rem;">Join Lobby</button>
-                        </div>
-                    </form>
-                </div>
-            {% endif %}
 
             <h3>🎮 Active Lobbies</h3>
             {% if active_rooms %}
@@ -386,21 +388,28 @@
                 localStorage.setItem('mathpuzzle_gamer_id', gamerId);
             }
             
-            // Query both id="player_name" and name="player_name" to include all inputs (visible and hidden)
-            const inputs = document.querySelectorAll('#player_name, input[name="player_name"]');
-            inputs.forEach(input => {
+            const mainInput = document.getElementById('player_name');
+            const hiddenInput = document.getElementById('hidden_player_name');
+            
+            mainInput.value = gamerId;
+            if (hiddenInput) hiddenInput.value = gamerId;
+
+            // Sync with all join forms in lobby section AND the invitation section
+            document.querySelectorAll('input[name="player_name"]').forEach(input => {
                 input.value = gamerId;
-                input.addEventListener('input', (e) => {
-                    const newValue = e.target.value;
-                    if (newValue.trim()) {
-                        localStorage.setItem('mathpuzzle_gamer_id', newValue);
-                        // Sync all other inputs on the same page (including hidden ones)
-                        document.querySelectorAll('#player_name, input[name="player_name"]').forEach(other => {
-                            if (other !== e.target) other.value = newValue;
-                        });
-                    }
-                    syncTabs();
-                });
+            });
+
+            mainInput.addEventListener('input', (e) => {
+                const newValue = e.target.value;
+                if (newValue.trim()) {
+                    localStorage.setItem('mathpuzzle_gamer_id', newValue);
+                    if (hiddenInput) hiddenInput.value = newValue;
+                    
+                    document.querySelectorAll('input[name="player_name"]').forEach(input => {
+                        input.value = newValue;
+                    });
+                }
+                syncTabs();
             });
         }
 
