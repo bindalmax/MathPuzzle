@@ -4,6 +4,16 @@
 
 {% block extra_style %}
     /* Prototype Styles Integration */
+    .hidden {
+        display: none !important;
+    }
+    
+    .form-section {
+        transition: opacity 0.3s ease-in;
+    }
+    
+    /* ... existing CSS ... */
+    
     .hero {
         padding: 2rem 0 3rem 0;
         text-align: center;
@@ -61,6 +71,38 @@
         height: 3px;
         background: var(--primary-color);
         border-radius: 3px 3px 0 0;
+    }
+
+    /* Progressive Disclosure Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-section {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .form-section.hidden {
+        display: none;
+    }
+
+    .form-section-header {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-light);
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-light);
     }
 
     /* Grid */
@@ -207,6 +249,11 @@
         <button class="tab" id="tab-startup_challenge" role="tab" onclick="setGameType('startup_challenge')">🚀 Startup Quest</button>
     </div>
 
+    <div class="form-group" style="max-width: 400px; margin: 0 auto 2rem auto;">
+        <label for="player_name">Your GamerId</label>
+        <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard" maxlength="20">
+    </div>
+
     <div class="home-grid">
         <!-- Setup Game Form -->
         <div class="form-card" id="game-setup-section">
@@ -220,12 +267,8 @@
                     <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="syncTabs()">
                 </div>
 
-                <div class="form-group">
-                    <label for="player_name">GamerId</label>
-                    <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard" maxlength="20">
-                </div>
-
-                <div id="standard-options">
+                <div id="standard-options" class="form-section hidden">
+                    <div class="form-section-header">📋 Game Settings</div>
                     <div class="form-group">
                         <label for="category">Category</label>
                         <select id="category" name="category">
@@ -260,12 +303,15 @@
                     </div>
                 </div>
 
-                <div id="startup-info" style="display:none;" class="info-box">
-                    <p><strong>CEO Quest: The Unicorn Hunt 🦄</strong></p>
-                    <p style="margin-top:0.5rem;"><small>$100K Seed ➡️ $1B Exit. Solve 10 high-stakes business puzzles. One wrong move could trigger a down-round!</small></p>
+                <div id="startup-info" class="form-section hidden">
+                    <div class="form-section-header">🚀 Startup Challenge</div>
+                    <div class="info-box">
+                        <p><strong>CEO Quest: The Unicorn Hunt 🦄</strong></p>
+                        <p style="margin-top:0.5rem;"><small>$100K Seed ➡️ $1B Exit. Solve 10 high-stakes business puzzles. One wrong move could trigger a down-round!</small></p>
+                    </div>
                 </div>
 
-                <button type="submit" id="start_btn">Create Multiplayer Lobby</button>
+                <button type="submit" id="start_btn" class="hidden">Create Game</button>
             </form>
         </div>
 
@@ -353,6 +399,7 @@
                             if (other !== e.target) other.value = newValue;
                         });
                     }
+                    syncTabs();
                 });
             });
         }
@@ -389,10 +436,10 @@
             types.forEach(t => {
                 const radio = document.getElementById(t);
                 const tab = document.getElementById('tab-' + t);
-                if (radio.checked) {
+                if (radio && radio.checked) {
                     activeType = t;
                     tab.classList.add('active');
-                } else {
+                } else if (tab) {
                     tab.classList.remove('active');
                 }
             });
@@ -400,21 +447,28 @@
             const btn = document.getElementById('start_btn');
             const standardOptions = document.getElementById('standard-options');
             const startupInfo = document.getElementById('startup-info');
-            const setupSection = document.getElementById('game-setup-section');
             const lobbySection = document.getElementById('lobby-section');
+            const gamerId = document.getElementById('player_name').value.trim();
 
-            // Always show setup section, show lobby section only for Multiplayer
-            setupSection.style.display = 'block';
-            lobbySection.style.display = (activeType === 'multiplayer') ? 'block' : 'none';
-            
-            if (activeType === 'startup_challenge') {
-                btn.textContent = "Start Startup Quest";
-                standardOptions.style.display = 'none';
-                startupInfo.style.display = 'block';
+            if (gamerId) {
+                // Reveal options
+                btn.classList.remove('hidden');
+                if (activeType === 'startup_challenge') {
+                    btn.textContent = "Start Startup Quest";
+                    standardOptions.classList.add('hidden');
+                    startupInfo.classList.remove('hidden');
+                } else {
+                    btn.textContent = (activeType === 'multiplayer') ? "Create Multiplayer Lobby" : "Start Solo Challenge";
+                    standardOptions.classList.remove('hidden');
+                    startupInfo.classList.add('hidden');
+                }
+                lobbySection.style.display = (activeType === 'multiplayer') ? 'block' : 'none';
             } else {
-                btn.textContent = (activeType === 'multiplayer') ? "Create Multiplayer Lobby" : "Start Solo Challenge";
-                standardOptions.style.display = 'block';
-                startupInfo.style.display = 'none';
+                // Hide options
+                btn.classList.add('hidden');
+                standardOptions.classList.add('hidden');
+                startupInfo.classList.add('hidden');
+                lobbySection.style.display = 'none';
             }
         }
 
