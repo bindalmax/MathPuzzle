@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}MathPuzzle - Session Expired{% endblock %}
+
+{% block content %}
+    <div style="text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">⌛</div>
+        <h1>Session Expired</h1>
+        <p>It looks like your session has timed out or the security token is no longer valid.</p>
+        <p>This often happens if you keep the tab open for a long time.</p>
+        <div style="margin-top: 2rem;">
+            <button onclick="window.location.reload()" style="background: var(--primary-color); color: white; padding: 1rem 2rem; border-radius: 12px; cursor: pointer;">Refresh Page & Try Again</button>
+        </div>
+        <div style="margin-top: 1rem;">
+            <a href="{{ url_for('index') }}" style="color: var(--text-light);">Return to Home</a>
+        </div>
+    </div>
+{% endblock %}

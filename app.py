@@ -44,8 +44,17 @@ if not SECRET_KEY:
     SECRET_KEY = 'dev-secret-key-change-in-production'
 app.secret_key = SECRET_KEY
 
+from flask_wtf.csrf import CSRFProtect, CSRFError
+# ... existing imports ...
+
+# ... existing app initialization ...
+
 # CSRF Protection
 csrf = CSRFProtect(app)
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return render_template('csrf_error.html', reason=e.description), 400
 
 # Rate Limiting
 limiter = Limiter(
