@@ -143,7 +143,7 @@ class TestUIAutomation(unittest.TestCase):
         
         # Verify button text change
         start_btn = self.driver.find_element(By.ID, "start_btn")
-        self.assertEqual(start_btn.text, "Start Startup Challenge")
+        self.assertEqual(start_btn.text, "Start Startup Quest")
 
     def test_multiplayer_invite_ui(self):
         """Verify invite link and QR code elements in the lobby."""

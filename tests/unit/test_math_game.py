@@ -39,11 +39,12 @@ class TestHighscoreManager(unittest.TestCase):
         self.ctx.pop()
 
     def test_load_empty(self):
-        self.assertEqual(self.manager.load(), [])
+        self.assertEqual(self.manager.load()['scores'], [])
 
     def test_add_and_load_score(self):
         self.manager.add_score('Player1', 10, 'basic', 'easy', time_taken=5.0, questions_attempted=10)
-        scores = self.manager.load()
+        result = self.manager.load()
+        scores = result['scores']
         self.assertEqual(len(scores), 1)
         self.assertEqual(scores[0]['name'], 'Player1')
         self.assertEqual(scores[0]['score'], 10)
@@ -72,8 +73,8 @@ class TestBasicArithmeticQuestion(unittest.TestCase):
         self.assertIn(answer, choices)
 
 class TestDecimalFractionQuestion(unittest.TestCase):
-    @patch('questions.decimal_fraction.random.choice', side_effect=['decimal', '+', Fraction(1,2), Fraction(1,4), 1, 2, 3])
-    @patch('questions.decimal_fraction.random.uniform', side_effect=[2.5, 3.5, 0.1, 0.2, 0.3])
+    @patch('questions.decimal_fraction.random.choice', side_effect=['decimal', '+'] + [Fraction(1,2), Fraction(1,4), 1, 2, 3, -1, 1] * 10)
+    @patch('questions.decimal_fraction.random.uniform', side_effect=[2.5, 3.5] + [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7] * 10)
     def test_easy_decimal_addition_with_choices(self, mock_uniform, mock_choice):
         question, answer, choices = DecimalFractionQuestion().generate('easy')
         self.assertEqual(question, "What is 2.5 + 3.5? ")
