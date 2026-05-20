@@ -12,6 +12,21 @@ spec:
       labels:
         app: mathpuzzle-web
     spec:
+      initContainers:
+      - name: db-init
+        image: ghcr.io/bindalmax/mathpuzzle:latest
+        command: ["python3", "-c", "import sys; sys.path.append('/app/src'); from database import db; from app import app; app.app_context().push(); db.create_all(); print('✅ DB Initialized')"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: DATABASE_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: SECRET_KEY
       containers:
       - name: web
         image: ghcr.io/bindalmax/mathpuzzle:latest
