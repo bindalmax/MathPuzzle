@@ -5,11 +5,12 @@ class HighscoreManager:
         if app:
             self.init_app(app)
 
-    def init_app(self, app):
+    def init_app(self, app, create_tables=False):
         if 'sqlalchemy' not in app.extensions:
             db.init_app(app)
-        with app.app_context():
-            db.create_all()
+        if create_tables:
+            with app.app_context():
+                db.create_all()
 
     def add_score(self, name, score, category, difficulty, time_taken=None, questions_attempted=None):
         new_score = Highscore(

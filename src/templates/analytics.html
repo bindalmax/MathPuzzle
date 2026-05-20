@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}MathPuzzle - Your Learning Analytics{% endblock %}
+
+{% block extra_head %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="analytics-container">
+        <h1>{{ summary.user_name }}'s Progress</h1>
+        
+        <div class="stats-grid">
+            <div class="card">
+                <h3>Skill Level</h3>
+                <div class="big-number">{{ summary.skill_level }}%</div>
+            </div>
+            <div class="card">
+                <h3>Accuracy</h3>
+                <div class="big-number">{{ summary.accuracy }}%</div>
+            </div>
+            <div class="card">
+                <h3>Velocity</h3>
+                <div class="big-number">{{ summary.learning_velocity }}</div>
+                <p><small>Improvement per day</small></p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+            <h3>Accuracy Trend (Last 30 Days)</h3>
+            <canvas id="progressChart"></canvas>
+        </div>
+        
+        <div class="card" style="margin-top: 2rem;">
+            <h3>Learning Insights</h3>
+            <h4>Weak Topics</h4>
+            <ul>
+                {% for topic, rate in summary.weak_topics.items() %}
+                    <li>{{ topic | capitalize }}: {{ (rate * 100) | round }}% accuracy</li>
+                {% else %}
+                    <li>No identified gaps! Great work.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const progressData = {{ progress | tojson }};
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: progressData.map(d => d.date),
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: progressData.map(d => d.accuracy),
+                    borderColor: '#4CAF50',
+                    tension: 0.1
+                }]
+            },
+            options: { responsive: true }
+        });
+    </script>
+{% endblock %}

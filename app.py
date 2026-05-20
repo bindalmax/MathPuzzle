@@ -4,7 +4,12 @@ import sys
 # Add src directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-from flask import Flask, render_template, request, redirect, url_for, session, abort, send_from_directory, make_response
+from learning_profile_service import LearningProfileService
+from learning_analytics_service import LearningAnalyticsService
+from difficulty_engine import DifficultyEngine
+from attempt_logger import AttemptLogger
+from flask import Flask, render_template, request, redirect, url_for, session, abort, send_from_directory, make_response, jsonify
+
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms as socket_rooms
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -261,7 +266,21 @@ def game():
             app.logger.error(f"Error in startup challenge: {str(e)}")
             return render_template('game_over.html', error="An unexpected error occurred.")
     else:
-        factory = QuestionFactory(session.get('category', 'basic'), session.get('difficulty', 'medium'))
+        difficulty = session.get('difficulty', 'medium')
+        category = session.get('category', 'basic')
+        player_name = session.get('player_name', 'Guest')
+        
+        # Adaptive Difficulty Logic (AI-Powered)
+        if difficulty == 'adaptive':
+            difficulty = DifficultyEngine.get_recommended_difficulty(player_name, category)
+            # Store numeric difficulty for logging later
+            session['current_difficulty_level'] = difficulty
+        else:
+            # Map named difficulty to level
+            mapping = {"easy": 0.5, "medium": 1.0, "hard": 2.0}
+            session['current_difficulty_level'] = mapping.get(difficulty.lower(), 1.0)
+
+        factory = QuestionFactory(category, difficulty)
         try:
             question, answer, choices = factory.create_question()
             session['current_answer'] = answer
@@ -296,10 +315,32 @@ def submit_answer():
         return redirect(url_for('index'))
 
     try:
-        user_answer = float(request.form['answer'])
+        user_answer_str = request.form.get('answer', '')
+        user_answer = float(user_answer_str)
         correct_answer = session.get('current_answer')
+        is_correct = abs(user_answer - correct_answer) < 0.01
 
-        if abs(user_answer - correct_answer) < 0.01:
+        # Phase 4: Log attempt for AI analytics and adaptive learning
+        if not session.get('is_startup_challenge'):
+            player_name = session.get('player_name', 'Guest')
+            category = session.get('category', 'basic')
+            diff_level = session.get('current_difficulty_level', 1.0)
+            
+            AttemptLogger.log_attempt(
+                user_name=player_name,
+                problem_id=f"q_{uuid.uuid4().hex[:8]}", # Unique ID for each attempt
+                category=category,
+                difficulty_level=diff_level,
+                user_answer=str(user_answer),
+                correct_answer=str(correct_answer),
+                is_correct=is_correct,
+                time_taken_seconds=None # Tracked at session level for now
+            )
+            
+            # Update learning profile/skill level
+            LearningProfileService.update_skill_level(player_name, category)
+
+        if is_correct:
             session['score'] += 1
             
             if session.get('is_startup_challenge'):
@@ -439,6 +480,18 @@ def leaderboard():
                            filter_difficulty=filter_difficulty, 
                            sort_by=sort_by)
 
+@app.route('/analytics')
+def analytics():
+    if 'player_name' not in session:
+        return redirect(url_for('index'))
+
+    user_name = session['player_name']
+    summary = LearningProfileService.get_profile_summary(user_name)
+    progress = LearningAnalyticsService.get_progress_data(user_name)
+    mistakes = LearningAnalyticsService.get_mistake_insights(user_name)
+
+    return render_template('analytics.html', summary=summary, progress=progress, mistakes=mistakes)
+
 @app.route('/quit')
 def quit_game():
     if session.get('multiplayer'):
@@ -447,8 +500,8 @@ def quit_game():
         if room_id in rooms:
             if player_name in rooms[room_id]['players']:
                 rooms[room_id]['players'].remove(player_name)
-            if player_name in rooms[room_id]['scores']:
-                del rooms[room_id]['scores'][player_name]
+                if player_name in rooms[room_id].get('scores', {}):
+                    del rooms[room_id]['scores'][player_name]
             if not rooms[room_id]['players']:
                 del rooms[room_id]
                 

@@ -16,6 +16,12 @@ class Question(ABC):
     def generate_choices(self, correct_answer, is_integer=True):
         """Generates 3 distractors and returns a shuffled list of 4 choices.
         """
+        # Normalize correct_answer to int or float based on is_integer
+        if is_integer:
+            correct_answer = int(correct_answer)
+        else:
+            correct_answer = float(correct_answer)
+
         choices = {correct_answer}
         attempts = 0
         while len(choices) < 4 and attempts < 10:
@@ -43,7 +49,7 @@ class Question(ABC):
             formatted_choices = [float(f"{c:.2f}") for c in choices]
             choices_list = list(set(formatted_choices))
         else:
-            choices_list = list(choices)
+            choices_list = [int(c) for c in choices]
             
         # Ensure we always have 4 choices even if set resulted in fewer
         while len(choices_list) < 4:
@@ -85,4 +91,20 @@ class QuestionFactory:
     def create_question(self):
         if not self.question_class:
             raise ValueError("Invalid question category selected.")
-        return self.question_class().generate(self.difficulty)
+        
+        # Ensure difficulty is a string key for the question classes
+        # Question classes currently expect 'easy', 'medium', or 'hard'
+        diff_key = self.difficulty
+        if isinstance(diff_key, (int, float)):
+            if diff_key <= 0.7:
+                diff_key = 'easy'
+            elif diff_key <= 1.5:
+                diff_key = 'medium'
+            else:
+                diff_key = 'hard'
+        elif isinstance(diff_key, str):
+            diff_key = diff_key.lower()
+            if diff_key not in ['easy', 'medium', 'hard']:
+                diff_key = 'medium' # Default
+            
+        return self.question_class().generate(diff_key)
