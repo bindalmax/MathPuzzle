@@ -35,6 +35,7 @@
                         <option value="percentage" {{ 'selected' if filter_category == 'percentage' }}>Percentages</option>
                         <option value="profit" {{ 'selected' if filter_category == 'profit' }}>Profit & Loss</option>
                         <option value="algebra" {{ 'selected' if filter_category == 'algebra' }}>Algebra</option>
+                        <option value="startup_challenge" {{ 'selected' if filter_category == 'startup_challenge' }}>Startup Quest</option>
                     </select>
                 </div>
                 <div>
@@ -72,7 +73,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for score in scores %}
+                {% for score in data.scores %}
                 <tr>
                     <td>{{ score.name }}</td>
                     <td><strong>{{ score.score }}</strong></td>
@@ -87,6 +88,17 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination -->
+    <div style="margin-top: 20px; text-align: center;">
+        {% if data.current_page > 1 %}
+            <a href="{{ url_for('leaderboard', page=data.current_page-1, filter_category=filter_category, filter_difficulty=filter_difficulty, sort_by=sort_by) }}">« Previous</a>
+        {% endif %}
+        <span>Page {{ data.current_page }} of {{ data.total_pages }}</span>
+        {% if data.current_page < data.total_pages %}
+            <a href="{{ url_for('leaderboard', page=data.current_page+1, filter_category=filter_category, filter_difficulty=filter_difficulty, sort_by=sort_by) }}">Next »</a>
+        {% endif %}
     </div>
 
     <div style="margin-top: 30px;">
