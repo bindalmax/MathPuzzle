@@ -30,8 +30,14 @@ class TestMultiplayerE2E(unittest.TestCase):
     def setUp(self):
         self.base_url = "http://127.0.0.1:5005/"
         self.drivers = []
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless=new')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        
         for _ in range(2):
-            driver = webdriver.Chrome()
+            driver = webdriver.Chrome(options=options)
             driver.implicitly_wait(5)
             self.drivers.append(driver)
         # Ensure a clean state for each test

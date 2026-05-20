@@ -33,10 +33,14 @@ class TestGamerIdPersistence(unittest.TestCase):
     def setUp(self):
         try:
             options = webdriver.ChromeOptions()
-            options.add_argument('--headless')
+            options.add_argument('--headless=new') # Use new headless mode
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-gpu')
             self.driver = webdriver.Chrome(options=options)
-        except Exception:
-            self.driver = webdriver.Chrome()
+        except Exception as e:
+            print(f"Failed to initialize Chrome: {e}")
+            raise
 
         self.driver.implicitly_wait(5)
         self.base_url = "http://127.0.0.1:5007/"
