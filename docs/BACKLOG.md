@@ -9,11 +9,6 @@
 - Secure REST API endpoints using JWT authentication for registered users.
 - Implement stricter rate limiting on game-critical endpoints to prevent cheating.
 
-### Android UI/UX Enhancements
-- Add animations and haptic feedback to the Android app for better user engagement.
-- Integrate sound effects and background music into the Flutter application.
-- Implement an offline mode with local question caching for single-player practice.
-
 ### Infrastructure & Deployment
 - Set up a CI/CD pipeline using GitHub Actions for automated testing and builds.
 - Add analytics endpoints to track gameplay metrics and user engagement.
