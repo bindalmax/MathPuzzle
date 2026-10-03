@@ -106,6 +106,12 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Hall of Fame', response.data)
 
+    def test_privacy_route(self):
+        response = self.client.get('/privacy')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Privacy Policy', response.data)
+        self.assertIn(b'Google AdSense', response.data)
+
 class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
         self.app = app

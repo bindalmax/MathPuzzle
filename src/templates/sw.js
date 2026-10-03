@@ -37,8 +37,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 1. Skip non-GET requests and external API calls (like QR code generator)
-  if (event.request.method !== 'GET' || url.hostname.includes('qrserver.com')) {
+  // 1. Skip non-GET requests and external third-party services (ads, tracking, QR)
+  if (
+    event.request.method !== 'GET' ||
+    url.hostname.includes('qrserver.com') ||
+    url.hostname.includes('googlesyndication.com') ||
+    url.hostname.includes('doubleclick.net') ||
+    url.hostname.includes('google-analytics.com')
+  ) {
     return;
   }
 

@@ -501,6 +501,10 @@ def analytics():
 
     return render_template('analytics.html', summary=summary, progress=progress, mistakes=mistakes)
 
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
 @app.route('/quit')
 def quit_game():
     if session.get('multiplayer'):

@@ -437,9 +437,34 @@
         </div>
 
         <footer style="margin-top: 50px; font-size: 0.8rem; color: var(--text-light); border-top: 1px solid var(--border-light); padding-top: 20px;">
-            <p>&copy; 2026 SharpHuman.app | v{{ app_version }}</p>
+            <p>&copy; 2026 SharpHuman.app | v{{ app_version }} • <a href="{{ url_for('privacy') }}" style="color: var(--text-light); text-decoration: underline;">Privacy Policy</a></p>
             <p style="margin-top: 0.5rem;">📱 Works offline with PWA • 🔒 100% Secure</p>
         </footer>
     </div>
+
+    <!-- Cookie & Ad Consent Banner -->
+    <div id="cookieConsentBanner" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 9999; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.9rem;">
+        <div style="flex: 1; text-align: left; color: var(--text-color);">
+            🍪 We use cookies and local storage to personalize content and support Google AdSense advertising. Read our <a href="{{ url_for('privacy') }}" style="color: var(--primary-color); text-decoration: underline; font-weight: 600;">Privacy Policy</a>.
+        </div>
+        <button id="acceptCookiesBtn" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Got it!</button>
+    </div>
+
+    <script>
+        (function() {
+            try {
+                if (!localStorage.getItem('mathpuzzle_cookie_consent')) {
+                    const banner = document.getElementById('cookieConsentBanner');
+                    if (banner) {
+                        banner.style.display = 'flex';
+                        document.getElementById('acceptCookiesBtn').addEventListener('click', function() {
+                            localStorage.setItem('mathpuzzle_cookie_consent', 'accepted');
+                            banner.style.display = 'none';
+                        });
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
 </body>
 </html>
