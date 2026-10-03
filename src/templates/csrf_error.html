@@ -9,7 +9,7 @@
         <p>It looks like your session has timed out or the security token is no longer valid.</p>
         <p>This often happens if you keep the tab open for a long time.</p>
         <div style="margin-top: 2rem;">
-            <button onclick="window.location.reload()" style="background: var(--primary-color); color: white; padding: 1rem 2rem; border-radius: 12px; cursor: pointer;">Refresh Page & Try Again</button>
+            <button onclick="window.location.href='{{ url_for('index') }}'" style="background: var(--primary-color); color: white; padding: 1rem 2rem; border-radius: 12px; cursor: pointer; border: none; font-size: 1rem; font-weight: 600;">Return to Home & Try Again</button>
         </div>
         <div style="margin-top: 1rem;">
             <a href="{{ url_for('index') }}" style="color: var(--text-light);">Return to Home</a>

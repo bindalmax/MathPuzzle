@@ -48,6 +48,9 @@ class TestPWAIntegration(unittest.TestCase):
         # Check for headers
         self.assertEqual(response.headers.get('Cache-Control'), 'no-cache, no-store, must-revalidate')
         self.assertEqual(response.headers.get('Service-Worker-Allowed'), '/')
+        # Ensure root path '/' is NOT in STATIC_ASSETS to prevent stale CSRF caching
+        self.assertNotIn(b"'/'", response.data)
+        self.assertNotIn(b'"/"', response.data)
 
     def test_homepage_pwa_tags(self):
         from app import APP_VERSION

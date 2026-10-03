@@ -18,6 +18,7 @@ import bleach
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
 from room_storage import rooms
+from datetime import timedelta
 import time
 import uuid
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -33,8 +34,8 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
 # Disable CSRF in non-production environments (makes testing & development easier)
 app.config['WTF_CSRF_ENABLED'] = (FLASK_ENV == 'production')
-app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour instead of default
-app.config['PERMANENT_SESSION_LIFETIME'] = 7200  # 2 hours
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # Valid for full session lifetime
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # 7 days
 
 if FLASK_ENV == 'production':
     app.config['SESSION_COOKIE_SECURE'] = True
@@ -59,6 +60,7 @@ csrf = CSRFProtect(app)
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
+    app.logger.warning(f"CSRF validation failed: {e.description}")
     return render_template('csrf_error.html', reason=e.description), 400
 
 # Rate Limiting
@@ -69,9 +71,10 @@ limiter = Limiter(
     storage_uri="memory://",
     strategy="fixed-window",
 )
-# During automated tests, toggle the limiter off to avoid 429s from E2E/UI test suites
+# Make session permanent and toggle rate limiter off during automated tests
 @app.before_request
-def _adjust_rate_limiter_for_tests():
+def _before_request_handler():
+    session.permanent = True
     try:
         limiter.enabled = not app.config.get('TESTING', False)
     except Exception:
@@ -251,10 +254,14 @@ def game():
 
     if session.get('multiplayer'):
         room_id = session.get('room_id')
-        q_idx = session.get('question_index', 0)
-        if room_id in rooms and q_idx < len(rooms[room_id]['question_pool']):
-            question, answer, choices = rooms[room_id]['question_pool'][q_idx]
-            session['current_answer'] = answer
+        if room_id in rooms:
+            # Use server-side question index instead of session index
+            q_idx = rooms[room_id].get('question_index', 0)
+            if q_idx < len(rooms[room_id]['question_pool']):
+                question, answer, choices = rooms[room_id]['question_pool'][q_idx]
+                session['current_answer'] = answer
+            else:
+                return redirect(url_for('game_over'))
         else:
             return redirect(url_for('game_over'))
     if session.get('is_startup_challenge'):
@@ -368,7 +375,9 @@ def submit_answer():
     
     session['questions_answered'] = session.get('questions_answered', 0) + 1
     if session.get('multiplayer'):
-        session['question_index'] = session.get('question_index', 0) + 1
+        room_id = session.get('room_id')
+        if room_id in rooms:
+            rooms[room_id]['question_index'] = rooms[room_id].get('question_index', 0) + 1
         
     return redirect(url_for('game'))
 
@@ -564,33 +573,35 @@ def handle_start_game_request(data=None):
     room_id = session.get('room_id')
     if not room_id and data:
         room_id = data.get('room')
-    
+
     player_name = session.get('player_name')
     if not player_name and data:
         player_name = data.get('name')
 
     print(f"Start game request for room {room_id} by {player_name}")
-    
+
     if room_id and room_id in rooms:
         # Check if the requester is the creator
         if rooms[room_id]['creator'] == player_name:
+            # Generate pool atomically before broadcasting
             factory = QuestionFactory(rooms[room_id]['category'], rooms[room_id]['difficulty'])
             pool = []
-            for _ in range(50): 
+            for _ in range(50):
                 try:
                     pool.append(factory.create_question())
                 except Exception as e:
                     app.logger.error(f"Failed to pre-generate question in pool: {str(e)}")
                     break
+
+            # Atomic update of room state
             rooms[room_id]['question_pool'] = pool
             rooms[room_id]['is_started'] = True
             rooms[room_id]['last_activity'] = time.time()
-            print(f"Emitting game_start_signal to room {room_id}")
-            # Use socketio.emit to ensure broadcast to the room
-            socketio.emit('game_start_signal', {'room': room_id}, room=room_id)
+
+            print(f"Emitting game_start_signal to room {room_id} with pool size {len(pool)}")
+            socketio.emit('game_start_signal', {'room': room_id, 'pool_ready': True}, room=room_id)
         else:
             print(f"Unauthorized start request: {player_name} is not {rooms[room_id]['creator']}")
-
 @socketio.on('disconnect')
 def handle_disconnect():
     sid = request.sid

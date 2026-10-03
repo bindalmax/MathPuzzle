@@ -59,6 +59,15 @@ class TestWebApp(unittest.TestCase):
             self.assertTrue(sess['multiplayer'])
             self.assertEqual(sess['category'], 'percentage')
 
+    def test_session_permanent_configuration(self):
+        """Verify that session is marked permanent and configuration is properly set."""
+        self.assertIsNone(self.app.config.get('WTF_CSRF_TIME_LIMIT'))
+        self.assertIsNotNone(self.app.config.get('PERMANENT_SESSION_LIFETIME'))
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        with self.client.session_transaction() as sess:
+            self.assertTrue(sess.permanent)
+
     @patch('app.QuestionFactory')
     def test_game_route(self, mock_factory):
         mock_factory.return_value.create_question.return_value = ("What is 5 + 5?", 10, None)

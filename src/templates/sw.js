@@ -1,6 +1,5 @@
 const CACHE_NAME = 'mathpuzzle-v{{ app_version }}';
 const STATIC_ASSETS = [
-  '/',
   '/static/css/responsive.css?v={{ app_version }}',
   '/static/manifest.json?v={{ app_version }}',
   '/static/icons/icon-192.png',
@@ -62,13 +61,19 @@ self.addEventListener('fetch', (event) => {
   // 3. Application Pages - Network First (with offline fallback)
   event.respondWith(
     fetch(event.request)
+      .then((networkResponse) => {
+        // Cache successful navigation responses for offline fallback
+        if (networkResponse.status === 200 && event.request.mode === 'navigate') {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
       .catch(() => {
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
-          
-          if (event.request.mode === 'navigate') {
-             return caches.match('/');
-          }
           return null;
         });
       })
