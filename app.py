@@ -224,6 +224,7 @@ def index():
                 'results': {},
                 'creator': player_name,
                 'question_pool': [],
+                'player_progress': {player_name: 0},
                 'last_activity': time.time()
             }
             return redirect(url_for('multiplayer_lobby'))
@@ -254,17 +255,18 @@ def game():
 
     if session.get('multiplayer'):
         room_id = session.get('room_id')
-        if room_id in rooms:
-            # Use server-side question index instead of session index
-            q_idx = rooms[room_id].get('question_index', 0)
-            if q_idx < len(rooms[room_id]['question_pool']):
-                question, answer, choices = rooms[room_id]['question_pool'][q_idx]
+        player_name = session.get('player_name')
+        if room_id in rooms and rooms[room_id].get('question_pool'):
+            q_idx = session.get('question_index', 0)
+            pool = rooms[room_id]['question_pool']
+            if q_idx < len(pool):
+                question, answer, choices = pool[q_idx]
                 session['current_answer'] = answer
             else:
                 return redirect(url_for('game_over'))
         else:
             return redirect(url_for('game_over'))
-    if session.get('is_startup_challenge'):
+    elif session.get('is_startup_challenge'):
         factory = QuestionFactory("startup", 'medium')
         try:
             question, answer, choices = factory.create_question()
@@ -375,9 +377,13 @@ def submit_answer():
     
     session['questions_answered'] = session.get('questions_answered', 0) + 1
     if session.get('multiplayer'):
+        session['question_index'] = session.get('question_index', 0) + 1
         room_id = session.get('room_id')
+        player_name = session.get('player_name')
         if room_id in rooms:
-            rooms[room_id]['question_index'] = rooms[room_id].get('question_index', 0) + 1
+            if 'player_progress' not in rooms[room_id]:
+                rooms[room_id]['player_progress'] = {}
+            rooms[room_id]['player_progress'][player_name] = session['question_index']
         
     return redirect(url_for('game'))
 
@@ -558,6 +564,9 @@ def handle_join(data):
         if name and name not in rooms[room]['players']:
             rooms[room]['players'].append(name)
             rooms[room]['scores'][name] = 0
+            if 'player_progress' not in rooms[room]:
+                rooms[room]['player_progress'] = {}
+            rooms[room]['player_progress'][name] = 0
         emit('score_update', {'players': rooms[room]['scores']}, room=room)
         emit('update_players', rooms[room]['players'], room=room)
 
@@ -601,6 +610,7 @@ def handle_start_game_request(data=None):
             rooms[room_id]['question_pool'] = pool
             rooms[room_id]['is_started'] = True
             rooms[room_id]['last_activity'] = time.time()
+            rooms[room_id]['player_progress'] = {p: 0 for p in rooms[room_id]['players']}
 
             print(f"Emitting game_start_signal to room {room_id} with pool size {len(pool)}")
             socketio.emit('game_start_signal', {'room': room_id, 'pool_ready': True}, room=room_id)

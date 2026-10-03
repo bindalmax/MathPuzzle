@@ -47,6 +47,21 @@ class TestMultiplayerE2E(unittest.TestCase):
         for driver in self.drivers:
             driver.quit()
 
+    def click_safe(self, driver, by, value, retries=5):
+        """Helper to click an element that might go stale during PWA service worker initialization."""
+        for i in range(retries):
+            try:
+                element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((by, value)))
+                try:
+                    element.click()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", element)
+                return
+            except Exception:
+                if i == retries - 1:
+                    raise
+                time.sleep(1)
+
     def test_multiplayer_sync_and_independence(self):
         """Test question synchronization and individual game end."""
         p1 = self.drivers[0]
@@ -57,29 +72,26 @@ class TestMultiplayerE2E(unittest.TestCase):
 
         # 1. Player 1 creates lobby
         p1.get(self.base_url)
-        # Multiplayer is default now, so just fill name and create
-        p1.find_element(By.ID, "player_name").send_keys("Host")
-        p1.find_element(By.ID, "start_btn").click()
+        wait1.until(EC.presence_of_element_located((By.ID, "player_name"))).send_keys("Host")
+        self.click_safe(p1, By.ID, "start_btn")
         wait1.until(EC.url_contains("multiplayer_lobby"))
 
         # 2. Player 2 joins
         p2.get(self.base_url)
-        wait2.until(EC.presence_of_element_located((By.CLASS_NAME, "room-item")))
-        room_item = p2.find_element(By.CLASS_NAME, "room-item")
+        room_item = wait2.until(EC.presence_of_element_located((By.CLASS_NAME, "room-item")))
         room_item.find_element(By.NAME, "player_name").send_keys("Guest")
-        room_item.find_element(By.XPATH, ".//button[contains(text(), 'Join')]").click()
+        self.click_safe(p2, By.XPATH, "//button[contains(text(), 'Join')]")
         wait2.until(EC.url_contains("multiplayer_lobby"))
 
         # 3. Start Game
-        wait1.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Start Game')]"))).click()
+        self.click_safe(p1, By.XPATH, "//button[contains(text(), 'Start Game')]")
         wait1.until(EC.url_contains("game"))
         wait2.until(EC.url_contains("game"))
 
-        # 4. Verify Sync (Using new .question-box p selector)
-        # q1 = p1.find_element(By.CSS_SELECTOR, ".question-box p").text
-        # q2 = p2.find_element(By.CSS_SELECTOR, ".question-box p").text
-        # self.assertEqual(q1, q2, "Questions are not synchronized!")
-        print("Note: Skipping synchronization check due to known bug #SYNC-001")
+        # 4. Verify Sync (Using .question-box p selector)
+        q1 = p1.find_element(By.CSS_SELECTOR, ".question-box p").text
+        q2 = p2.find_element(By.CSS_SELECTOR, ".question-box p").text
+        self.assertEqual(q1, q2, "Questions are not synchronized!")
 
         # 5. Independence: Player 1 finishes, Player 2 stays
         p1.find_element(By.LINK_TEXT, "QUIT SESSION & SAVE").click()

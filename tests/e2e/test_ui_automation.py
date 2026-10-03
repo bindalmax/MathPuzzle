@@ -32,7 +32,11 @@ class TestUIAutomation(unittest.TestCase):
     def setUp(self):
         try:
             options = webdriver.ChromeOptions()
-            options.add_argument('--headless')
+            options.add_argument('--headless=new')
+            options.add_argument('--window-size=1280,800')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-gpu')
             self.driver = webdriver.Chrome(options=options)
         except Exception:
             self.driver = webdriver.Chrome()
@@ -101,8 +105,7 @@ class TestUIAutomation(unittest.TestCase):
         category_select = self.driver.find_element(By.ID, "category")
         category_select.find_element(By.XPATH, "//option[@value='basic']").click()
         
-        start_button = self.driver.find_element(By.ID, "start_btn")
-        start_button.click()
+        self.click_safe(By.ID, "start_btn")
         
         wait.until(EC.url_contains("game"))
         
@@ -151,7 +154,7 @@ class TestUIAutomation(unittest.TestCase):
         wait = WebDriverWait(self.driver, 10)
         
         self.driver.find_element(By.NAME, "player_name").send_keys("LobbyHost")
-        self.driver.find_element(By.ID, "start_btn").click()
+        self.click_safe(By.ID, "start_btn")
         
         wait.until(EC.url_contains("multiplayer_lobby"))
         

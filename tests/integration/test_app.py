@@ -112,6 +112,75 @@ class TestWebApp(unittest.TestCase):
         self.assertIn(b'Privacy Policy', response.data)
         self.assertIn(b'Google AdSense', response.data)
 
+    def test_multiplayer_independent_progression(self):
+        """Verify that two players in the same room solve the shared pool independently without skipping."""
+        room_id = 'test_sync_room'
+        pool = [
+            ("Q0: What is 5 + 5?", 10.0, [10.0, 20.0, 30.0, 40.0]),
+            ("Q1: What is 6 + 6?", 12.0, [12.0, 22.0, 32.0, 42.0]),
+            ("Q2: What is 7 + 7?", 14.0, [14.0, 24.0, 34.0, 44.0])
+        ]
+        rooms[room_id] = {
+            'players': ['PlayerA', 'PlayerB'],
+            'scores': {'PlayerA': 0, 'PlayerB': 0},
+            'is_started': True,
+            'category': 'basic',
+            'difficulty': 'easy',
+            'mode': 'questions',
+            'mode_value': 3,
+            'creator': 'PlayerA',
+            'question_pool': pool,
+            'player_progress': {'PlayerA': 0, 'PlayerB': 0}
+        }
+
+        client_a = self.app.test_client()
+        with client_a.session_transaction() as sess:
+            sess['player_name'] = 'PlayerA'
+            sess['multiplayer'] = True
+            sess['room_id'] = room_id
+            sess['question_index'] = 0
+            sess['score'] = 0
+            sess['questions_answered'] = 0
+            sess['start_time'] = time.time()
+            sess['mode'] = 'questions'
+            sess['mode_value'] = 3
+
+        client_b = self.app.test_client()
+        with client_b.session_transaction() as sess:
+            sess['player_name'] = 'PlayerB'
+            sess['multiplayer'] = True
+            sess['room_id'] = room_id
+            sess['question_index'] = 0
+            sess['score'] = 0
+            sess['questions_answered'] = 0
+            sess['start_time'] = time.time()
+            sess['mode'] = 'questions'
+            sess['mode_value'] = 3
+
+        # Both players load /game -> both receive Q0
+        resp_a0 = client_a.get('/game')
+        self.assertIn(b'Q0: What is 5 + 5?', resp_a0.data)
+        resp_b0 = client_b.get('/game')
+        self.assertIn(b'Q0: What is 5 + 5?', resp_b0.data)
+
+        # Player A answers Q0 correctly
+        client_a.post('/submit_answer', data={'answer': '10.0'})
+        
+        # Player A is now on Q1
+        resp_a1 = client_a.get('/game')
+        self.assertIn(b'Q1: What is 6 + 6?', resp_a1.data)
+
+        # CRITICAL TEST: Player B is still on Q0! Player A's answer did NOT advance/skip Player B's question!
+        resp_b_still0 = client_b.get('/game')
+        self.assertIn(b'Q0: What is 5 + 5?', resp_b_still0.data)
+
+        # Player B answers Q0 correctly
+        client_b.post('/submit_answer', data={'answer': '10.0'})
+
+        # Now Player B is on Q1
+        resp_b1 = client_b.get('/game')
+        self.assertIn(b'Q1: What is 6 + 6?', resp_b1.data)
+
 class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
         self.app = app
