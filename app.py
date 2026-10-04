@@ -146,6 +146,14 @@ def serve_sw():
 def serve_manifest():
     return send_from_directory(app.static_folder, 'manifest.json', mimetype='application/manifest+json')
 
+@app.route('/ads.txt')
+def serve_ads_txt():
+    return send_from_directory(app.static_folder, 'ads.txt', mimetype='text/plain')
+
+@app.route('/robots.txt')
+def serve_robots_txt():
+    return send_from_directory(app.static_folder, 'robots.txt', mimetype='text/plain')
+
 @app.route('/join/<room_id>')
 def join_room_link(room_id):
     """Deep link to join a specific room."""
@@ -156,7 +164,7 @@ def join_room_link(room_id):
     return redirect(url_for('index', error="Lobby not found or expired."))
 
 @app.route('/', methods=['GET', 'POST'])
-@limiter.limit("10 per minute")
+@limiter.limit("10 per minute", methods=["POST"])
 def index():
     if request.method == 'POST':
         player_name = sanitize_input(request.form.get('player_name', 'Player'))

@@ -72,5 +72,25 @@ class TestPWAIntegration(unittest.TestCase):
         response_512 = self.client.get('/static/icons/icon-512.png')
         self.assertEqual(response_512.status_code, 200)
 
+    def test_ads_txt(self):
+        response = self.client.get('/ads.txt')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'text/plain')
+        self.assertIn(b'google.com, pub-4860872913350465, DIRECT, f08c47fec0942fa0', response.data)
+
+    def test_robots_txt(self):
+        response = self.client.get('/robots.txt')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'text/plain')
+        self.assertIn(b'User-agent: Mediapartners-Google', response.data)
+        self.assertIn(b'Allow: /', response.data)
+
+    def test_adsense_tags_consistency(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta name="google-adsense-account" content="ca-pub-4860872913350465">', response.data)
+        self.assertIn(b'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4860872913350465', response.data)
+        self.assertNotIn(b'ca-pub-8821650129943864', response.data)
+
 if __name__ == '__main__':
     unittest.main()
