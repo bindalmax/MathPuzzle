@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Frequently Asked Questions (FAQ) - MathPuzzle{% endblock %}
+
+{% block extra_style %}
+    .content-container {
+        max-width: 860px;
+        margin: 2rem auto;
+        text-align: left;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        line-height: 1.75;
+    }
+
+    .content-container h1 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+        background: var(--header-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .content-container .subtitle {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 1rem;
+    }
+
+    .faq-item {
+        border-bottom: 1px solid var(--border-light);
+        padding: 1.5rem 0;
+    }
+
+    .faq-item:last-child {
+        border-bottom: none;
+    }
+
+    .faq-question {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .faq-answer {
+        color: var(--text-light);
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .faq-answer p {
+        margin-bottom: 0.75rem;
+    }
+
+    .faq-answer p:last-child {
+        margin-bottom: 0;
+    }
+
+    .faq-answer a {
+        color: var(--primary-color);
+        text-decoration: underline;
+    }
+
+    .help-box {
+        background: rgba(79, 70, 229, 0.05);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2.5rem;
+        text-align: center;
+    }
+
+    .help-box h3 {
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <h1>Frequently Asked Questions</h1>
+    <div class="subtitle">Everything you need to know about playing, competing, and learning on MathPuzzle.</div>
+
+    <div class="faq-item">
+        <div class="faq-question">❓ What is MathPuzzle?</div>
+        <div class="faq-answer">
+            <p>MathPuzzle is a free, interactive mathematical training web application designed to boost mental calculation speed, quantitative problem solving, and analytical intuition. It features real-time multiplayer duels, single-player speed runs, and an entrepreneurial business simulation known as Startup Quest.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">💰 Is MathPuzzle completely free to use?</div>
+        <div class="faq-answer">
+            <p>Yes! All game modes, educational guides, categories, and multiplayer features are 100% free to access without subscription fees or paywalls. The platform is supported by non-intrusive banner advertising.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">👤 Do I need to create an account or provide an email?</div>
+        <div class="faq-answer">
+            <p>No registration is required. You can jump directly into the game simply by choosing an anonymous GamerId. Your local progress, preferred settings, and high scores are preserved right in your browser.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">🤖 How does the AI Adaptive Mode work?</div>
+        <div class="faq-answer">
+            <p>Adaptive Mode continuously monitors your response speed and answer correctness. If you answer consecutive questions quickly and accurately, the system dynamically increases problem complexity. If you hit a roadblock, the engine automatically adjusts to reinforce conceptual building blocks before advancing.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">👥 How do I invite friends to a multiplayer duel?</div>
+        <div class="faq-answer">
+            <p>Navigate to the <strong>Multiplayer</strong> tab on the homepage, choose your category and round duration, and click <strong>Create Game</strong>. You will receive a unique Room ID and shareable link (e.g., <code>sharphuman.app/join/ROOM_ID</code>) to share with your friends. Up to 8 players can compete in real time.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">📱 Can I install MathPuzzle on my phone or tablet?</div>
+        <div class="faq-answer">
+            <p>Yes! MathPuzzle is a certified Progressive Web App (PWA). You can install it on your device without downloading through an app store:</p>
+            <p><strong>iOS (iPhone/iPad):</strong> Tap the <em>Share</em> button in Safari and select <em>Add to Home Screen</em>.</p>
+            <p><strong>Android:</strong> Tap the three-dot menu in Chrome and select <em>Install App</em> or <em>Add to Home screen</em>.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">📶 Does MathPuzzle work offline?</div>
+        <div class="faq-answer">
+            <p>Yes! Our Service Worker caches essential game assets and math problem generators. Once loaded or installed as a PWA, Solo Challenge modes remain fully playable offline without an internet connection.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">🏫 Can educators or teachers use MathPuzzle in classrooms?</div>
+        <div class="faq-answer">
+            <p>Absolutely! MathPuzzle is widely used in middle school, high school, and university STEM clubs as a fast-paced warmup tool. Teachers can create multiplayer rooms on a projector or smartboard and have students join on their laptops or smartphones.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">🔒 How do you protect user data and privacy?</div>
+        <div class="faq-answer">
+            <p>We practice strict data minimization. We do not collect names, emails, passwords, or location data. Read our comprehensive <a href="{{ url_for('privacy') }}">Privacy Policy</a> for complete details.</p>
+        </div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-question">🐛 How can I report a bug or request a new math category?</div>
+        <div class="faq-answer">
+            <p>We welcome community feedback! Please send error reports, feature suggestions, or mathematical formula inquiries to <a href="mailto:support@sharphuman.app">support@sharphuman.app</a>.</p>
+        </div>
+    </div>
+
+    <div class="help-box">
+        <h3>Still have questions?</h3>
+        <p>We are always here to help. Reach out to our team at <a href="mailto:support@sharphuman.app" style="color: var(--primary-color); font-weight: 600;">support@sharphuman.app</a>.</p>
+    </div>
+</div>
+{% endblock %}

@@ -76,7 +76,7 @@ class TestPWAIntegration(unittest.TestCase):
         response = self.client.get('/ads.txt')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, 'text/plain')
-        self.assertIn(b'google.com, pub-4860872913350465, DIRECT, f08c47fec0942fa0', response.data)
+        self.assertIn(b'google.com, pub-8821650129943864, DIRECT, f08c47fec0942fa0', response.data)
 
     def test_robots_txt(self):
         response = self.client.get('/robots.txt')
@@ -84,13 +84,59 @@ class TestPWAIntegration(unittest.TestCase):
         self.assertEqual(response.mimetype, 'text/plain')
         self.assertIn(b'User-agent: Mediapartners-Google', response.data)
         self.assertIn(b'Allow: /', response.data)
+        self.assertIn(b'Sitemap: https://sharphuman.app/sitemap.xml', response.data)
+
+    def test_sitemap_xml(self):
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, 'application/xml')
+        self.assertIn(b'<loc>https://sharphuman.app/</loc>', response.data)
+        self.assertIn(b'<loc>https://sharphuman.app/about</loc>', response.data)
+        self.assertIn(b'<loc>https://sharphuman.app/how-to-play</loc>', response.data)
+        self.assertIn(b'<loc>https://sharphuman.app/faq</loc>', response.data)
+        self.assertIn(b'<loc>https://sharphuman.app/terms</loc>', response.data)
+
+    def test_about_page(self):
+        response = self.client.get('/about')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'About MathPuzzle', response.data)
+        self.assertIn(b'AI-Powered Adaptive Learning', response.data)
+        self.assertIn(b'Startup Quest Simulation', response.data)
+
+    def test_how_to_play_page(self):
+        response = self.client.get('/how-to-play')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'How to Play & Math Guides', response.data)
+        self.assertIn(b'Solo Challenge', response.data)
+        self.assertIn(b'The 10% & 1% Rule', response.data)
+
+    def test_faq_page(self):
+        response = self.client.get('/faq')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Frequently Asked Questions', response.data)
+        self.assertIn(b'What is MathPuzzle?', response.data)
+        self.assertIn(b'Is MathPuzzle completely free to use?', response.data)
+
+    def test_terms_page(self):
+        response = self.client.get('/terms')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Terms of Service', response.data)
+        self.assertIn(b'Fair Play', response.data)
+
+    def test_homepage_educational_content(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Master Mental Math with Speed & Strategy', response.data)
+        self.assertIn(b'Explore Challenge Categories', response.data)
+        self.assertIn(b'The Science of Mental Computation', response.data)
 
     def test_adsense_tags_consistency(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta name="google-adsense-account" content="ca-pub-4860872913350465">', response.data)
-        self.assertIn(b'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4860872913350465', response.data)
-        self.assertNotIn(b'ca-pub-8821650129943864', response.data)
+        self.assertIn(b'<meta name="google-adsense-account" content="ca-pub-8821650129943864">', response.data)
+        self.assertIn(b'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8821650129943864', response.data)
+        self.assertNotIn(b'ca-pub-4860872913350465', response.data)
 
 if __name__ == '__main__':
     unittest.main()
+

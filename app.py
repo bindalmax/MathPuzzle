@@ -154,6 +154,10 @@ def serve_ads_txt():
 def serve_robots_txt():
     return send_from_directory(app.static_folder, 'robots.txt', mimetype='text/plain')
 
+@app.route('/sitemap.xml')
+def serve_sitemap():
+    return send_from_directory(app.static_folder, 'sitemap.xml', mimetype='application/xml')
+
 @app.route('/join/<room_id>')
 def join_room_link(room_id):
     """Deep link to join a specific room."""
@@ -515,9 +519,25 @@ def analytics():
 
     return render_template('analytics.html', summary=summary, progress=progress, mistakes=mistakes)
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/how-to-play')
+def how_to_play():
+    return render_template('how_to_play.html')
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
+
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
 
 @app.route('/quit')
 def quit_game():

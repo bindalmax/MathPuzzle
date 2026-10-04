@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - MathPuzzle{% endblock %}
+
+{% block extra_style %}
+    .content-container {
+        max-width: 860px;
+        margin: 2rem auto;
+        text-align: left;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        line-height: 1.75;
+    }
+
+    .content-container h1 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+        background: var(--header-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .content-container .subtitle {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 1rem;
+    }
+
+    .content-container h2 {
+        font-size: 1.4rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .content-container p, .content-container ul {
+        color: var(--text-color);
+        margin-bottom: 1.25rem;
+    }
+
+    .content-container ul {
+        padding-left: 1.5rem;
+    }
+
+    .content-container li {
+        margin-bottom: 0.5rem;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+    .feature-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .feature-card h3 {
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .feature-card p {
+        font-size: 0.95rem;
+        color: var(--text-light);
+        margin-bottom: 0;
+    }
+
+    .highlight-banner {
+        background: rgba(79, 70, 229, 0.05);
+        border-left: 4px solid var(--primary-color);
+        padding: 1.25rem 1.5rem;
+        border-radius: 0 12px 12px 0;
+        margin: 2rem 0;
+    }
+
+    .highlight-banner p {
+        margin: 0;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .cta-row {
+        margin-top: 3rem;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .cta-btn {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white !important;
+        text-decoration: none !important;
+        padding: 0.85rem 1.75rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    }
+
+    .cta-btn.secondary {
+        background: var(--bg-color);
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-light);
+    }
+
+    .cta-btn.secondary:hover {
+        background: var(--paper-grid);
+    }
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <h1>About MathPuzzle</h1>
+    <div class="subtitle">Empowering logical thinking, mental agility, and quantitative intuition.</div>
+
+    <h2>🎯 Our Mission</h2>
+    <p>
+        At <strong>MathPuzzle</strong> (operated at <a href="https://sharphuman.app/">sharphuman.app</a>), our mission is to make mathematical mastery fast, engaging, and accessible to everyone. We believe mental computation is more than memorizing tables—it is the foundation of critical reasoning, quantitative literacy, and problem-solving in everyday life and professional careers.
+    </p>
+    <p>
+        Whether you are a student sharpening fundamentals, a professional practicing business arithmetic, or a puzzle enthusiast challenging friends in real-time multiplayer duels, MathPuzzle offers a distraction-free, privacy-first platform tailored to your pace.
+    </p>
+
+    <div class="highlight-banner">
+        <p>💡 <em>"Mathematics is not about numbers, equations, computations, or algorithms: it is about understanding."</em> — William Paul Thurston</p>
+    </div>
+
+    <h2>🧠 Key Pillars of MathPuzzle</h2>
+    <div class="grid-2">
+        <div class="feature-card">
+            <h3>🤖 AI-Powered Adaptive Learning</h3>
+            <p>Our intelligent difficulty engine analyzes your problem-solving speed and accuracy in real time, automatically calibrating questions to keep you in the optimal cognitive learning zone.</p>
+        </div>
+        <div class="feature-card">
+            <h3>⚡ Real-Time Multiplayer</h3>
+            <p>Compete head-to-head with friends or classmates across synchronized problem sets with sub-100ms WebSocket updates and dynamic live leaderboards.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🚀 Startup Quest Simulation</h3>
+            <p>Put your math to the test with real-world entrepreneurial puzzles: navigate burn rates, unit economics, dilution, and valuations from $100K Seed to a $1B Unicorn exit.</p>
+        </div>
+        <div class="feature-card">
+            <h3>📱 PWA & Offline Support</h3>
+            <p>Built as an ultra-fast Progressive Web App. Install it directly onto iOS, Android, macOS, or Windows to practice mental math on the go, even without internet access.</p>
+        </div>
+    </div>
+
+    <h2>📐 Educational Philosophy</h2>
+    <p>
+        Traditional math education often focuses on mechanical memorization. MathPuzzle emphasizes **computational intuition**:
+    </p>
+    <ul>
+        <li><strong>Decomposition:</strong> Breaking down complex multiplication and percentages into intuitive building blocks (e.g., computing 15% as 10% + 5%).</li>
+        <li><strong>Fractional Sense:</strong> Visualizing decimals and ratios as proportional scales rather than abstract symbols.</li>
+        <li><strong>Business Pragmatism:</strong> Connecting algebraic formulas to real-world financial decision-making, profits, and margins.</li>
+        <li><strong>Flow State:</strong> Time-pressured gamification promotes rapid neural retrieval and boosts working memory capacity.</li>
+    </ul>
+
+    <h2>🔒 Privacy by Design</h2>
+    <p>
+        We respect your digital privacy. MathPuzzle does not require account registration, passwords, or personal data collection. You jump straight into games with a lightweight, anonymous GamerId stored only on your local device. Read our full <a href="{{ url_for('privacy') }}">Privacy Policy</a> for complete details.
+    </p>
+
+    <h2>📬 Contact & Community</h2>
+    <p>
+        MathPuzzle is actively developed and curated by the SharpHuman team. We continuously add new problem sets, math categories, and competitive modes. We value feedback, bug reports, and suggestions from students, educators, and gamers worldwide.
+    </p>
+    <p>
+        For inquiries, suggestions, or institutional partnerships, reach us at:
+        <br>
+        <strong>Email:</strong> <a href="mailto:support@sharphuman.app">support@sharphuman.app</a>
+        <br>
+        <strong>Website:</strong> <a href="https://sharphuman.app/">https://sharphuman.app</a>
+    </p>
+
+    <div class="cta-row">
+        <a href="{{ url_for('index') }}" class="cta-btn">Start Playing Now</a>
+        <a href="{{ url_for('how_to_play') }}" class="cta-btn secondary">Read Game & Math Guides</a>
+    </div>
+</div>
+{% endblock %}

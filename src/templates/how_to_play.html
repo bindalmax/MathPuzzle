@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}How to Play & Math Guides - MathPuzzle{% endblock %}
+
+{% block extra_style %}
+    .content-container {
+        max-width: 880px;
+        margin: 2rem auto;
+        text-align: left;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        line-height: 1.75;
+    }
+
+    .content-container h1 {
+        font-size: 2.2rem;
+        margin-bottom: 0.5rem;
+        background: var(--header-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .content-container .subtitle {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 1rem;
+    }
+
+    .content-container h2 {
+        font-size: 1.4rem;
+        margin-top: 2.25rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .content-container h3 {
+        font-size: 1.15rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .content-container p, .content-container ul, .content-container ol {
+        color: var(--text-color);
+        margin-bottom: 1.25rem;
+    }
+
+    .content-container ul, .content-container ol {
+        padding-left: 1.5rem;
+    }
+
+    .content-container li {
+        margin-bottom: 0.5rem;
+    }
+
+    .math-guide-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .math-guide-card h4 {
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-size: 1.1rem;
+    }
+
+    .math-guide-card .formula {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-family: 'Fira Code', monospace;
+        margin: 0.75rem 0;
+        font-size: 0.95rem;
+        color: var(--primary-color);
+        display: inline-block;
+    }
+
+    .tip-box {
+        background: rgba(16, 185, 129, 0.08);
+        border-left: 4px solid var(--secondary-color);
+        padding: 1rem 1.25rem;
+        border-radius: 0 10px 10px 0;
+        margin: 1rem 0;
+    }
+
+    .tip-box p {
+        margin: 0;
+        color: var(--text-color);
+    }
+
+    .step-list {
+        list-style: none;
+        padding-left: 0;
+        counter-reset: step-counter;
+    }
+
+    .step-list li {
+        counter-increment: step-counter;
+        position: relative;
+        padding-left: 3rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .step-list li::before {
+        content: counter(step-counter);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2rem;
+        height: 2rem;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .cta-row {
+        margin-top: 3rem;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .cta-btn {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white !important;
+        text-decoration: none !important;
+        padding: 0.85rem 1.75rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+    }
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <h1>How to Play & Math Guides</h1>
+    <div class="subtitle">Complete guide to game mechanics, competitive strategies, and mental calculation techniques.</div>
+
+    <h2>🎮 Getting Started</h2>
+    <ol class="step-list">
+        <li>
+            <strong>Choose Your GamerId:</strong>
+            Enter a nickname on the homepage. No passwords or registration needed. Your stats, accuracy rates, and high scores are tracked seamlessly with your GamerId.
+        </li>
+        <li>
+            <strong>Select Your Game Mode:</strong>
+            Pick between <strong>Solo Challenge</strong> (beat your personal best), <strong>Multiplayer</strong> (real-time battles with friends), or <strong>Startup Quest</strong> (entrepreneurial business math).
+        </li>
+        <li>
+            <strong>Configure Time & Difficulty:</strong>
+            Choose between standard difficulty tiers (Easy, Medium, Hard) or our <strong>AI Adaptive Mode</strong>, which continuously scales questions to match your real-time performance.
+        </li>
+        <li>
+            <strong>Solve Rapidly & Climb:</strong>
+            Submit correct answers before the clock expires to earn speed points, maintain winning streaks, and rank on the global Hall of Fame!
+        </li>
+    </ol>
+
+    <h2>🏆 Game Modes Explained</h2>
+
+    <h3>🎯 1. Solo Challenge</h3>
+    <p>
+        The classic training mode. Test yourself under time constraints (e.g. 30, 60, or 120 seconds) or fixed question counts (10, 20, or 50 questions). Perfect for daily warmups, mental agility drills, and building rapid calculation reflexes.
+    </p>
+
+    <h3>👥 2. Real-Time Multiplayer</h3>
+    <p>
+        Create a private game room or join an active lobby from the homepage. When the host begins:
+    </p>
+    <ul>
+        <li>All players in the room receive the exact same randomized problem sequence to ensure 100% fair competition.</li>
+        <li>Live scoreboards update via real-time WebSockets so you can see who is leading question by question.</li>
+        <li>Fastest correct answers earn speed multipliers!</li>
+    </ul>
+
+    <h3>🚀 3. Startup Quest: The Unicorn Hunt</h3>
+    <p>
+        Step into the shoes of a tech founder! Start with $100K in seed capital and work your way up to a $1 Billion Unicorn valuation by solving 10 high-stakes business calculations:
+    </p>
+    <ul>
+        <li><strong>Unit Economics:</strong> Calculate Customer Acquisition Cost (CAC), Lifetime Value (LTV), and churn rate impact.</li>
+        <li><strong>Burn & Runway:</strong> Determine monthly cash runway and optimal hiring pace.</li>
+        <li><strong>Dilution & Cap Tables:</strong> Calculate investor ownership percentages and founder shares across priced rounds.</li>
+        <li><strong>Margins:</strong> Optimize pricing to protect gross margins against rising supply chain costs.</li>
+    </ul>
+
+    <h2>📐 Mental Math Guides & Strategies</h2>
+
+    <div class="math-guide-card">
+        <h4>📈 Percentages: The 10% & 1% Rule</h4>
+        <p>Never calculate percentages using long multiplication. Break the number into easy power-of-10 chunks:</p>
+        <div class="formula">To find 15% of 240: 10% = 24, 5% = 12 ➔ 24 + 12 = 36</div>
+        <div class="tip-box">
+            <p><strong>Pro-Tip:</strong> Remember that percentages are reversible: <strong>x% of y = y% of x</strong>. For example, calculating 16% of 50 is identical to calculating 50% of 16 (which is simply 8)!</p>
+        </div>
+    </div>
+
+    <div class="math-guide-card">
+        <h4>💰 Profit, Loss & Markup vs Margin</h4>
+        <p>Understanding the difference between markup and profit margin is crucial for business math:</p>
+        <div class="formula">Markup = (Selling Price - Cost) / Cost × 100%</div>
+        <div class="formula">Gross Margin = (Selling Price - Cost) / Selling Price × 100%</div>
+        <p>If an item costs $80 and you sell it for $100, your markup is 25%, but your gross profit margin is 20%.</p>
+    </div>
+
+    <div class="math-guide-card">
+        <h4>📊 Decimals & Fractions: Instant Conversion Table</h4>
+        <p>Memorize these critical fraction-to-decimal benchmarks for split-second answers:</p>
+        <ul>
+            <li><strong>1/8 = 0.125</strong> | <strong>3/8 = 0.375</strong> | <strong>5/8 = 0.625</strong> | <strong>7/8 = 0.875</strong></li>
+            <li><strong>1/6 ≈ 0.167</strong> | <strong>5/6 ≈ 0.833</strong></li>
+            <li><strong>1/7 ≈ 0.143</strong> | <strong>2/7 ≈ 0.286</strong></li>
+        </ul>
+    </div>
+
+    <div class="math-guide-card">
+        <h4>🔢 Algebra: Quick Linear Balance</h4>
+        <p>When solving equations like \(ax + b = c\), mentally combine steps by subtracting \(b\) and immediately dividing by \(a\):</p>
+        <div class="formula">x = (c - b) / a</div>
+        <p>Example: \(4x + 12 = 36\) ➔ Subtract 12 (gives 24) ➔ Divide by 4 ➔ \(x = 6\).</p>
+    </div>
+
+    <h2>⭐ Scoring & Leaderboards</h2>
+    <p>Your final score is calculated using three key performance factors:</p>
+    <ul>
+        <li><strong>Base Points:</strong> 100 points for every correct solution.</li>
+        <li><strong>Speed Multiplier:</strong> Answer in under 3 seconds to earn up to a 2.5x speed multiplier.</li>
+        <li><strong>Streak Bonus:</strong> Consecutive correct answers build a combo multiplier (+10% per consecutive correct problem).</li>
+        <li><strong>Difficulty Scaling:</strong> Hard and Adaptive problems award higher point weights compared to Easy problems.</li>
+    </ul>
+
+    <div class="cta-row">
+        <a href="{{ url_for('index') }}" class="cta-btn">Practice Now</a>
+        <a href="{{ url_for('leaderboard') }}" class="cta-btn" style="background: var(--secondary-color);">View Global Hall of Fame</a>
+    </div>
+</div>
+{% endblock %}

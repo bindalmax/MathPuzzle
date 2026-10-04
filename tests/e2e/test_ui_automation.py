@@ -141,8 +141,8 @@ class TestUIAutomation(unittest.TestCase):
         wait = WebDriverWait(self.driver, 15)
         
         # The new link text includes an emoji
-        link = wait.until(EC.element_to_be_clickable((By.ID, "leaderboard_link")))
-        link.click()
+        self.click_safe(By.ID, "leaderboard_link")
+        wait.until(EC.url_contains("leaderboard"))
         
         h1 = wait.until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
         self.assertEqual(h1.text, "Global Hall of Fame")

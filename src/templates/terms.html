@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - MathPuzzle{% endblock %}
+
+{% block extra_style %}
+    .policy-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        text-align: left;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        line-height: 1.7;
+    }
+
+    .policy-container h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .policy-container .last-updated {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 1rem;
+    }
+
+    .policy-container h2 {
+        font-size: 1.3rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+    }
+
+    .policy-container p, .policy-container ul {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+
+    .policy-container ul {
+        padding-left: 1.5rem;
+    }
+
+    .policy-container li {
+        margin-bottom: 0.5rem;
+    }
+
+    .policy-container a {
+        color: var(--primary-color);
+        text-decoration: underline;
+    }
+
+    .back-nav {
+        margin-top: 2.5rem;
+        text-align: center;
+    }
+
+    .back-nav a {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white !important;
+        text-decoration: none !important;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: transform 0.2s;
+    }
+
+    .back-nav a:hover {
+        transform: translateY(-2px);
+    }
+{% endblock %}
+
+{% block content %}
+<div class="policy-container">
+    <h1>Terms of Service</h1>
+    <div class="last-updated">Last Updated: October 5, 2026</div>
+
+    <p>Welcome to <strong>MathPuzzle</strong> (operated at <a href="https://sharphuman.app/">sharphuman.app</a>). By accessing or using our website, applications, and services, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the service.</p>
+
+    <h2>1. Educational & Entertainment Purpose</h2>
+    <p>MathPuzzle provides educational math puzzles, mental calculation challenges, and business simulations designed for learning, cognitive skill building, and entertainment. The content is provided for informational and educational purposes only.</p>
+
+    <h2>2. User Conduct & Fair Play</h2>
+    <p>We strive to maintain a fair, friendly, and respectful environment for all players. By using MathPuzzle, you agree that you will not:</p>
+    <ul>
+        <li>Use automated scripts, bots, scrapers, or exploits to submit answers or artificially inflate leaderboard scores.</li>
+        <li>Attempt to interfere with or disrupt the operation of the service, servers, WebSockets, or networks.</li>
+        <li>Choose a GamerId containing defamatory, offensive, hateful, or abusive language.</li>
+        <li>Reverse engineer or decompile any portion of the service except as permitted by applicable law.</li>
+    </ul>
+
+    <h2>3. Intellectual Property</h2>
+    <p>All game designs, question generation algorithms, visual layouts, graphics, audio, code, and documentation are the intellectual property of MathPuzzle / SharpHuman or its licensors and are protected by applicable copyright, trademark, and intellectual property laws.</p>
+
+    <h2>4. Third-Party Services & Advertising</h2>
+    <p>MathPuzzle may display third-party advertisements served through Google AdSense. We do not endorse or assume liability for third-party products, content, or services advertised on our platform. Your interactions with advertisers are governed by their respective terms and privacy policies.</p>
+
+    <h2>5. Disclaimer of Warranties</h2>
+    <p>The service is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind, whether express or implied. We do not warrant that the service will be uninterrupted, error-free, completely secure, or free from computer viruses.</p>
+
+    <h2>6. Limitation of Liability</h2>
+    <p>To the fullest extent permitted by applicable law, MathPuzzle and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your access to or use of the service.</p>
+
+    <h2>7. Modifications to Terms</h2>
+    <p>We reserve the right to modify these Terms at any time. Any changes will be posted on this page with an updated "Last Updated" date. Continued use of the platform following the posting of changes constitutes acceptance of those changes.</p>
+
+    <h2>8. Contact Information</h2>
+    <p>If you have any questions or concerns regarding these Terms of Service, please contact us at:</p>
+    <p>
+        <strong>Email:</strong> <a href="mailto:support@sharphuman.app">support@sharphuman.app</a><br>
+        <strong>Website:</strong> <a href="https://sharphuman.app/">https://sharphuman.app</a>
+    </p>
+
+    <div class="back-nav">
+        <a href="{{ url_for('index') }}">Back to Home</a>
+    </div>
+</div>
+{% endblock %}
