@@ -11,7 +11,7 @@ class AlgebraQuestion(Question):
             x = random.randint(1, 10)
             a = random.randint(1, 10)
             b = x + a
-            question = f"Solve for x: x + {a} = {b}"
+            question = f"Solve for x: \\(x + {a} = {b}\\)"
             answer = x
 
         elif difficulty == 'medium':
@@ -21,19 +21,19 @@ class AlgebraQuestion(Question):
                 x = random.randint(5, 20)
                 a = random.randint(1, 10)
                 b = x - a
-                question = f"Solve for x: x - {a} = {b}"
+                question = f"Solve for x: \\(x - {a} = {b}\\)"
                 answer = x
             elif eq_type == 'multiplication':
                 x = random.randint(2, 10)
                 a = random.randint(2, 5)
                 b = x * a
-                question = f"Solve for x: {a}x = {b}"
+                question = f"Solve for x: \\({a}x = {b}\\)"
                 answer = x
             else: # division
                 b = random.randint(2, 10)
                 a = random.randint(2, 10)
                 x = a * b
-                question = f"Solve for x: x / {a} = {b}"
+                question = f"Solve for x: \\(\\frac{{x}}{{{a}}} = {b}\\)"
                 answer = x
 
         elif difficulty == 'hard':
@@ -47,7 +47,8 @@ class AlgebraQuestion(Question):
                 coeff = Fraction(coeff_num, coeff_den)
                 a = random.randint(1, 5)
                 b = coeff * x + a
-                question = f"Solve for x: ({coeff_num}/{coeff_den})x + {a} = {b}"
+                b_str = f"\\frac{{{b.numerator}}}{{{b.denominator}}}" if isinstance(b, Fraction) and b.denominator != 1 else str(b)
+                question = f"Solve for x: \\(\\frac{{{coeff_num}}}{{{coeff_den}}}x + {a} = {b_str}\\)"
                 answer = x
             else: # two_var (simple system)
                 x = random.randint(1, 5)
@@ -55,9 +56,9 @@ class AlgebraQuestion(Question):
                 sum_xy = x + y
                 diff_xy = abs(x - y)
                 if x > y:
-                    question = f"If x + y = {sum_xy} and x - y = {diff_xy}, what is x? "
+                    question = f"If \\(x + y = {sum_xy}\\) and \\(x - y = {diff_xy}\\), what is \\(x\\)? "
                 else:
-                    question = f"If x + y = {sum_xy} and y - x = {diff_xy}, what is x? "
+                    question = f"If \\(x + y = {sum_xy}\\) and \\(y - x = {diff_xy}\\), what is \\(x\\)? "
                 answer = x
         else:
             raise NotImplementedError(f"Algebra questions for {difficulty} difficulty are not yet implemented.")

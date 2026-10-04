@@ -8,7 +8,10 @@ const STATIC_ASSETS = [
 
 const EXTERNAL_ASSETS = [
   'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap',
-  'https://cdn.socket.io/4.7.2/socket.io.min.js'
+  'https://cdn.socket.io/4.7.2/socket.io.min.js',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js'
 ];
 
 // Install: Cache static assets
@@ -53,7 +56,7 @@ self.addEventListener('fetch', (event) => {
   const isStaticAsset = STATIC_ASSETS.some(asset => {
       const assetUrl = new URL(asset, self.location.origin);
       return url.pathname === assetUrl.pathname;
-  }) || EXTERNAL_ASSETS.includes(event.request.url);
+  }) || EXTERNAL_ASSETS.includes(event.request.url) || url.hostname.includes('cdn.jsdelivr.net');
 
   if (isStaticAsset) {
     event.respondWith(

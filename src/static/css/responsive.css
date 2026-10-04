@@ -192,3 +192,13 @@ a {
 a:hover {
     color: var(--primary-color);
 }
+
+/* KaTeX Mathematical Notation Styling */
+.katex {
+    font-size: 1.15em;
+    color: inherit;
+}
+.katex-display {
+    margin: 0.5em 0;
+}
+

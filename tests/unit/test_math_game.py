@@ -83,6 +83,12 @@ class TestDecimalFractionQuestion(unittest.TestCase):
         self.assertEqual(len(choices), 4)
         self.assertIn(answer, choices)
 
+    @patch('questions.decimal_fraction.random.choice', side_effect=['fraction', '+', Fraction(1, 2), Fraction(3, 4), 1, 2, 3, -1, 1, 2])
+    def test_easy_fraction_addition_latex(self, mock_choice):
+        question, answer, choices = DecimalFractionQuestion().generate('easy')
+        self.assertEqual(question, "What is \\(\\frac{1}{2} + \\frac{3}{4}\\)? (Answer as decimal, round to 2 places) ")
+        self.assertEqual(answer, 1.25)
+
 class TestPercentageQuestion(unittest.TestCase):
     @patch('questions.percentage.random.choice', side_effect=[25, 1, 2, 3]) # Mock random.choice for percent and generate_choices
     @patch('questions.percentage.random.randint', side_effect=[4, 10, 1, 2, 3]) # Mock random.randint for number and generate_choices
@@ -108,11 +114,26 @@ class TestAlgebraQuestion(unittest.TestCase):
     @patch('questions.algebra.random.randint', side_effect=[5, 8, 1, 2, 3]) # Mock for x, a, and generate_choices
     def test_easy_algebra_with_choices(self, mock_randint):
         question, answer, choices = AlgebraQuestion().generate('easy')
-        self.assertEqual(question, "Solve for x: x + 8 = 13")
+        self.assertEqual(question, "Solve for x: \\(x + 8 = 13\\)")
         self.assertEqual(answer, 5)
         self.assertIsInstance(choices, list)
         self.assertEqual(len(choices), 4)
         self.assertIn(answer, choices)
+
+    @patch('questions.algebra.random.choice', side_effect=['division', 1, -1, 1, 1, -1])
+    @patch('questions.algebra.random.randint', side_effect=[4, 3, 1, 2, 3, 4, 5])
+    def test_medium_algebra_division_latex(self, mock_randint, mock_choice):
+        question, answer, choices = AlgebraQuestion().generate('medium')
+        self.assertEqual(question, "Solve for x: \\(\\frac{x}{3} = 4\\)")
+        self.assertEqual(answer, 12)
+
+    @patch('questions.algebra.random.choice', side_effect=['fraction', 1, -1, 1, 1, -1])
+    @patch('questions.algebra.random.randint', side_effect=[6, 2, 3, 1, 1, 2, 3, 4, 5])
+    def test_hard_algebra_fraction_latex(self, mock_randint, mock_choice):
+        # x=6, coeff_num=2, coeff_den=3 -> coeff=2/3 -> 2/3*6 + 1 = 5
+        question, answer, choices = AlgebraQuestion().generate('hard')
+        self.assertEqual(question, "Solve for x: \\(\\frac{2}{3}x + 1 = 5\\)")
+        self.assertEqual(answer, 6)
 
 # --- Game Class Tests (now expects choices) ---
 class TestGame(unittest.TestCase):

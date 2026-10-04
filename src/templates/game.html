@@ -73,6 +73,9 @@
                 SoundEngine.playError();
             }
             sessionStorage.setItem('last_known_score', sessionScore);
+            if (window.renderMath) {
+                window.renderMath();
+            }
         };
     </script>
 {% endblock %}

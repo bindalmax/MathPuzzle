@@ -113,6 +113,28 @@ class TestUIAutomation(unittest.TestCase):
         choices = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "choice-btn")))
         self.assertEqual(len(choices), 4)
 
+    def test_katex_math_rendering_in_game(self):
+        """Verify that KaTeX successfully auto-renders algebra equations into .katex elements."""
+        self.driver.get(self.base_url)
+        wait = WebDriverWait(self.driver, 10)
+
+        self.click_safe(By.ID, "single")
+        time.sleep(0.5)
+
+        self.driver.find_element(By.NAME, "player_name").send_keys("MathScholar")
+
+        # Select Algebra category
+        category_select = self.driver.find_element(By.ID, "category")
+        category_select.find_element(By.XPATH, "//option[@value='algebra']").click()
+
+        self.click_safe(By.ID, "start_btn")
+        wait.until(EC.url_contains("game"))
+
+        # Verify that KaTeX rendered the equation in the question box
+        katex_element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "katex")))
+        self.assertTrue(katex_element.is_displayed())
+        self.assertIn("katex", katex_element.get_attribute("class"))
+
     def test_navigation_to_hall_of_fame(self):
         """Verify link text for the leaderboard and successful navigation."""
         self.driver.get(self.base_url)
