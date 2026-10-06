@@ -48,6 +48,12 @@ spec:
               key: SECRET_KEY
         - name: ALLOWED_ORIGINS
           value: "http://localhost:5000" # Default local, overridden in overlays
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: GOOGLE_CLIENT_ID
+              optional: true
         resources:
           limits:
             memory: "512Mi"

@@ -62,12 +62,104 @@ This document outlines the strategy for implementing Google Single Sign-On (SSO)
 
 ---
 
+## Phase 5: Production Deployment on Ubuntu Server
+
+Follow these steps to deploy and activate Google SSO on your Ubuntu production server (`https://sharphuman.app`):
+
+### 1. Google Cloud Console Configuration
+1. Go to [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials).
+2. Select your project and create (or edit) your **OAuth 2.0 Client ID** (Application type: **Web application**).
+3. Under **Authorized JavaScript origins**, add:
+   - `https://sharphuman.app`
+   - `https://www.sharphuman.app`
+   *(Optional for staging/testing: `https://localhost:5005`)*
+4. Under **Authorized redirect URIs**:
+   - Google Identity Services (One Tap & standard button) uses credential post/callback, so redirect URI is not required, but you can set:
+     - `https://sharphuman.app`
+5. Copy your **Client ID** (e.g. `1234567890-abcdefg123456.apps.googleusercontent.com`).
+
+---
+
+### 2. Configure Environment on Ubuntu Server
+
+Depending on how MathPuzzle is hosted on your Ubuntu server, apply the Client ID using one of the following methods:
+
+#### Method A: Docker Compose Deployment (Recommended for VPS)
+1. SSH into your Ubuntu server:
+   ```bash
+   ssh ubuntu@your-server-ip
+   cd /path/to/mathpuzzle
+   ```
+2. Add `GOOGLE_CLIENT_ID` to your production `.env` file:
+   ```bash
+   echo 'GOOGLE_CLIENT_ID="YOUR_CLIENT_ID.apps.googleusercontent.com"' >> .env
+   ```
+3. Ensure `docker-compose.prod.yml` passes the variable (already configured):
+   ```yaml
+   environment:
+     - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+   ```
+4. Rebuild and restart the container:
+   ```bash
+   docker compose -f docker-compose.prod.yml down
+   docker compose -f docker-compose.prod.yml up -d --build
+   ```
+
+#### Method B: K3s / Kubernetes Deployment
+1. SSH into your Ubuntu server with `kubectl` access.
+2. Edit or recreate `k8s/secrets.yaml`:
+   ```yaml
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: mathpuzzle-secrets
+     namespace: mathpuzzle
+   type: Opaque
+   stringData:
+     SECRET_KEY: "your-production-secret-key"
+     DATABASE_URL: "postgresql://user:pass@postgres:5432/mathpuzzle"
+     GOOGLE_CLIENT_ID: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+   ```
+3. Apply the updated secret and rollout restart:
+   ```bash
+   kubectl apply -f k8s/secrets.yaml
+   kubectl rollout restart deployment/mathpuzzle-web -n mathpuzzle
+   ```
+
+#### Method C: Native Systemd Service (Gunicorn without Docker)
+1. If running as a systemd service (e.g. `/etc/systemd/system/mathpuzzle.service`):
+   ```bash
+   sudo nano /etc/systemd/system/mathpuzzle.service
+   ```
+2. Add to the `[Service]` section:
+   ```ini
+   Environment="GOOGLE_CLIENT_ID=YOUR_CLIENT_ID.apps.googleusercontent.com"
+   ```
+3. Reload systemd and restart service:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl restart mathpuzzle
+   ```
+
+---
+
+### 3. Verification on Production
+1. Visit `https://sharphuman.app/` in your browser.
+2. Confirm the **"Sign in to save your career stats"** Google One Tap prompt and standard Google Sign-In button render.
+3. Sign in with your Google account.
+4. Verify that:
+   - The header displays `Logged in as: Your Name` with a `Logout` button.
+   - The `GamerId` input is locked/readonly with your name.
+   - Finished games save high scores associated with your user account in the database.
+
+---
+
 ## Implementation Checklist
-- [ ] Create Google Cloud Project and Web Credentials.
-- [ ] Add `google-auth` to `requirements.txt`.
-- [ ] Implement `id_token` verification logic in the Flask backend.
-- [ ] Update database schema to store `google_id`.
-- [ ] Implement auto-generation logic for Gamer IDs.
-- [ ] Integrate Google One Tap and Sign-In button in `index.html`.
-- [ ] Verify session sharing between browser and standalone PWA mode.
-- [ ] Update Privacy Policy for GDPR compliance.
+- [x] Integrate `google-auth` in `requirements.txt`.
+- [x] Implement backend token verification and user linking in `GoogleAuthResource` (`POST /api/auth/google`).
+- [x] Update database models (`User` table with `google_id`, and `Highscore.user_id` foreign key).
+- [x] Integrate Google Identity Services (GIS) One Tap and standard button in `src/templates/index.html`.
+- [x] Connect `GOOGLE_CLIENT_ID` in `app.py`, `docker-compose.prod.yml`, and `k8s/base/app.yaml`.
+- [x] Run full automated test suite (Unit, Integration, API, E2E).
+- [ ] Add `https://sharphuman.app` to Google Cloud Console Authorized Origins.
+- [ ] Set `GOOGLE_CLIENT_ID` environment variable on Ubuntu server.
