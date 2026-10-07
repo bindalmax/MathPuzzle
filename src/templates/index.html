@@ -365,6 +365,7 @@
 {% endblock %}
 
 {% block scripts %}
+    {% if config.get('GOOGLE_CLIENT_ID') %}
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         function handleCredentialResponse(response) {
@@ -383,6 +384,7 @@
             });
         }
     </script>
+    {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -391,24 +393,26 @@
         <p>Sharpen your skills with fun puzzles, real-time multiplayer, and business simulations.</p>
     </section>
 
-    <div class="login-section">
-        {% if session.get('user_id') %}
+    {% if session.get('user_id') %}
+        <div class="login-section">
             <div class="user-info">
                 <span>Logged in as: <strong>{{ session.get('player_name') }}</strong></span>
                 <a href="{{ url_for('logout') }}" style="font-size: 0.8rem; color: #ef4444;">Logout</a>
             </div>
-        {% else %}
+        </div>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+    {% elif config.get('GOOGLE_CLIENT_ID') %}
+        <div class="login-section">
             <p style="margin-bottom: 10px;">Sign in to save your career stats:</p>
             <div id="g_id_onload"
-                 data-client_id="{{ config.get('GOOGLE_CLIENT_ID', '') }}"
+                 data-client_id="{{ config.get('GOOGLE_CLIENT_ID') }}"
                  data-callback="handleCredentialResponse"
                  data-auto_prompt="false">
             </div>
             <div class="g_id_signin" data-type="standard"></div>
-        {% endif %}
-    </div>
-
-    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        </div>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+    {% endif %}
 
     {% if error %}
         <p class="error" role="alert" id="error_msg">{{ error }}</p>

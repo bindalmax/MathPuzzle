@@ -4,6 +4,22 @@ import sys
 # Add src directory to path for imports
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
+# Automatically load .env file if present in project root
+_env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+if os.path.exists(_env_path):
+    try:
+        with open(_env_path, 'r', encoding='utf-8') as _f:
+            for _line in _f:
+                _line = _line.strip()
+                if _line and not _line.startswith('#') and '=' in _line:
+                    _k, _v = _line.split('=', 1)
+                    _k = _k.strip()
+                    _v = _v.strip().strip('"').strip("'")
+                    if _k and _k not in os.environ:
+                        os.environ[_k] = _v
+    except Exception:
+        pass
+
 from learning_profile_service import LearningProfileService
 from learning_analytics_service import LearningAnalyticsService
 from difficulty_engine import DifficultyEngine
@@ -51,7 +67,7 @@ if not SECRET_KEY:
 app.secret_key = SECRET_KEY
 
 # Google SSO Configuration
-app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
 
 # CSRF Protection
 csrf = CSRFProtect(app)
