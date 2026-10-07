@@ -195,16 +195,15 @@ class TestUIAutomation(unittest.TestCase):
         # Test QR Toggle
         qr_container = self.driver.find_element(By.ID, "qr-container")
         
-        # It might be hidden by display: none or opacity. check is_displayed()
         # Ensure it starts hidden
         self.assertFalse(qr_container.is_displayed())
         
         self.click_safe(By.ID, "qr-btn")
-        # Wait for it to become visible
-        wait.until(lambda d: qr_container.is_displayed())
+        # Wait for it to become visible (re-locate dynamically to prevent StaleElementReferenceException)
+        wait.until(EC.visibility_of_element_located((By.ID, "qr-container")))
         
         # Verify QR image has src from qrserver
-        qr_img = self.driver.find_element(By.ID, "qr-image")
+        qr_img = wait.until(EC.visibility_of_element_located((By.ID, "qr-image")))
         self.assertIn("qrserver.com", qr_img.get_attribute("src"))
 
 if __name__ == '__main__':
