@@ -232,122 +232,236 @@
         margin-bottom: 1rem;
     }
 
-    /* Educational Homepage Sections */
+    /* Educational Homepage Sections - Decluttered Accordion Hub */
     .edu-section {
-        margin-top: 4rem;
+        margin-top: 3.5rem;
         text-align: left;
         border-top: 1px solid var(--border-light);
-        padding-top: 3rem;
+        padding-top: 2rem;
     }
-    .edu-section h2 {
-        font-size: 1.8rem;
-        margin-bottom: 0.75rem;
-        color: var(--text-color);
+    .edu-header {
         text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .edu-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.4rem;
+        color: var(--text-color);
     }
     .edu-subtitle {
         color: var(--text-light);
         text-align: center;
         max-width: 650px;
-        margin: 0 auto 2.5rem auto;
-        font-size: 1.05rem;
+        margin: 0 auto;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Quick Feature Pills Strip */
+    .feature-pills {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .feature-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    /* Accordion Container */
+    .edu-accordion-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .edu-accordion {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .edu-accordion:hover {
+        border-color: var(--primary-color);
+    }
+    .edu-accordion[open] {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.06);
+    }
+    .edu-summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 0.95rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        transition: background-color 0.15s;
+    }
+    .edu-summary::-webkit-details-marker {
+        display: none;
+    }
+    .edu-summary:hover {
+        background: rgba(79, 70, 229, 0.03);
+    }
+    .summary-left {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .summary-icon {
+        font-size: 1.2rem;
+    }
+    .summary-heading {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0;
+        display: inline;
+    }
+    .summary-right {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .summary-badge {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        background: rgba(0,0,0,0.04);
+        padding: 0.2rem 0.55rem;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    .summary-chevron {
+        font-size: 0.85rem;
+        color: var(--primary-color);
+        transition: transform 0.2s ease;
+        display: inline-block;
+    }
+    .edu-accordion[open] .summary-chevron {
+        transform: rotate(90deg);
+    }
+    .edu-content {
+        padding: 0 1.25rem 1.25rem 1.25rem;
+        border-top: 1px solid var(--border-light);
+        animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .edu-intro {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0.85rem 0 1.25rem 0;
     }
     .edu-grid-3 {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
     }
     .edu-card {
         background: var(--bg-color);
         border: 1px solid var(--border-light);
-        border-radius: 14px;
-        padding: 1.75rem;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .edu-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border-radius: 12px;
+        padding: 1.25rem;
     }
     .edu-card-icon {
-        font-size: 2rem;
-        margin-bottom: 0.75rem;
-    }
-    .edu-card h3 {
-        font-size: 1.2rem;
+        font-size: 1.75rem;
         margin-bottom: 0.5rem;
+    }
+    .edu-card h4 {
+        font-size: 1.05rem;
+        margin-bottom: 0.4rem;
         color: var(--primary-color);
     }
     .edu-card p {
         color: var(--text-light);
-        font-size: 0.95rem;
-        line-height: 1.6;
+        font-size: 0.88rem;
+        line-height: 1.55;
         margin: 0;
     }
     .category-showcase {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin: 2rem 0;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
     }
     .category-box {
-        background: var(--card-bg);
+        background: var(--bg-color);
         border: 1px solid var(--border-light);
-        border-radius: 12px;
-        padding: 1.5rem;
-        border-top: 4px solid var(--primary-color);
+        border-radius: 10px;
+        padding: 1.25rem;
+        border-top: 3px solid var(--primary-color);
     }
     .category-box h4 {
-        font-size: 1.15rem;
-        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
         color: var(--text-color);
     }
     .category-box p {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: var(--text-light);
-        line-height: 1.6;
-        margin-bottom: 0.75rem;
+        line-height: 1.5;
+        margin-bottom: 0.6rem;
     }
     .category-box .example-tag {
         display: inline-block;
         background: rgba(79, 70, 229, 0.08);
         color: var(--primary-color);
-        padding: 0.25rem 0.6rem;
-        border-radius: 6px;
-        font-size: 0.8rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
         font-family: 'Fira Code', monospace;
     }
     .why-math-banner {
-        background: linear-gradient(135deg, rgba(79, 70, 229, 0.06) 0%, rgba(14, 165, 233, 0.06) 100%);
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
         border: 1px solid var(--border-light);
-        border-radius: 16px;
-        padding: 2.5rem;
-        margin-top: 3rem;
-    }
-    .why-math-banner h3 {
-        font-size: 1.4rem;
-        margin-bottom: 1rem;
-        color: var(--text-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 0.5rem;
     }
     .why-math-banner p {
         color: var(--text-light);
-        line-height: 1.7;
-        margin-bottom: 1rem;
+        line-height: 1.65;
+        font-size: 0.9rem;
+        margin: 0;
     }
 
     .login-section {
-        margin-top: 20px;
-        padding: 15px;
-        background: #eef2ff;
-        border-radius: 8px;
-        border: 1px solid #c7d2fe;
+        max-width: 480px;
+        margin: 0 auto 1.5rem auto;
+        padding: 10px 18px;
+        background: rgba(79, 70, 229, 0.04);
+        border-radius: 12px;
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
     }
     .user-info {
         display: flex;
         align-items: center;
-        gap: 10px;
-        font-weight: bold;
-        color: #3730a3;
+        justify-content: space-between;
+        width: 100%;
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 0.9rem;
     }
     .google-btn {
         display: inline-flex;
@@ -399,14 +513,13 @@
     {% if session.get('user_id') %}
         <div class="login-section">
             <div class="user-info">
-                <span>Logged in as: <strong>{{ session.get('player_name') }}</strong></span>
-                <a href="{{ url_for('logout') }}" style="font-size: 0.8rem; color: #ef4444;">Logout</a>
+                <span>👤 Logged in as: <strong>{{ session.get('player_name') }}</strong></span>
+                <a href="{{ url_for('logout') }}" style="font-size: 0.8rem; color: #ef4444; font-weight: bold; text-decoration: underline;">Logout</a>
             </div>
         </div>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
     {% elif config.get('GOOGLE_CLIENT_ID') %}
         <div class="login-section">
-            <p style="margin-bottom: 10px;">Sign in to save your career stats:</p>
+            <span style="font-size: 0.88rem; color: var(--text-light); font-weight: 500;">Sign in to save career stats:</span>
             <div id="g_id_onload"
                  data-client_id="{{ config.get('GOOGLE_CLIENT_ID') }}"
                  data-callback="handleCredentialResponse"
@@ -414,7 +527,6 @@
             </div>
             <div class="g_id_signin" data-type="standard"></div>
         </div>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
     {% endif %}
 
     {% if error %}
@@ -555,77 +667,133 @@
         </div>
     </div>
 
-    <!-- Educational & Informational Content for Users and Search Crawlers -->
-    <section class="edu-section">
-        <h2>⚡ Master Mental Math with Speed & Strategy</h2>
-        <p class="edu-subtitle">MathPuzzle blends cognitive science, real-time competitive gaming, and practical business arithmetic to turn mental math into your greatest everyday superpower.</p>
+    <!-- Key Feature Highlights -->
+    <div class="feature-pills" aria-label="MathPuzzle Highlights">
+        <div class="feature-pill"><span>🧠</span> Adaptive AI Engine</div>
+        <div class="feature-pill"><span>⚔️</span> Real-Time Multiplayer</div>
+        <div class="feature-pill"><span>🦄</span> Startup Quest Simulation</div>
+        <div class="feature-pill"><span>📊</span> Personal Analytics</div>
+    </div>
 
-        <div class="edu-grid-3">
-            <div class="edu-card">
-                <div class="edu-card-icon">🧠</div>
-                <h3>Adaptive AI Engine</h3>
-                <p>Never too easy, never overwhelming. Our algorithmic difficulty engine analyzes your reaction times and accuracy to serve problems right at your learning edge.</p>
-            </div>
-            <div class="edu-card">
-                <div class="edu-card-icon">⚔️</div>
-                <h3>Real-Time Multiplayer Duels</h3>
-                <p>Challenge friends, classmates, or colleagues. Synchronized problem sets guarantee fair competition with instant WebSocket scoreboard updates.</p>
-            </div>
-            <div class="edu-card">
-                <div class="edu-card-icon">🦄</div>
-                <h3>Real-World Startup Math</h3>
-                <p>Tackle practical finance and venture capital puzzles in Startup Quest: compute burn rates, runway, CAC-to-LTV ratios, and equity dilution.</p>
-            </div>
+    <!-- Educational & Informational Content Hub (Collapsible for Clean UX, Fully Crawlable for SEO/AdSense) -->
+    <section class="edu-section" id="educational-guide">
+        <div class="edu-header">
+            <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--primary-color);">Curriculum & Learning Guide</span>
+            <h2>Explore Math Training & Game Modes</h2>
+            <p class="edu-subtitle">Learn how MathPuzzle combines cognitive science, adaptive algorithms, and competition. Tap any section to view full details.</p>
         </div>
 
-        <h2>📚 Explore Challenge Categories</h2>
-        <p class="edu-subtitle">Whether preparing for exams, interviews, or daily cognitive fitness, MathPuzzle covers essential quantitative disciplines.</p>
+        <div class="edu-accordion-container">
+            <!-- Accordion 1: Platform Overview & AI Engine -->
+            <details class="edu-accordion" id="accordion-features">
+                <summary class="edu-summary">
+                    <div class="summary-left">
+                        <span class="summary-icon">⚡</span>
+                        <h3 class="summary-heading">Master Mental Math with Speed & Strategy</h3>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-badge">Adaptive Learning & Modes</span>
+                        <span class="summary-chevron" aria-hidden="true">▸</span>
+                    </div>
+                </summary>
+                <div class="edu-content">
+                    <p class="edu-intro">MathPuzzle blends cognitive science, real-time competitive gaming, and practical business arithmetic to turn mental math into your greatest everyday superpower.</p>
+                    <div class="edu-grid-3">
+                        <div class="edu-card">
+                            <div class="edu-card-icon">🧠</div>
+                            <h4>Adaptive AI Engine</h4>
+                            <p>Never too easy, never overwhelming. Our algorithmic difficulty engine analyzes your reaction times and accuracy to serve problems right at your learning edge.</p>
+                        </div>
+                        <div class="edu-card">
+                            <div class="edu-card-icon">⚔️</div>
+                            <h4>Real-Time Multiplayer Duels</h4>
+                            <p>Challenge friends, classmates, or colleagues. Synchronized problem sets guarantee fair competition with instant WebSocket scoreboard updates.</p>
+                        </div>
+                        <div class="edu-card">
+                            <div class="edu-card-icon">🦄</div>
+                            <h4>Real-World Startup Math</h4>
+                            <p>Tackle practical finance and venture capital puzzles in Startup Quest: compute burn rates, runway, CAC-to-LTV ratios, and equity dilution.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
 
-        <div class="category-showcase">
-            <div class="category-box">
-                <h4>🔢 Basic Arithmetic</h4>
-                <p>Fast-fire mental addition, subtraction, multiplication, and division designed to boost core number sense and eliminate reliance on calculators.</p>
-                <span class="example-tag">Speed drills: 7 × 18, 144 ÷ 12</span>
-            </div>
-            <div class="category-box">
-                <h4>📊 Decimals & Fractions</h4>
-                <p>Master seamless conversions between fractions, decimals, and mixed numbers. Essential for science, engineering, and data analysis.</p>
-                <span class="example-tag">Benchmarks: 3/8 = 0.375, 5/6 ≈ 0.833</span>
-            </div>
-            <div class="category-box">
-                <h4>📈 Percentages</h4>
-                <p>Learn decomposition techniques (10% and 1% rules) to calculate discounts, interest, tips, and percentage changes in your head.</p>
-                <span class="example-tag">Shortcuts: 15% of 240, 16% of 50 = 8</span>
-            </div>
-            <div class="category-box">
-                <h4>💰 Profit, Loss & Margins</h4>
-                <p>Understand the critical commercial difference between markup on cost and gross profit margin on selling price.</p>
-                <span class="example-tag">Formulas: Margin vs Markup</span>
-            </div>
-            <div class="category-box">
-                <h4>📐 Algebra & Equations</h4>
-                <p>Develop rapid algebraic intuition. Balance linear equations and isolate variables without writing scratch steps.</p>
-                <span class="example-tag">Equations: 4x + 12 = 36 ➔ x = 6</span>
-            </div>
-            <div class="category-box">
-                <h4>🚀 Startup Quest Simulation</h4>
-                <p>10 levels of high-stakes entrepreneurial math. Make executive decisions on pricing, hiring, and venture equity.</p>
-                <span class="example-tag">Business: $100K Seed ➔ $1B Unicorn</span>
-            </div>
-        </div>
+            <!-- Accordion 2: Quantitative Disciplines & Topics -->
+            <details class="edu-accordion" id="accordion-categories">
+                <summary class="edu-summary">
+                    <div class="summary-left">
+                        <span class="summary-icon">📚</span>
+                        <h3 class="summary-heading">Explore Challenge Categories</h3>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-badge">6 Quantitative Disciplines</span>
+                        <span class="summary-chevron" aria-hidden="true">▸</span>
+                    </div>
+                </summary>
+                <div class="edu-content">
+                    <p class="edu-intro">Whether preparing for exams, interviews, or daily cognitive fitness, MathPuzzle covers essential quantitative disciplines.</p>
+                    <div class="category-showcase">
+                        <div class="category-box">
+                            <h4>🔢 Basic Arithmetic</h4>
+                            <p>Fast-fire mental addition, subtraction, multiplication, and division designed to boost core number sense and eliminate reliance on calculators.</p>
+                            <span class="example-tag">Speed drills: 7 × 18, 144 ÷ 12</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>📊 Decimals & Fractions</h4>
+                            <p>Master seamless conversions between fractions, decimals, and mixed numbers. Essential for science, engineering, and data analysis.</p>
+                            <span class="example-tag">Benchmarks: 3/8 = 0.375, 5/6 ≈ 0.833</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>📈 Percentages</h4>
+                            <p>Learn decomposition techniques (10% and 1% rules) to calculate discounts, interest, tips, and percentage changes in your head.</p>
+                            <span class="example-tag">Shortcuts: 15% of 240, 16% of 50 = 8</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>💰 Profit, Loss & Margins</h4>
+                            <p>Understand the critical commercial difference between markup on cost and gross profit margin on selling price.</p>
+                            <span class="example-tag">Formulas: Margin vs Markup</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>📐 Algebra & Equations</h4>
+                            <p>Develop rapid algebraic intuition. Balance linear equations and isolate variables without writing scratch steps.</p>
+                            <span class="example-tag">Equations: 4x + 12 = 36 ➔ x = 6</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>🚀 Startup Quest Simulation</h4>
+                            <p>10 levels of high-stakes entrepreneurial math. Make executive decisions on pricing, hiring, and venture equity.</p>
+                            <span class="example-tag">Business: $100K Seed ➔ $1B Unicorn</span>
+                        </div>
+                    </div>
+                </div>
+            </details>
 
-        <div class="why-math-banner">
-            <h3>💡 The Science of Mental Computation</h3>
-            <p>
-                Neuroscience research shows that practicing mental calculation strengthens the brain's prefrontal cortex, enhancing working memory, focus, and rapid logical deduction. By eliminating calculation anxiety and transforming math into an intuitive game, MathPuzzle helps learners of all ages build durable quantitative confidence.
-            </p>
-            <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                <a href="{{ url_for('how_to_play') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">📖 Read our Mental Math Guides & Strategy</a>
-                <span style="color: var(--text-light);">•</span>
-                <a href="{{ url_for('about') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">ℹ️ About MathPuzzle & Our Mission</a>
-                <span style="color: var(--text-light);">•</span>
-                <a href="{{ url_for('faq') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">❓ Frequently Asked Questions</a>
-            </div>
+            <!-- Accordion 3: The Science & Guides -->
+            <details class="edu-accordion" id="accordion-science">
+                <summary class="edu-summary">
+                    <div class="summary-left">
+                        <span class="summary-icon">💡</span>
+                        <h3 class="summary-heading">The Science of Mental Computation</h3>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-badge">Cognitive Benefits & Guides</span>
+                        <span class="summary-chevron" aria-hidden="true">▸</span>
+                    </div>
+                </summary>
+                <div class="edu-content">
+                    <div class="why-math-banner">
+                        <p>
+                            Neuroscience research shows that practicing mental calculation strengthens the brain's prefrontal cortex, enhancing working memory, focus, and rapid logical deduction. By eliminating calculation anxiety and transforming math into an intuitive game, MathPuzzle helps learners of all ages build durable quantitative confidence.
+                        </p>
+                        <div style="margin-top: 1.25rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="{{ url_for('how_to_play') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">📖 Read our Mental Math Guides & Strategy</a>
+                            <span style="color: var(--text-light);">•</span>
+                            <a href="{{ url_for('about') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">ℹ️ About MathPuzzle & Our Mission</a>
+                            <span style="color: var(--text-light);">•</span>
+                            <a href="{{ url_for('faq') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">❓ Frequently Asked Questions</a>
+                        </div>
+                    </div>
+                </div>
+            </details>
         </div>
     </section>
 
