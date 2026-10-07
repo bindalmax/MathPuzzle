@@ -21,7 +21,54 @@ This checklist separates **P0 (Must-Haves for Public Preview Launch)** from **P1
 │ - GA4 / Telemetry funnel     │ - Haptic feedback toggle     │   scaling     │
 │ - In-app feedback mechanism  │ - Rate-limit cluster store   │ - Stripe/Pro  │
 └──────────────────────────────┴──────────────────────────────┴───────────────┘
+---
+
+## 🧱 MANDATORY TEST PYRAMID STRATEGY & QUALITY GATES (Agent Contract)
+
+> [!IMPORTANT]
+> **Strict Precondition for All Agents and Engineers**:
+> **NO checklist item may be marked as complete, committed, or deployed without adhering to this 3-tier Test Pyramid contract.**
+> Every code or configuration change MUST be accompanied by corresponding automated tests at the appropriate layer(s).
+
+### 📐 The 3-Tier Quality Gates:
+
 ```
+                       ▲
+                      / \     Tier 3: E2E Browser & Console Safety Net
+                     /   \       Assert zero SEVERE console errors & zero CSP blocks in Chrome.
+                    / E2E \      Verify full dual-client WebSockets & UI loops.
+                   /───────\
+                  /         \  Tier 2: Integration & Contract Layer
+                 /Integration\    - Explicit HTTP header assertions (HSTS, CSP, X-Frame)
+                /             \   - Healthcheck contract (200 OK, 503 DB failure)
+               /───────────────\
+              /                 \ Tier 1: Unit & Logic Layer
+             /    Unit Tests     \   - In-memory cache mechanics (hit, miss, expiry)
+            /─────────────────────\  - Deterministic algorithm & math validation
+```
+
+1. **Tier 1: Unit Test Gate (`tests/unit/`)**
+   - **Scope**: In-memory caching logic, math generation, rating engines, pure helper functions.
+   - **Requirement for Caching**: Any TTL cache (e.g., Leaderboard cache) MUST have tests asserting: (a) cache MISS on first call, (b) cache HIT on subsequent calls within TTL, (c) cache expiry/refresh after TTL.
+   - **Standard**: 100% pass rate, 0 warnings.
+
+2. **Tier 2: Integration Test Gate (`tests/integration/`)**
+   - **Scope**: Flask routes, response headers, middleware, database transactions, error handlers.
+   - **Requirement for Security Headers**: Every new security header (`Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`) MUST be explicitly asserted on HTTP responses (`/`, `/game`, `/leaderboard`).
+   - **Requirement for Health Probes**: The `/health` endpoint MUST be tested for: (a) HTTP 200 with JSON payload `{"status": "healthy", "database": "connected"}` under normal DB connection, and (b) HTTP 503 under simulated DB disconnection.
+   - **Standard**: 100% pass rate, 0 warnings.
+
+3. **Tier 3: E2E Browser & Console Safety Net Gate (`tests/e2e/`)**
+   - **Scope**: Headless Chrome automation across user journeys, WebSockets, KaTeX rendering, and client-side scripts.
+   - **MANDATORY BROWSER CONSOLE INSPECTION**: All E2E test runs MUST inspect Chrome browser console logs (`driver.get_log('browser')`) and assert **ZERO SEVERE console errors and ZERO CSP violation blocks**. 
+   - *Rationale*: A server returning HTTP 200 does NOT mean the frontend works. If CSP blocks KaTeX fonts, Google SSO iframe, or WebSockets, the page loads but the app is broken. Inspecting browser console logs guarantees zero silent frontend breakages.
+   - **Standard**: 100% pass rate, 0 warnings.
+
+### 📜 Mandatory Workflow for Agents:
+1. **Step 1 (Test First / TDD)**: Write or update the unit, integration, or E2E test specifying the expected behavior before or alongside implementation.
+2. **Step 2 (Implementation)**: Implement the change in application or infrastructure code.
+3. **Step 3 (Pyramid Verification)**: Run `.venv/bin/pytest tests/unit tests/integration` and `.venv/bin/pytest tests/e2e`. Both must pass with **0 failures and 0 warnings**.
+4. **Step 4 (Commit Proof)**: The commit message must cite the automated tests executed and verified.
 
 ---
 
