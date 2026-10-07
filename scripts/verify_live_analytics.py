@@ -7,7 +7,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://127.0.0.1:5005"
 
-def test_live_analytics():
+def verify_live_analytics():
     print(f"--- Starting Live Analytics Test against {BASE_URL} ---")
 
     # 1. Setup Session
@@ -50,6 +50,6 @@ def test_live_analytics():
 
 if __name__ == "__main__":
     try:
-        test_live_analytics()
+        verify_live_analytics()
     except Exception as e:
         print(f"❌ Test failed: {e}")

@@ -14,6 +14,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from app import app, socketio, rooms
 from database import db
 
+def get_free_port():
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
 class TestUIAutomation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -24,7 +30,8 @@ class TestUIAutomation(unittest.TestCase):
         with app.app_context():
             db.create_all()
 
-        cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': 5006, 'debug': False, 'allow_unsafe_werkzeug': True})
+        cls.port = get_free_port()
+        cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': cls.port, 'debug': False, 'allow_unsafe_werkzeug': True})
         cls.server_thread.daemon = True
         cls.server_thread.start()
         time.sleep(3)
@@ -42,7 +49,7 @@ class TestUIAutomation(unittest.TestCase):
             self.driver = webdriver.Chrome()
 
         self.driver.implicitly_wait(5)
-        self.base_url = "http://127.0.0.1:5006/"
+        self.base_url = f"http://127.0.0.1:{self.port}/"
         rooms.clear()
 
     def tearDown(self):

@@ -13,6 +13,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from app import app, socketio, rooms
 
+def get_free_port():
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
 class TestMultiplayerE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -21,14 +27,15 @@ class TestMultiplayerE2E(unittest.TestCase):
         with app.app_context():
             from database import db
             db.create_all()
+        cls.port = get_free_port()
         # Run the Flask app with SocketIO in a separate thread
-        cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': 5005, 'debug': False, 'allow_unsafe_werkzeug': True})
+        cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': cls.port, 'debug': False, 'allow_unsafe_werkzeug': True})
         cls.server_thread.daemon = True
         cls.server_thread.start()
         time.sleep(2)
 
     def setUp(self):
-        self.base_url = "http://127.0.0.1:5005/"
+        self.base_url = f"http://127.0.0.1:{self.port}/"
         self.drivers = []
         options = webdriver.ChromeOptions()
         options.add_argument('--headless=new')

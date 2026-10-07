@@ -114,7 +114,10 @@ limiter = Limiter(
 def _before_request_handler():
     session.permanent = True
     try:
-        limiter.enabled = not app.config.get('TESTING', False)
+        is_testing = app.config.get('TESTING', False)
+        limiter.enabled = not is_testing
+        if is_testing:
+            app.config['RATELIMIT_ENABLED'] = False
     except Exception:
         # If limiter isn't available for any reason, skip toggling
         pass
