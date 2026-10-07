@@ -5,7 +5,7 @@ Elo-like rating system for adjusting problem difficulty based on user performanc
 
 from database import db, UserLearningProfile, ProblemAttempt
 from learning_profile_service import LearningProfileService
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from logger import get_logger
 
 logger = get_logger('difficulty_engine')
@@ -179,7 +179,7 @@ class DifficultyEngine:
                                                   min(profile.preferred_difficulty,
                                                       DifficultyEngine.MAX_DIFFICULTY)), 2)
         
-        profile.last_updated = datetime.utcnow()
+        profile.last_updated = datetime.now(timezone.utc)
         db.session.commit()
 
     @staticmethod
@@ -239,7 +239,7 @@ class DifficultyEngine:
         Returns:
             list: Daily difficulty averages [{date, avg_difficulty, success_rate}]
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         attempts = ProblemAttempt.query.filter_by(
             user_name=user_name,
             category=category

@@ -1,5 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
+
+def utcnow():
+    """Return timezone-aware current UTC datetime."""
+    return datetime.now(timezone.utc)
 
 db = SQLAlchemy()
 
@@ -9,7 +13,7 @@ class User(db.Model):
     google_id = db.Column(db.String(120), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     display_name = db.Column(db.String(80), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     
     # Relationship to link highscores
     highscores = db.relationship('Highscore', backref='user', lazy=True)
@@ -26,7 +30,7 @@ class Highscore(db.Model):
     difficulty = db.Column(db.String(80), nullable=False)
     time_taken = db.Column(db.Float, nullable=True)
     questions_attempted = db.Column(db.Integer, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     
     # Optional link to a registered user
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
@@ -53,9 +57,9 @@ class UserLearningProfile(db.Model):
     learning_style = db.Column(db.String(50), default='mixed')  # visual, analytical, kinesthetic, mixed
     total_problems_attempted = db.Column(db.Integer, default=0)
     total_problems_correct = db.Column(db.Integer, default=0)
-    last_activity = db.Column(db.DateTime, default=datetime.utcnow)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    last_activity = db.Column(db.DateTime, default=utcnow)
+    last_updated = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow, index=True)
 
     def __repr__(self):
         return f'<UserLearningProfile {self.user_name} (skill={self.current_skill_level:.2f})>'
@@ -89,7 +93,7 @@ class ProblemAttempt(db.Model):
     user_answer = db.Column(db.String(500))
     correct_answer = db.Column(db.String(500))
     problem_text = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=utcnow, index=True)
 
     __table_args__ = (
         db.Index('idx_problem_user_category', 'user_name', 'category'),
@@ -127,11 +131,11 @@ class MistakePattern(db.Model):
     mistake_type = db.Column(db.String(200), nullable=False)  # e.g., "sign_error", "arithmetic_error"
     frequency = db.Column(db.Integer, default=1)
     severity_score = db.Column(db.Float, default=0.5)  # 0-1 how serious
-    last_occurrence = db.Column(db.DateTime, default=datetime.utcnow)
+    last_occurrence = db.Column(db.DateTime, default=utcnow)
     misconception_description = db.Column(db.Text)
     recommended_strategy = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow, index=True)
+    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     __table_args__ = (
         db.Index('idx_mistake_user_category', 'user_name', 'category'),
@@ -161,7 +165,7 @@ class LearningSession(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(100), nullable=False, index=True)
-    session_start = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    session_start = db.Column(db.DateTime, default=utcnow, index=True)
     session_end = db.Column(db.DateTime, nullable=True)
     problems_attempted = db.Column(db.Integer, default=0)
     problems_correct = db.Column(db.Integer, default=0)

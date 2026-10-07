@@ -4,7 +4,7 @@ Analyzes incorrect attempts to identify recurring misconceptions and patterns.
 """
 
 from database import db, ProblemAttempt, MistakePattern
-from datetime import datetime
+from datetime import datetime, timezone
 
 class MistakeAnalyzer:
     @staticmethod
@@ -69,14 +69,14 @@ class MistakeAnalyzer:
             
             if existing:
                 existing.frequency += 1
-                existing.last_occurrence = datetime.utcnow()
+                existing.last_occurrence = datetime.now(timezone.utc)
             else:
                 new_p = MistakePattern(
                     user_name=user_name,
                     category=m['category'],
                     mistake_type=m['type'],
                     frequency=1,
-                    last_occurrence=datetime.utcnow()
+                    last_occurrence=datetime.now(timezone.utc)
                 )
                 db.session.add(new_p)
                 

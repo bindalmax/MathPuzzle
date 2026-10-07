@@ -4,7 +4,7 @@ Manages user learning profiles, skill tracking, and topic mastery.
 """
 
 from database import db, UserLearningProfile, ProblemAttempt
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 
 class LearningProfileService:
@@ -79,7 +79,7 @@ class LearningProfileService:
         profile.current_skill_level = round(new_skill, 3)
         
         # Calculate learning velocity (rate of improvement)
-        week_ago = datetime.utcnow() - timedelta(days=7)
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
         week_attempts = ProblemAttempt.query.filter_by(
             user_name=user_name
         ).filter(ProblemAttempt.created_at >= week_ago).all()
@@ -90,7 +90,7 @@ class LearningProfileService:
             velocity = (new_skill - old_skill)
             profile.learning_velocity = round(velocity, 4)
         
-        profile.last_updated = datetime.utcnow()
+        profile.last_updated = datetime.now(timezone.utc)
         db.session.commit()
         
         return profile
@@ -182,7 +182,7 @@ class LearningProfileService:
         Returns:
             float: Learning velocity score (0-1)
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         attempts = ProblemAttempt.query.filter_by(
             user_name=user_name
         ).filter(ProblemAttempt.created_at >= cutoff_date).all()
@@ -219,7 +219,7 @@ class LearningProfileService:
         
         profile.topics_mastered = list(mastered.keys())
         profile.weak_topics = list(weak.keys())
-        profile.last_updated = datetime.utcnow()
+        profile.last_updated = datetime.now(timezone.utc)
         
         db.session.commit()
         return profile

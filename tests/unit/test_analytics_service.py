@@ -1,7 +1,7 @@
 import unittest
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 # Add project root and src to path for imports
 root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -32,7 +32,7 @@ class TestAnalyticsService(unittest.TestCase):
         with self.app.app_context():
             # Seed attempts for the last 5 days
             for i in range(5):
-                date = datetime.utcnow() - timedelta(days=i)
+                date = datetime.now(timezone.utc) - timedelta(days=i)
                 db.session.add(ProblemAttempt(
                     user_name='testuser',
                     problem_id=f'p{i}',

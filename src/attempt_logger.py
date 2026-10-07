@@ -4,7 +4,7 @@ Handles logging of problem attempts with all relevant metadata for analytics.
 """
 
 from database import db, ProblemAttempt, UserLearningProfile, LearningSession
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from logger import get_logger
 
 logger = get_logger('attempt_logger')
@@ -55,8 +55,8 @@ class AttemptLogger:
                 profile.total_problems_attempted += 1
                 if is_correct:
                     profile.total_problems_correct += 1
-                profile.last_activity = datetime.utcnow()
-                profile.last_updated = datetime.utcnow()
+                profile.last_activity = datetime.now(timezone.utc)
+                profile.last_updated = datetime.now(timezone.utc)
             
             db.session.commit()
             logger.debug(f"Logged attempt for {user_name} on {category} (correct={is_correct})")
@@ -81,8 +81,7 @@ class AttemptLogger:
         query = ProblemAttempt.query.filter_by(user_name=user_name)
         
         if days:
-            from datetime import timedelta
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
             query = query.filter(ProblemAttempt.created_at >= cutoff_date)
         
         attempts = query.all()

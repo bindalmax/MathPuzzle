@@ -4,7 +4,7 @@ Aggregates performance data and generates insights for the dashboard.
 """
 
 from database import db, ProblemAttempt, MistakePattern, UserLearningProfile
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import func
 from gap_detector import GapDetector
 from mistake_analyzer import MistakeAnalyzer
@@ -13,7 +13,7 @@ class LearningAnalyticsService:
     @staticmethod
     def get_progress_data(user_name, days=30):
         """Aggregate daily performance data for visualization."""
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         attempts = ProblemAttempt.query.filter(
             ProblemAttempt.user_name == user_name,
             ProblemAttempt.created_at >= cutoff
