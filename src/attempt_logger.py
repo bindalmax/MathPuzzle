@@ -5,6 +5,9 @@ Handles logging of problem attempts with all relevant metadata for analytics.
 
 from database import db, ProblemAttempt, UserLearningProfile, LearningSession
 from datetime import datetime
+from logger import get_logger
+
+logger = get_logger('attempt_logger')
 
 
 class AttemptLogger:
@@ -31,31 +34,37 @@ class AttemptLogger:
         Returns:
             ProblemAttempt: The logged attempt object
         """
-        attempt = ProblemAttempt(
-            user_name=user_name,
-            problem_id=problem_id,
-            category=category,
-            difficulty_level=difficulty_level,
-            user_answer=user_answer,
-            correct_answer=correct_answer,
-            is_correct=is_correct,
-            time_taken_seconds=time_taken_seconds,
-            problem_text=problem_text,
-        )
-        
-        db.session.add(attempt)
-        
-        # Update user's learning profile statistics
-        profile = UserLearningProfile.query.filter_by(user_name=user_name).first()
-        if profile:
-            profile.total_problems_attempted += 1
-            if is_correct:
-                profile.total_problems_correct += 1
-            profile.last_activity = datetime.utcnow()
-            profile.last_updated = datetime.utcnow()
-        
-        db.session.commit()
-        return attempt
+        try:
+            attempt = ProblemAttempt(
+                user_name=user_name,
+                problem_id=problem_id,
+                category=category,
+                difficulty_level=difficulty_level,
+                user_answer=user_answer,
+                correct_answer=correct_answer,
+                is_correct=is_correct,
+                time_taken_seconds=time_taken_seconds,
+                problem_text=problem_text,
+            )
+            
+            db.session.add(attempt)
+            
+            # Update user's learning profile statistics
+            profile = UserLearningProfile.query.filter_by(user_name=user_name).first()
+            if profile:
+                profile.total_problems_attempted += 1
+                if is_correct:
+                    profile.total_problems_correct += 1
+                profile.last_activity = datetime.utcnow()
+                profile.last_updated = datetime.utcnow()
+            
+            db.session.commit()
+            logger.debug(f"Logged attempt for {user_name} on {category} (correct={is_correct})")
+            return attempt
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Failed to log attempt for {user_name}: {e}", exc_info=True)
+            return None
 
     @staticmethod
     def get_user_performance_by_category(user_name, days=None):

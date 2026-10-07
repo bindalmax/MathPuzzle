@@ -1,6 +1,9 @@
 import sqlite3
 import os
 from database import db, Highscore, User
+from logger import get_logger
+
+logger = get_logger('highscore_manager')
 
 class HighscoreManager:
     def __init__(self, app=None):
@@ -15,18 +18,35 @@ class HighscoreManager:
                 db.create_all()
 
     def add_score(self, name, score, category, difficulty, time_taken=0, questions_attempted=0, user_id=None):
-        """Add a new score entry to the database."""
-        new_highscore = Highscore(
-            name=name,
-            score=score,
-            category=category,
-            difficulty=difficulty,
-            time_taken=time_taken,
-            questions_attempted=questions_attempted,
-            user_id=user_id # Link to persistent user if available
-        )
-        db.session.add(new_highscore)
-        db.session.commit()
+        """Add a new score entry to the database with safe fallback and rollback."""
+        try:
+            # Validate user_id exists if provided to prevent foreign key errors
+            valid_user_id = None
+            if user_id is not None:
+                try:
+                    user_record = db.session.get(User, user_id)
+                    if user_record:
+                        valid_user_id = user_id
+                except Exception as e:
+                    logger.debug(f"User check for user_id={user_id} bypassed: {e}")
+
+            new_highscore = Highscore(
+                name=str(name),
+                score=int(score),
+                category=str(category),
+                difficulty=str(difficulty),
+                time_taken=float(time_taken),
+                questions_attempted=int(questions_attempted),
+                user_id=valid_user_id
+            )
+            db.session.add(new_highscore)
+            db.session.commit()
+            logger.info(f"Recorded highscore for {name}: {score} pts in category='{category}' ({difficulty})")
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Failed to record highscore for '{name}': {str(e)}", exc_info=True)
+            return False
 
     def load(self, category=None, difficulty=None, sort_by='score', page=1, per_page=10):
         """Loads paginated highscores based on filters."""

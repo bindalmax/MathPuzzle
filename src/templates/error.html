@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Error {{ code or 500 }} - MathPuzzle{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 40px 20px;">
+    <div style="font-size: 4rem; margin-bottom: 10px;">⚠️</div>
+    <h1 style="color: var(--error-color); margin-bottom: 10px;">{{ title or "Something went wrong" }}</h1>
+    <p style="font-size: 1.2rem; color: var(--text-light); max-width: 600px; margin: 0 auto 30px;">
+        {{ message or "The server encountered an unexpected situation. Don't worry, your progress has been safely handled." }}
+    </p>
+
+    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+        <a href="{{ url_for('index') }}" style="background: var(--primary-color); color: white; padding: 12px 28px; border-radius: 12px; font-weight: bold; text-decoration: none;">
+            🏠 Return Home
+        </a>
+        <a href="{{ url_for('leaderboard') }}" style="background: var(--chalkboard-bg); color: white; padding: 12px 28px; border-radius: 12px; font-weight: bold; text-decoration: none;">
+            🏆 Hall of Fame
+        </a>
+    </div>
+</div>
+{% endblock %}

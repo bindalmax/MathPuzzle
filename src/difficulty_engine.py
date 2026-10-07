@@ -6,6 +6,9 @@ Elo-like rating system for adjusting problem difficulty based on user performanc
 from database import db, UserLearningProfile, ProblemAttempt
 from learning_profile_service import LearningProfileService
 from datetime import datetime, timedelta
+from logger import get_logger
+
+logger = get_logger('difficulty_engine')
 
 
 class DifficultyEngine:
@@ -60,8 +63,11 @@ class DifficultyEngine:
             new_difficulty = current_difficulty
         
         # Clamp to valid range
-        return round(max(DifficultyEngine.MIN_DIFFICULTY, 
+        clamped_diff = round(max(DifficultyEngine.MIN_DIFFICULTY, 
                         min(new_difficulty, DifficultyEngine.MAX_DIFFICULTY)), 2)
+        if clamped_diff != current_difficulty:
+            logger.info(f"Adjusted difficulty for user='{user_name}' cat='{category}' from {current_difficulty} to {clamped_diff} (success_rate={success_rate:.2f})")
+        return clamped_diff
 
     @staticmethod
     def get_recommended_difficulty(user_name, category):

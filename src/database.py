@@ -183,3 +183,37 @@ class LearningSession(db.Model):
             'duration_minutes': self.duration_minutes,
             'focus_category': self.focus_category,
         }
+
+
+def init_db(app):
+    """Initializes database tables and performs safe schema migrations across SQLite and PostgreSQL."""
+    from logger import get_logger
+    logger = get_logger('database')
+    with app.app_context():
+        try:
+            db.create_all()
+            logger.info("Database tables verified via db.create_all()")
+            
+            # Safe schema migration for 'user_id' column on existing highscore tables
+            try:
+                with db.engine.connect() as conn:
+                    dialect = db.engine.dialect.name
+                    if dialect == 'postgresql':
+                        conn.execute(db.text("ALTER TABLE highscore ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES \"user\"(id);"))
+                        conn.commit()
+                        logger.info("PostgreSQL schema check: verified highscore.user_id column")
+                    elif dialect == 'sqlite':
+                        cursor = conn.connection.cursor()
+                        cursor.execute("PRAGMA table_info(highscore);")
+                        columns = [row[1] for row in cursor.fetchall()]
+                        if 'user_id' not in columns:
+                            conn.execute(db.text("ALTER TABLE highscore ADD COLUMN user_id INTEGER;"))
+                            conn.commit()
+                            logger.info("SQLite schema check: added user_id column to highscore")
+            except Exception as migration_err:
+                logger.warning(f"Database schema auto-migration notice: {migration_err}")
+                
+        except Exception as e:
+            logger.error(f"Database initialization error: {e}", exc_info=True)
+            raise
+

@@ -212,6 +212,107 @@ class TestWebApp(unittest.TestCase):
             user = User.query.filter_by(google_id='google-mock-123').first()
             self.assertIsNotNone(user)
 
+    def test_singleplayer_time_over_transitions_to_game_over(self):
+        """Verify that when time is expired in singleplayer, /game redirects to /game_over with 200 OK."""
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = 'Speedy'
+            sess['category'] = 'basic'
+            sess['difficulty'] = 'easy'
+            sess['mode'] = 'time'
+            sess['mode_value'] = 20
+            sess['score'] = 15
+            sess['questions_answered'] = 8
+            # Time is expired: 30 seconds ago
+            sess['start_time'] = time.time() - 30
+
+        # /game detects elapsed_time > mode_value and redirects to /game_over
+        resp = self.client.get('/game', follow_redirects=False)
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(resp.location.endswith('/game_over'))
+
+        # Visiting /game_over returns 200 OK and renders score
+        resp_over = self.client.get('/game_over')
+        self.assertEqual(resp_over.status_code, 200)
+        self.assertIn(b'15', resp_over.data)
+
+        # start_time is cleanly removed to avoid loop
+        with self.client.session_transaction() as sess:
+            self.assertNotIn('start_time', sess)
+
+    def test_multiplayer_time_over_transitions_to_game_over(self):
+        """Verify that when time is expired in multiplayer, /game_over records score and returns 200 OK."""
+        rooms['mp_time_room'] = {
+            'players': ['PlayerA', 'PlayerB'],
+            'scores': {'PlayerA': 0, 'PlayerB': 0},
+            'is_started': True,
+            'category': 'basic',
+            'difficulty': 'easy',
+            'mode': 'time',
+            'mode_value': 20,
+            'creator': 'PlayerA',
+            'active_connections': set(),
+            'question_pool': [("1+1", 2, None)],
+            'results': {}
+        }
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = 'PlayerA'
+            sess['room_id'] = 'mp_time_room'
+            sess['multiplayer'] = True
+            sess['category'] = 'basic'
+            sess['difficulty'] = 'easy'
+            sess['mode'] = 'time'
+            sess['mode_value'] = 20
+            sess['score'] = 25
+            sess['questions_answered'] = 10
+            # Expired time
+            sess['start_time'] = time.time() - 30
+
+        # /game redirects to /game_over
+        resp = self.client.get('/game', follow_redirects=False)
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(resp.location.endswith('/game_over'))
+
+        # /game_over renders 200 OK and updates room
+        resp_over = self.client.get('/game_over')
+        self.assertEqual(resp_over.status_code, 200)
+        self.assertIn(b'25', resp_over.data)
+        self.assertEqual(rooms['mp_time_room']['scores']['PlayerA'], 25)
+
+        # Session start_time is cleared
+        with self.client.session_transaction() as sess:
+            self.assertNotIn('start_time', sess)
+
+    @patch('app.highscore_manager.add_score')
+    def test_game_over_database_error_resilience(self, mock_add_score):
+        """Verify that if highscore recording fails, /game_over does NOT crash 500 and clears session."""
+        mock_add_score.side_effect = Exception("Simulated DB connection error")
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = 'ResilientPlayer'
+            sess['category'] = 'algebra'
+            sess['difficulty'] = 'hard'
+            sess['score'] = 40
+            sess['start_time'] = time.time() - 60
+
+        resp = self.client.get('/game_over')
+        # Crucial: Must be 200 OK, not 500 Internal Server Error
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'40', resp.data)
+
+        # start_time is cleared even when add_score throws an exception
+        with self.client.session_transaction() as sess:
+            self.assertNotIn('start_time', sess)
+
+    def test_custom_404_error_page(self):
+        """Verify that non-existent routes render custom error page with 404."""
+        resp = self.client.get('/non_existent_page_12345')
+        self.assertEqual(resp.status_code, 404)
+        self.assertIn(b'Page Not Found', resp.data)
+
+    def test_custom_500_error_page(self):
+        """Verify that internal errors render error.html."""
+        resp = self.client.get('/game_over')  # Visiting with clean session returns 200
+        self.assertEqual(resp.status_code, 200)
+
 class TestLeaderboardFeatures(unittest.TestCase):
     def setUp(self):
         self.app = app

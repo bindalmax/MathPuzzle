@@ -33,6 +33,8 @@ from flask_limiter.util import get_remote_address
 import bleach
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
+from database import init_db
+from logger import setup_app_logging, get_logger
 from room_storage import rooms
 from datetime import timedelta
 import time
@@ -42,6 +44,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'templates'),
             static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src', 'static'))
+
+# Setup centralized logging
+setup_app_logging(app)
+logger = get_logger('app')
 
 # Handle proxy headers (Traefik) for correct rate limiting
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
@@ -74,8 +80,26 @@ csrf = CSRFProtect(app)
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
-    app.logger.warning(f"CSRF validation failed: {e.description}")
+    logger.warning(f"CSRF validation failed: {e.description}")
     return render_template('csrf_error.html', reason=e.description), 400
+
+@app.errorhandler(404)
+def handle_404_error(e):
+    logger.warning(f"404 Not Found: {request.path}")
+    return render_template('error.html', code=404, title="Page Not Found", message="The page you requested could not be found. Please return to the homepage or check the leaderboard."), 404
+
+@app.errorhandler(500)
+def handle_500_error(e):
+    logger.error(f"500 Internal Server Error: {e}", exc_info=True)
+    return render_template('error.html', code=500, title="Internal Server Error", message="An unexpected server error occurred. Your game session state has been preserved safely."), 500
+
+@app.errorhandler(Exception)
+def handle_unhandled_exception(e):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return e
+    logger.error(f"Unhandled Exception: {e}", exc_info=True)
+    return render_template('error.html', code=500, title="Unexpected Server Error", message="An unexpected error occurred while processing your request. Please try again."), 500
 
 # Rate Limiting
 limiter = Limiter(
@@ -103,8 +127,9 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize database manager
+# Initialize database manager and perform safe migrations
 highscore_manager = HighscoreManager(app)
+init_db(app)
 
 # Load Version from file
 def get_version():
@@ -113,7 +138,7 @@ def get_version():
         with open(version_path, 'r') as f:
             return f.read().strip()
     except FileNotFoundError:
-        app.logger.warning("VERSION file not found, defaulting to dev")
+        logger.warning("VERSION file not found, defaulting to dev")
         return "dev"
 
 APP_VERSION = get_version()
@@ -295,7 +320,7 @@ def game():
             question, answer, choices = factory.create_question()
             session['current_answer'] = answer
         except Exception as e:
-            app.logger.error(f"Error in startup challenge: {str(e)}")
+            logger.error(f"Error in startup challenge: {str(e)}")
             return render_template('game_over.html', error="An unexpected error occurred.")
     else:
         difficulty = session.get('difficulty', 'medium')
@@ -319,7 +344,7 @@ def game():
         except (NotImplementedError, ValueError) as e:
             return render_template('game_over.html', error=f"Error generating question: {str(e)}")
         except Exception as e:
-            app.logger.error(f"Unexpected error in /game: {str(e)}")
+            logger.error(f"Unexpected error in /game: {str(e)}")
             return render_template('game_over.html', error="An unexpected error occurred. Please try again.")
 
     context = {
@@ -415,67 +440,75 @@ def submit_answer():
 def game_over():
     score = session.get('score', 0)
     player_name = session.get('player_name', 'Player')
-    user_id = session.get('user_id') # Link to user if logged in
+    user_id = session.get('user_id')  # Link to user if logged in
     
     room_results = None
     startup_data = None
+    is_startup = session.get('is_startup_challenge', False)
     
-    if 'start_time' in session:
-        category = session.get('category', 'unknown')
-        difficulty = session.get('difficulty', 'unknown')
-        
-        time_taken = time.time() - session['start_time']
-        questions_answered = session.get('questions_answered', 0)
-        
-        if session.get('is_startup_challenge'):
-            final_value = session.get('startup_value', 0)
-            ceo_score = int(final_value / 100)
+    try:
+        if 'start_time' in session:
+            category = session.get('category', 'unknown')
+            difficulty = session.get('difficulty', 'unknown')
             
-            if final_value >= 1000000000:
-                title = "Unicorn CEO 🦄 (Billionaire)"
-            elif final_value >= 100000000:
-                title = "Centimillionaire Founder 💎"
-            elif final_value >= 10000000:
-                title = "Serial Entrepreneur 🚀"
-            elif final_value >= 1000000:
-                title = "Successful Exit 💰"
-            elif final_value >= 100000:
-                title = "Rising Star 🌟"
-            else:
-                title = "Bootstrap Survivalist 🛠️"
+            time_taken = max(0.0, time.time() - session['start_time'])
+            questions_answered = session.get('questions_answered', 0)
             
-            startup_data = {
-                'final_value': final_value,
-                'ceo_score': ceo_score,
-                'title': title
-            }
-            # Use ceo_score as the main score for highscores
-            score = ceo_score
-            category = "startup_challenge"
+            if is_startup:
+                final_value = session.get('startup_value', 0)
+                ceo_score = int(final_value / 100)
+                
+                if final_value >= 1000000000:
+                    title = "Unicorn CEO 🦄 (Billionaire)"
+                elif final_value >= 100000000:
+                    title = "Centimillionaire Founder 💎"
+                elif final_value >= 10000000:
+                    title = "Serial Entrepreneur 🚀"
+                elif final_value >= 1000000:
+                    title = "Successful Exit 💰"
+                elif final_value >= 100000:
+                    title = "Rising Star 🌟"
+                else:
+                    title = "Bootstrap Survivalist 🛠️"
+                
+                startup_data = {
+                    'final_value': final_value,
+                    'ceo_score': ceo_score,
+                    'title': title
+                }
+                # Use ceo_score as the main score for highscores
+                score = ceo_score
+                category = "startup_challenge"
 
-        highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered, user_id=user_id)
+            # Safely record score
+            highscore_manager.add_score(player_name, score, category, difficulty, time_taken, questions_answered, user_id=user_id)
+
+            if session.get('multiplayer'):
+                room_id = session.get('room_id')
+                if room_id in rooms:
+                    rooms[room_id]['scores'][player_name] = score
+                    rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
+                    rooms[room_id]['last_activity'] = time.time()
+                    room_results = rooms[room_id]['results']
+                    try:
+                        socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
+                    except Exception as sock_err:
+                        logger.warning(f"Failed to emit score_update in multiplayer game_over: {sock_err}")
 
         if session.get('multiplayer'):
             room_id = session.get('room_id')
-            if room_id in rooms:
-                rooms[room_id]['scores'][player_name] = score
-                rooms[room_id]['results'] = rooms[room_id]['scores'].copy()
-                rooms[room_id]['last_activity'] = time.time()
-                room_results = rooms[room_id]['results']
-                socketio.emit('score_update', {'players': rooms[room_id]['scores']}, room=room_id)
+            if not room_results and room_id in rooms:
+                room_results = rooms[room_id].get('results', rooms[room_id].get('scores', {}))
 
-    session.pop('start_time', None)
-    session.pop('current_answer', None)
-    
-    if session.get('multiplayer'):
-        room_id = session.get('room_id')
-        if not room_results and room_id in rooms:
-             room_results = rooms[room_id].get('results', rooms[room_id]['scores'])
-
-    is_startup = session.get('is_startup_challenge', False)
-    # Clear startup challenge state after game over
-    session.pop('is_startup_challenge', None)
-    session.pop('startup_value', None)
+        logger.info(f"Game over handled for player '{player_name}': score={score}, category={session.get('category', 'unknown')}")
+    except Exception as e:
+        logger.error(f"Error handling /game_over for player '{player_name}': {e}", exc_info=True)
+    finally:
+        # Crucial: Always clean up game state and start_time to prevent infinite redirect loops on time over
+        session.pop('start_time', None)
+        session.pop('current_answer', None)
+        session.pop('is_startup_challenge', None)
+        session.pop('startup_value', None)
 
     return render_template('game_over.html', score=score, multiplayer_results=room_results, startup_data=startup_data, is_startup_challenge=is_startup)
 
@@ -637,7 +670,7 @@ def handle_start_game_request(data=None):
     if not player_name and data:
         player_name = data.get('name')
 
-    print(f"Start game request for room {room_id} by {player_name}")
+    logger.info(f"Start game request for room {room_id} by {player_name}")
 
     if room_id and room_id in rooms:
         # Check if the requester is the creator
@@ -649,7 +682,7 @@ def handle_start_game_request(data=None):
                 try:
                     pool.append(factory.create_question())
                 except Exception as e:
-                    app.logger.error(f"Failed to pre-generate question in pool: {str(e)}")
+                    logger.error(f"Failed to pre-generate question in pool: {str(e)}")
                     break
 
             # Atomic update of room state
@@ -658,10 +691,10 @@ def handle_start_game_request(data=None):
             rooms[room_id]['last_activity'] = time.time()
             rooms[room_id]['player_progress'] = {p: 0 for p in rooms[room_id]['players']}
 
-            print(f"Emitting game_start_signal to room {room_id} with pool size {len(pool)}")
+            logger.info(f"Emitting game_start_signal to room {room_id} with pool size {len(pool)}")
             socketio.emit('game_start_signal', {'room': room_id, 'pool_ready': True}, room=room_id)
         else:
-            print(f"Unauthorized start request: {player_name} is not {rooms[room_id]['creator']}")
+            logger.warning(f"Unauthorized start request: {player_name} is not {rooms[room_id]['creator']}")
 @socketio.on('disconnect')
 def handle_disconnect():
     sid = request.sid
@@ -670,9 +703,6 @@ def handle_disconnect():
             room_data['active_connections'].remove(sid)
 
 if __name__ == '__main__':
-    with app.app_context():
-        from database import db
-        db.create_all()
     port = int(os.environ.get('PORT', 5005))
     if FLASK_ENV == 'development':
         cert_file = 'cert.pem'
