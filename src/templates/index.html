@@ -371,7 +371,10 @@
         function handleCredentialResponse(response) {
             fetch('/api/auth/google', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify({ id_token: response.credential })
             })
             .then(res => res.json())

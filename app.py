@@ -133,11 +133,8 @@ socketio = SocketIO(app, cors_allowed_origins=ALLOWED_ORIGINS, async_mode='threa
 # Register REST API Blueprint
 from api_blueprint.api import api_bp
 app.register_blueprint(api_bp)
-# Exempt API blueprint from CSRF protection in non-production/testing environments only
-# Allow disabling CSRF for API endpoints via environment variable when running test servers
-# This is safer than turning off CSRF globally in production.
-if os.environ.get('DISABLE_API_CSRF', '0') == '1' or not app.config.get('WTF_CSRF_ENABLED', True):
-    csrf.exempt(api_bp)
+# Exempt REST API blueprint from CSRF protection (stateless JSON API & Google OAuth ID token verification)
+csrf.exempt(api_bp)
 
 # Global rooms dictionary removed, now imported from room_storage
 
