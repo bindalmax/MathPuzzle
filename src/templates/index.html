@@ -3,236 +3,801 @@
 {% block title %}MathPuzzle - Master Math, Challenge Friends{% endblock %}
 
 {% block extra_style %}
-    /* Prototype Styles Integration */
+    :root {
+        --primary-glow: rgba(79, 70, 229, 0.25);
+    }
+
     .hidden {
         display: none !important;
     }
-    
-    .form-section {
-        transition: opacity 0.3s ease-in;
-    }
-    
-    /* ... existing CSS ... */
-    
-    .hero {
-        padding: 2rem 0 3rem 0;
+
+    /* ===== HERO SECTION ===== */
+    .hero-banner {
+        position: relative;
         text-align: center;
+        padding: 1.25rem 0.5rem 2rem 0.5rem;
+        overflow: hidden;
     }
 
-    .hero h1 {
-        font-size: clamp(1.5rem, 5vw, 2.5rem);
-        margin-bottom: 0.5rem;
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-size: clamp(1.6rem, 4vw, 2.3rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--text-color);
+        line-height: 1.2;
+        margin-bottom: 0.4rem;
+    }
+
+    .hero-title .gradient-text {
         background: var(--header-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
-    .hero p {
+    .hero-subtitle {
+        font-size: 0.95rem;
         color: var(--text-light);
-        font-size: 1.1rem;
-        max-width: 600px;
-        margin: 0 auto 2rem auto;
+        max-width: 580px;
+        margin: 0 auto 1.2rem auto;
+        line-height: 1.5;
     }
 
-    /* Tabs */
-    .mode-tabs {
+    .hero-feature-tags {
         display: flex;
+        align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid var(--paper-grid);
-        padding-bottom: 1rem;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
-    .tab {
-        background: none;
-        border: none;
-        padding: 0.75rem 1.25rem;
-        font-size: 1rem;
+    .feature-tag {
+        font-size: 0.75rem;
         font-weight: 600;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
         color: var(--text-light);
-        cursor: pointer;
-        position: relative;
-        transition: color 0.2s;
-        border-radius: 8px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
-    .tab.active {
+    .feature-tag.highlight {
+        border-color: rgba(79, 70, 229, 0.3);
         color: var(--primary-color);
         background: rgba(79, 70, 229, 0.05);
     }
 
-    .tab.active::after {
+    /* ===== UNIFIED PLAYER IDENTITY PASSPORT ===== */
+    .player-passport {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 10px 16px;
+        margin: 0 auto 1.75rem auto;
+        max-width: 680px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: all 0.2s ease;
+    }
+
+    .player-passport:focus-within {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .passport-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .player-avatar {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(14, 165, 233, 0.15) 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        transition: transform 0.2s;
+    }
+
+    .player-passport:hover .player-avatar {
+        transform: scale(1.05) rotate(-3deg);
+    }
+
+    .passport-input-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        text-align: left;
+    }
+
+    .passport-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--text-light);
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .passport-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .gamer-input {
+        border: none;
+        background: transparent;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-color);
+        outline: none;
+        width: 100%;
+        padding: 2px 0;
+        font-family: inherit;
+    }
+
+    .gamer-input[readonly] {
+        color: var(--primary-color);
+        cursor: default;
+    }
+
+    .dice-btn {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        color: var(--text-light);
+        font-size: 0.9rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .dice-btn:hover {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: rotate(18deg);
+    }
+
+    .passport-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        padding-left: 12px;
+        border-left: 1px solid var(--border-light);
+    }
+
+    .auth-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .auth-badge.verified {
+        color: var(--secondary-color);
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        padding: 5px 10px;
+        border-radius: 999px;
+    }
+
+    .auth-badge.guest {
+        color: var(--text-light);
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+    }
+
+    .auth-badge .logout-link {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-left: 4px;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    /* ===== TACTILE 3D GAME MODE DECK ===== */
+    .mode-deck {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+        max-width: 840px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .mode-tile {
+        background: var(--card-bg);
+        border: 2px solid var(--border-light);
+        border-radius: 14px;
+        padding: 14px 12px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        outline: none;
+        font-family: inherit;
+    }
+
+    .mode-tile:hover {
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .mode-tile.active {
+        border-color: var(--primary-color);
+        background: linear-gradient(180deg, var(--card-bg) 0%, rgba(79, 70, 229, 0.03) 100%);
+        box-shadow: 0 10px 24px -6px var(--primary-glow);
+        transform: translateY(-3px);
+    }
+
+    .mode-tile.active::after {
         content: '';
         position: absolute;
-        bottom: -1rem;
-        left: 0;
-        right: 0;
+        top: -2px;
+        left: 20%;
+        right: 20%;
         height: 3px;
         background: var(--primary-color);
-        border-radius: 3px 3px 0 0;
+        border-radius: 999px;
     }
 
-    /* Progressive Disclosure Animations */
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .form-section {
-        animation: slideIn 0.3s ease-out;
-    }
-
-    .form-section.hidden {
-        display: none;
-    }
-
-    .form-section-header {
-        font-size: 0.85rem;
-        font-weight: 700;
+    .mode-badge {
+        align-self: flex-start;
+        font-size: 0.65rem;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+
+    .badge-solo { background: #e0e7ff; color: #4338ca; }
+    .badge-multi { background: #ecfdf5; color: #047857; }
+    .badge-quest { background: #fdf2f8; color: #be185d; }
+
+    .mode-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mode-icon {
+        font-size: 1.4rem;
+    }
+
+    .mode-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .mode-desc {
+        font-size: 0.75rem;
         color: var(--text-light);
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
+        line-height: 1.35;
+    }
+
+    /* ===== MAIN ACTION ARENA LAYOUT ===== */
+    .arena-layout {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 18px;
+        max-width: 840px;
+        margin: 0 auto;
+        align-items: start;
+        width: 100%;
+        transition: all 0.25s ease;
+    }
+
+    .arena-layout.single-column {
+        grid-template-columns: 1fr;
+        max-width: 580px;
+        margin: 0 auto;
+    }
+
+    .arena-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        text-align: left;
+    }
+
+    .card-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
         border-bottom: 1px solid var(--border-light);
     }
 
-    /* Grid */
-    .home-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 2rem;
-        align-items: start;
-    }
-
-    .form-card {
-        text-align: left;
-    }
-
-    .form-group {
-        margin-bottom: 1.25rem;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
+    .card-title {
+        font-size: 0.95rem;
         font-weight: 700;
-        font-size: 0.9rem;
         color: var(--text-color);
-        letter-spacing: 0.5px;
-    }
-
-    .form-group input[type="text"],
-    .form-group input[type="number"],
-    .form-group select {
-        width: 100%;
-    }
-
-    /* Custom Radio Styling (Visible for Selenium, hidden from users via positioning) */
-    .game-type-radios {
-        position: absolute;
-        left: -9999px;
-    }
-
-    /* Lobbies */
-    .lobby-section h3 {
-        text-align: left;
-        margin-bottom: 1.5rem;
-        font-size: 1.25rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 6px;
+    }
+
+    .card-subtitle-tag {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.08);
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    /* Setting Controls */
+    .setting-group {
+        margin-bottom: 16px;
+    }
+
+    .setting-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .setting-helper {
+        font-size: 0.72rem;
+        color: var(--text-light);
+        font-weight: normal;
+    }
+
+    .category-pill-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+
+    .cat-chip {
+        background: var(--bg-color);
+        border: 1.5px solid var(--border-light);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-align: left;
+        font-family: inherit;
+    }
+
+    .cat-chip:hover {
+        border-color: #cbd5e1;
+        background: var(--card-bg);
+    }
+
+    .cat-chip.active {
+        border-color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.08);
+        color: var(--primary-color);
+    }
+
+    .styled-form-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1.5px solid var(--border-light);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s;
+        font-family: inherit;
+    }
+
+    .styled-form-select:focus {
+        border-color: var(--primary-color);
+    }
+
+    .styled-number-input {
+        width: 100%;
+        margin-top: 6px;
+        padding: 8px 12px;
+        border: 1.5px solid var(--border-light);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: inherit;
+        outline: none;
+    }
+
+    .styled-number-input:focus {
+        border-color: var(--primary-color);
+    }
+
+    /* Segmented Controls */
+    .segmented-row {
+        display: flex;
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        padding: 3px;
+        border-radius: 10px;
+        gap: 4px;
+        margin-bottom: 6px;
+    }
+
+    .segment-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 8px 4px;
+        border-radius: 7px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-light);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-family: inherit;
+    }
+
+    .segment-btn.active {
+        background: var(--card-bg);
+        color: var(--text-color);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .segment-btn.active.ai-active {
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        color: white;
+    }
+
+    .presets-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        margin-bottom: 6px;
+    }
+
+    .preset-chip {
+        flex: 1;
+        padding: 6px;
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 6px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--text-color);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s;
+        font-family: inherit;
+    }
+
+    .preset-chip:hover {
+        border-color: var(--primary-color);
+    }
+
+    .preset-chip.active {
+        background: var(--text-color);
+        color: var(--bg-color);
+        border-color: var(--text-color);
+    }
+
+    /* Launch Button */
+    .launch-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        color: white;
+        border: none;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 20px -4px var(--primary-glow);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 12px;
+        box-sizing: border-box;
+        max-width: 100%;
+        text-align: center;
+        white-space: normal;
+        word-break: break-word;
+        font-family: inherit;
+    }
+
+    .launch-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px -4px var(--primary-glow);
+        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    }
+
+    .launch-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Startup Quest Card */
+    .quest-hero-card {
+        background: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 100%);
+        border: 1.5px solid #fbcfe8;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .quest-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    .quest-badge {
+        background: #db2777;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .quest-rounds {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #be185d;
+        background: rgba(219, 39, 119, 0.1);
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .quest-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #831843;
+        margin-bottom: 6px;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .quest-desc {
+        font-size: 0.82rem;
+        color: #64748b;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .quest-milestones {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .milestone-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: white;
+        border: 1px solid #fbcfe8;
+        color: #831843;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+
+    .milestone-pill.highlight {
+        background: #fdf2f8;
+        border-color: #db2777;
+        color: #db2777;
+    }
+
+    .milestone-arrow {
+        font-size: 0.7rem;
+        color: #db2777;
+    }
+
+    /* ===== RIGHT COLUMN: ACTIVE LOBBIES ===== */
+    .lobby-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        text-align: left;
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .pulse-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--secondary-color);
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
     }
 
     .room-list {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 10px;
         list-style: none;
         padding: 0;
+        margin: 0;
     }
 
     .room-item {
         background: var(--bg-color);
         border: 1px solid var(--border-light);
-        padding: 1.25rem;
-        border-radius: 16px;
-        text-align: left;
-        transition: all 0.2s;
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.15s;
     }
 
     .room-item:hover {
-        border-color: var(--primary-color);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #94a3b8;
     }
 
     .room-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.75rem;
     }
 
     .room-id {
+        font-size: 0.84rem;
         font-weight: 700;
-        color: var(--primary-color);
+        color: var(--text-color);
     }
 
     .room-badge {
-        font-size: 0.75rem;
-        background: var(--primary-color);
-        color: white;
-        padding: 0.2rem 0.6rem;
-        border-radius: 10px;
+        font-size: 0.72rem;
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-weight: 700;
     }
 
     .room-meta {
+        font-size: 0.76rem;
+        color: var(--text-light);
+    }
+
+    .join-pill-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .join-pill-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    .hall-of-fame-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        padding: 12px 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: 700;
         font-size: 0.85rem;
-        color: var(--text-light);
-        margin-bottom: 1rem;
+        transition: all 0.2s;
+        margin-top: 4px;
     }
 
-    /* Info Box */
-    .info-box {
-        background: rgba(14, 165, 233, 0.05);
-        border-left: 4px solid var(--accent-color);
-        padding: 1rem;
-        border-radius: 0 8px 8px 0;
-        margin-bottom: 1.5rem;
+    .hall-of-fame-link:hover {
+        background: rgba(79, 70, 229, 0.1);
+        transform: translateX(2px);
     }
 
-    .info-box h3 {
-        font-size: 1.1rem;
-        margin-bottom: 0.5rem;
+    .game-type-radios {
+        position: absolute;
+        left: -9999px;
     }
 
-    .info-box p {
-        margin: 0;
-        font-size: 0.9rem;
-    }
-
-    .empty-state {
-        padding: 3rem 1rem;
-        background: var(--bg-color);
-        border-radius: 16px;
-        border: 2px dashed var(--border-light);
-        color: var(--text-light);
-    }
-
-    .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Educational Homepage Sections - Decluttered Accordion Hub */
+    /* ===== EDUCATIONAL HOMEPAGE ACCORDION SECTIONS ===== */
     .edu-section {
         margin-top: 3.5rem;
         text-align: left;
@@ -256,8 +821,6 @@
         font-size: 0.95rem;
         line-height: 1.5;
     }
-
-    /* Quick Feature Pills Strip */
     .feature-pills {
         display: flex;
         justify-content: center;
@@ -278,8 +841,6 @@
         color: var(--text-color);
         box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-
-    /* Accordion Container */
     .edu-accordion-container {
         display: flex;
         flex-direction: column;
@@ -441,41 +1002,102 @@
         margin: 0;
     }
 
-    .login-section {
-        max-width: 480px;
-        margin: 0 auto 1.5rem auto;
-        padding: 10px 18px;
-        background: rgba(79, 70, 229, 0.04);
-        border-radius: 12px;
-        border: 1px solid rgba(79, 70, 229, 0.15);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
+    /* ===== RESPONSIVE MEDIA QUERIES ===== */
+    @media (max-width: 768px) {
+        .arena-layout {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+        }
+        .mode-deck {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+        .mode-tile {
+            padding: 12px 14px !important;
+        }
+        .player-passport {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 12px 14px !important;
+            gap: 10px !important;
+        }
+        .passport-left {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+        .passport-right {
+            border-left: none !important;
+            border-top: 1px solid var(--border-light) !important;
+            padding-left: 0 !important;
+            padding-top: 10px !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+        }
     }
-    .user-info {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        font-weight: 600;
-        color: var(--primary-color);
-        font-size: 0.9rem;
+
+    @media (max-width: 440px) {
+        .hero-banner {
+            padding: 6px 4px 14px 4px !important;
+        }
+        .hero-title {
+            font-size: 1.4rem !important;
+        }
+        .hero-subtitle {
+            font-size: 0.84rem !important;
+            margin-bottom: 10px !important;
+        }
+        .hero-feature-tags {
+            gap: 4px !important;
+        }
+        .feature-tag {
+            font-size: 0.68rem !important;
+            padding: 2px 7px !important;
+        }
+        .arena-card, .lobby-card {
+            padding: 14px 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .quest-hero-card {
+            padding: 12px 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            margin-bottom: 12px !important;
+        }
+        .quest-title {
+            font-size: 0.95rem !important;
+        }
+        .quest-desc {
+            font-size: 0.78rem !important;
+        }
+        .category-pill-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 5px !important;
+        }
+        .cat-chip {
+            font-size: 0.72rem !important;
+            padding: 7px 6px !important;
+        }
+        .segmented-row {
+            gap: 2px !important;
+            padding: 2px !important;
+        }
+        .segment-btn {
+            font-size: 0.69rem !important;
+            padding: 6px 2px !important;
+        }
+        .presets-row {
+            gap: 4px !important;
+        }
+        .preset-chip {
+            font-size: 0.7rem !important;
+            padding: 5px 2px !important;
+        }
+        .launch-btn {
+            padding: 12px 10px !important;
+            font-size: 0.88rem !important;
+        }
     }
-    .google-btn {
-        display: inline-flex;
-        align-items: center;
-        background: white;
-        color: #374151;
-        padding: 8px 16px;
-        border-radius: 4px;
-        border: 1px solid #d1d5db;
-        text-decoration: none;
-        font-weight: 500;
-        cursor: pointer;
-    }
-    .google-btn:hover { background: #f9fafb; }
 {% endblock %}
 
 {% block scripts %}
@@ -505,66 +1127,122 @@
 {% endblock %}
 
 {% block content %}
-    <section class="hero">
-        <h1>Master Math, Challenge Friends 🧮</h1>
-        <p>Sharpen your skills with fun puzzles, real-time multiplayer, and business simulations.</p>
+    <!-- 1. Hero Banner -->
+    <section class="hero-banner">
+        <div class="hero-content">
+            <h1 class="hero-title">Master Math, <span class="gradient-text">Challenge Friends</span> 🧮</h1>
+            <p class="hero-subtitle">High-speed mental arithmetic, AI-adaptive puzzles, and real-time multiplayer duels.</p>
+            
+            <div class="hero-feature-tags">
+                <span class="feature-tag highlight">🤖 AI-Adaptive Engine</span>
+                <span class="feature-tag">⚔️ Live Synchronized Duels</span>
+                <span class="feature-tag">🦄 $1B Unicorn Quest</span>
+                <span class="feature-tag">⚡ 20s Blitz Mode</span>
+            </div>
+        </div>
     </section>
 
-    {% if session.get('user_id') %}
-        <div class="login-section">
-            <div class="user-info">
-                <span>👤 Logged in as: <strong>{{ session.get('player_name') }}</strong></span>
-                <a href="{{ url_for('logout') }}" style="font-size: 0.8rem; color: #ef4444; font-weight: bold; text-decoration: underline;">Logout</a>
+    <!-- 2. Unified Player Identity Passport -->
+    <div class="player-passport" id="player-passport">
+        <div class="passport-left">
+            <div class="player-avatar" id="avatar-icon">🧙‍♂️</div>
+            <div class="passport-input-group">
+                <label class="passport-label" for="player_name">
+                    <span>GamerId</span> • <span id="gamer-status">{{ 'Verified' if session.get('user_id') else 'Guest' }}</span>
+                </label>
+                <div class="passport-input-wrapper">
+                    <input type="text" id="player_name" name="player_name" class="gamer-input"
+                           value="{{ session.get('player_name', '') }}"
+                           {{ 'readonly' if session.get('user_id') }}
+                           maxlength="20" placeholder="e.g. MathWizard" required aria-required="true"
+                           style="{{ 'background-color: transparent;' }}">
+                    {% if not session.get('user_id') %}
+                    <button type="button" class="dice-btn" onclick="randomizeGamerId()" title="Randomize GamerId">🎲</button>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    {% elif config.get('GOOGLE_CLIENT_ID') %}
-        <div class="login-section">
-            <span style="font-size: 0.88rem; color: var(--text-light); font-weight: 500;">Sign in to save career stats:</span>
-            <div id="g_id_onload"
-                 data-client_id="{{ config.get('GOOGLE_CLIENT_ID') }}"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin" data-type="standard"></div>
+
+        <div class="passport-right" id="auth-badge-container">
+            {% if session.get('user_id') %}
+                <div class="auth-badge verified">
+                    <span>✓ Google Synced</span>
+                    <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+                </div>
+            {% elif config.get('GOOGLE_CLIENT_ID') %}
+                <div class="google-auth-passport-pill">
+                    <div id="g_id_onload"
+                         data-client_id="{{ config.get('GOOGLE_CLIENT_ID') }}"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="medium" data-text="signin_with"></div>
+                </div>
+            {% else %}
+                <div class="auth-badge guest">
+                    <span>Guest Mode</span>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
 
     {% if error %}
         <p class="error" role="alert" id="error_msg">{{ error }}</p>
     {% endif %}
 
     {% if prefill_room %}
-        <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-            <h3>👋 You're Invited!</h3>
-            <p>Enter your GamerId below to join room: <strong>{{ prefill_room }}</strong></p>
+        <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; text-align: left; background: rgba(16, 185, 129, 0.05); border-left: 4px solid var(--secondary-color); padding: 1rem; border-radius: 0 8px 8px 0;">
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">👋 You're Invited!</h3>
+            <p style="margin: 0; font-size: 0.9rem;">Enter your GamerId below to join room: <strong>{{ prefill_room }}</strong></p>
             <form action="{{ url_for('index') }}" method="post" style="margin-top: 1rem;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="join_room_id" value="{{ prefill_room }}">
                 <div style="display:flex; gap: 0.5rem;">
-                        <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px;">
-                        <button type="submit" style="background: var(--secondary-color); width: auto; min-height: 40px; padding: 0 1rem;">Join Lobby</button>
+                    <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px; padding: 0 10px; border: 1px solid var(--border-light); border-radius: 8px;">
+                    <button type="submit" style="background: var(--secondary-color); color: white; border: none; border-radius: 8px; width: auto; min-height: 40px; padding: 0 1rem; font-weight: 700; cursor: pointer;">Join Lobby</button>
                 </div>
             </form>
         </div>
     {% endif %}
 
-    <div class="mode-tabs" role="tablist">
-        <button class="tab" id="tab-single" role="tab" onclick="setGameType('single')">🎯 Solo Challenge</button>
-        <button class="tab" id="tab-multiplayer" role="tab" onclick="setGameType('multiplayer')">👥 Multiplayer</button>
-        <button class="tab" id="tab-startup_challenge" role="tab" onclick="setGameType('startup_challenge')">🚀 Startup Quest</button>
+    <!-- 3. Tactile 3D Game Mode Deck -->
+    <div class="mode-deck" role="tablist">
+        <!-- Mode 1: Solo Challenge -->
+        <button type="button" class="mode-tile tab" id="tab-single" role="tab" onclick="setGameType('single')">
+            <span class="mode-badge badge-solo">Solo Blitz</span>
+            <div class="mode-header">
+                <span class="mode-icon">🎯</span>
+                <div class="mode-name">Solo Challenge</div>
+            </div>
+            <div class="mode-desc">Beat your personal records with AI difficulty calibration.</div>
+        </button>
+
+        <!-- Mode 2: Multiplayer Arena (Active by default) -->
+        <button type="button" class="mode-tile tab active" id="tab-multiplayer" role="tab" onclick="setGameType('multiplayer')">
+            <span class="mode-badge badge-multi">Live Battle</span>
+            <div class="mode-header">
+                <span class="mode-icon">⚔️</span>
+                <div class="mode-name">Arena Duels</div>
+            </div>
+            <div class="mode-desc">Synchronized room duels with live score progression.</div>
+        </button>
+
+        <!-- Mode 3: Startup Quest -->
+        <button type="button" class="mode-tile tab" id="tab-startup_challenge" role="tab" onclick="setGameType('startup_challenge')">
+            <span class="mode-badge badge-quest">RPG Quest</span>
+            <div class="mode-header">
+                <span class="mode-icon">🦄</span>
+                <div class="mode-name">Startup Quest</div>
+            </div>
+            <div class="mode-desc">$100K Seed ➔ $1B Unicorn executive business puzzles.</div>
+        </button>
     </div>
 
-    <div class="form-group" style="max-width: 400px; margin: 0 auto 2rem auto;">
-        <label for="player_name">Your GamerId</label>
-        <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard" maxlength="20"
-               value="{{ session.get('player_name', '') }}"
-               {{ 'readonly' if session.get('user_id') }}
-               style="{{ 'background-color: #f3f4f6;' if session.get('user_id') }}">
-    </div>
-
-    <div class="home-grid">
-        <!-- Setup Game Form -->
-        <div class="form-card" id="game-setup-section">
+    <!-- 4. Action Arena (Configuration Console & Lobbies) -->
+    <div class="arena-layout" id="arena-layout">
+        
+        <!-- Left: Configuration Console -->
+        <div class="arena-card" id="game-setup-section">
             <form action="{{ url_for('index') }}" method="post" id="game_form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="player_name" id="hidden_player_name">
@@ -576,11 +1254,27 @@
                     <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="syncTabs()">
                 </div>
 
-                <div id="standard-options" class="form-section hidden">
-                    <div class="form-section-header">📋 Game Settings</div>
-                    <div class="form-group">
-                        <label for="category">Category</label>
-                        <select id="category" name="category">
+                <!-- Standard Settings (Solo & Multiplayer) -->
+                <div id="standard-options" class="form-section">
+                    <div class="card-header-row">
+                        <span class="card-title">⚙️ Arena Configuration</span>
+                        <span class="card-subtitle-tag" id="mode-state-tag">Multiplayer Lobby</span>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="category">
+                            <span>Category</span>
+                            <span class="setting-helper" id="cat-desc">Growth, discounts & change shortcuts</span>
+                        </label>
+                        <div class="category-pill-grid">
+                            <button type="button" class="cat-chip" data-cat="basic" onclick="selectCategoryChip('basic')">📚 Basic Math</button>
+                            <button type="button" class="cat-chip" data-cat="decimal" onclick="selectCategoryChip('decimal')">📊 Decimals</button>
+                            <button type="button" class="cat-chip active" data-cat="percentage" onclick="selectCategoryChip('percentage')">📈 Percentages</button>
+                            <button type="button" class="cat-chip" data-cat="profit" onclick="selectCategoryChip('profit')">💰 Profit & Loss</button>
+                            <button type="button" class="cat-chip" data-cat="algebra" onclick="selectCategoryChip('algebra')">🔢 Algebra</button>
+                        </div>
+                        <select id="category" name="category" class="styled-form-select" onchange="syncCategorySelect()">
                             <option value="basic">📚 Basic Arithmetic</option>
                             <option value="decimal">📊 Decimals and Fractions</option>
                             <option value="percentage" selected>📈 Percentages</option>
@@ -589,9 +1283,18 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="difficulty">Difficulty</label>
-                        <select id="difficulty" name="difficulty">
+                    <!-- Difficulty Selection -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="difficulty">
+                            <span>Difficulty Mode</span>
+                        </label>
+                        <div class="segmented-row">
+                            <button type="button" class="segment-btn" data-diff="easy" onclick="selectDifficultyChip('easy')">🟢 Easy</button>
+                            <button type="button" class="segment-btn" data-diff="medium" onclick="selectDifficultyChip('medium')">🟡 Medium</button>
+                            <button type="button" class="segment-btn" data-diff="hard" onclick="selectDifficultyChip('hard')">🔴 Hard</button>
+                            <button type="button" class="segment-btn active ai-active" data-diff="adaptive" onclick="selectDifficultyChip('adaptive')">🤖 Adaptive</button>
+                        </div>
+                        <select id="difficulty" name="difficulty" class="styled-form-select" onchange="syncDifficultySelect()">
                             <option value="easy">Easy</option>
                             <option value="medium">Medium</option>
                             <option value="hard">Hard</option>
@@ -599,42 +1302,69 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="mode">Game Mode</label>
-                        <select id="mode" name="mode" onchange="updateModeLabel()">
-                            <option value="time">⏱️ Time Mode</option>
+                    <!-- Game Mode & Time/Questions Presets -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="mode">
+                            <span id="mode_label">Time in seconds (5-300):</span>
+                            <span class="setting-helper">Quick tap</span>
+                        </label>
+                        <div class="segmented-row">
+                            <button type="button" class="segment-btn active" id="mode-btn-time" onclick="selectModeType('time')">⏱️ Time Mode</button>
+                            <button type="button" class="segment-btn" id="mode-btn-questions" onclick="selectModeType('questions')">❓ Questions</button>
+                        </div>
+                        <div class="presets-row" id="presets-row">
+                            <button type="button" class="preset-chip" onclick="setPresetValue(15)">15s</button>
+                            <button type="button" class="preset-chip active" onclick="setPresetValue(20)">20s (Std)</button>
+                            <button type="button" class="preset-chip" onclick="setPresetValue(45)">45s</button>
+                            <button type="button" class="preset-chip" onclick="setPresetValue(60)">60s Blitz</button>
+                        </div>
+                        <select id="mode" name="mode" class="styled-form-select" onchange="updateModeLabel()">
+                            <option value="time" selected>⏱️ Time Mode</option>
                             <option value="questions">❓ Question Count Mode</option>
                         </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="mode_value" id="mode_label">Time in seconds (5-300):</label>
-                        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required>
+                        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required class="styled-number-input">
                     </div>
                 </div>
 
+                <!-- Startup Challenge Info Box -->
                 <div id="startup-info" class="form-section hidden">
-                    <div class="form-section-header">🚀 Startup Challenge</div>
-                    <div class="info-box">
-                        <p><strong>CEO Quest: The Unicorn Hunt 🦄</strong></p>
-                        <p style="margin-top:0.5rem;"><small>$100K Seed ➡️ $1B Exit. Solve 10 high-stakes business puzzles. One wrong move could trigger a down-round!</small></p>
+                    <div class="quest-hero-card">
+                        <div class="quest-header-row">
+                            <span class="quest-badge">Executive Simulation</span>
+                            <span class="quest-rounds">10 Decision Rounds</span>
+                        </div>
+                        <div class="quest-title">CEO Quest: The Unicorn Hunt 🦄</div>
+                        <p class="quest-desc">$100K Seed ➡️ $1B Exit. Solve 10 high-stakes financial, equity dilution, burn-rate, and valuation decisions. Take your startup from a $100K Angel Seed to a $1B Unicorn Exit!</p>
+                        <div class="quest-milestones">
+                            <span class="milestone-pill">🌱 $100K Seed</span>
+                            <span class="milestone-arrow">➔</span>
+                            <span class="milestone-pill">📈 Series A</span>
+                            <span class="milestone-arrow">➔</span>
+                            <span class="milestone-pill highlight">🦄 $1B Unicorn</span>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" id="start_btn" class="hidden">Create Game</button>
+                <!-- Action Launch Button -->
+                <button type="submit" id="start_btn" class="launch-btn hidden">Create Multiplayer Lobby</button>
             </form>
         </div>
 
-        <!-- Discovery/Join Section -->
-        <div class="lobby-section" id="lobby-section">
+        <!-- Right Column: Live Lobbies & Hall of Fame -->
+        <div class="lobby-card" id="lobby-section">
+            <div class="card-header-row">
+                <span class="card-title">⚔️ Active Lobbies</span>
+                {% if active_rooms %}
+                    <span class="live-indicator"><span class="pulse-dot"></span> {{ active_rooms | length }} Live</span>
+                {% endif %}
+            </div>
 
-            <h3>🎮 Active Lobbies</h3>
             {% if active_rooms %}
                 <ul class="room-list">
                     {% for room_id, details in active_rooms.items() %}
                         <li class="room-item">
                             <div class="room-header">
-                                <span class="room-id">Room {{ room_id }}</span>
+                                <span class="room-id">🎮 Room {{ room_id }}</span>
                                 <span class="room-badge">👥 {{ details.players | length }}</span>
                             </div>
                             <div class="room-meta">
@@ -644,31 +1374,35 @@
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="join_room_id" value="{{ room_id }}">
                                 <div style="display:flex; gap: 0.5rem;">
-                                    <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px;">
-                                    <button type="submit" style="min-height: 40px; padding: 0 1rem; width: auto;">Join</button>
+                                    <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 38px; padding: 0 10px; border: 1px solid var(--border-light); border-radius: 8px;">
+                                    <button type="submit" class="join-pill-btn" style="min-height: 38px; padding: 0 1rem; width: auto;">Join</button>
                                 </div>
                             </form>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <div class="empty-state">
-                    <div class="empty-icon">🛋️</div>
-                    <p>No active lobbies at the moment.</p>
+                <div class="empty-state" style="padding: 2.5rem 1rem; text-align: center; background: var(--bg-color); border-radius: 12px; border: 2px dashed var(--border-light); color: var(--text-light);">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🛋️</div>
+                    <p style="margin: 0; font-weight: 600;">No active lobbies at the moment.</p>
                     <small>Create one above to invite your friends!</small>
                 </div>
             {% endif %}
 
             {% include 'components/ad_banner.html' %}
 
-            <div style="margin-top: 2rem; text-align: left;">
-                <a href="{{ url_for('leaderboard') }}" id="leaderboard_link" style="color: var(--primary-color); font-weight: 700;">🏆 View Global Hall of Fame</a>
+            <div style="margin-top: 0.75rem; text-align: left;">
+                <a href="{{ url_for('leaderboard') }}" id="leaderboard_link" class="hall-of-fame-link">
+                    <span>🏆 Global Hall of Fame</span>
+                    <span>Top Players ➔</span>
+                </a>
             </div>
         </div>
+
     </div>
 
     <!-- Key Feature Highlights -->
-    <div class="feature-pills" aria-label="MathPuzzle Highlights">
+    <div class="feature-pills" aria-label="MathPuzzle Highlights" style="margin-top: 2rem;">
         <div class="feature-pill"><span>🧠</span> Adaptive AI Engine</div>
         <div class="feature-pill"><span>⚔️</span> Real-Time Multiplayer</div>
         <div class="feature-pill"><span>🦄</span> Startup Quest Simulation</div>
@@ -798,6 +1532,14 @@
     </section>
 
     <script>
+        const catDescriptions = {
+            'basic': 'Addition, subtraction, multiplication & division drills',
+            'decimal': 'Decimals, fractions & benchmarks conversions',
+            'percentage': 'Growth, discounts & change shortcuts',
+            'profit': 'Cost markup vs profit margin analytics',
+            'algebra': 'Balance linear equations & variable isolation'
+        };
+
         function generateRandomGamerId() {
             const adjectives = ['Cool', 'Super', 'Math', 'Alpha', 'Quantum', 'Epic', 'Swift', 'Mega'];
             const nouns = ['Wizard', 'Solver', 'Hero', 'Thinker', 'Logic', 'Geek', 'Master', 'Prime'];
@@ -845,29 +1587,136 @@
             }
         }
 
+        function randomizeGamerId() {
+            const mainInput = document.getElementById('player_name');
+            const hiddenInput = document.getElementById('hidden_player_name');
+            const newId = generateRandomGamerId();
+            mainInput.value = newId;
+            if (hiddenInput) hiddenInput.value = newId;
+            localStorage.setItem('mathpuzzle_gamer_id', newId);
+            document.querySelectorAll('input[name="player_name"]').forEach(input => {
+                input.value = newId;
+            });
+            syncTabs();
+            const avatars = ['🧙‍♂️', '⚡', '🧠', '🦄', '🎯', '🦊', '🚀', '👑'];
+            const avatarEl = document.getElementById('avatar-icon');
+            if (avatarEl) {
+                avatarEl.textContent = avatars[Math.floor(Math.random() * avatars.length)];
+            }
+        }
+
+        function selectCategoryChip(val) {
+            const select = document.getElementById('category');
+            if (select) {
+                select.value = val;
+                syncCategorySelect();
+            }
+        }
+
+        function syncCategorySelect() {
+            const select = document.getElementById('category');
+            if (!select) return;
+            const val = select.value;
+            document.querySelectorAll('.cat-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.getAttribute('data-cat') === val);
+            });
+            const helper = document.getElementById('cat-desc');
+            if (helper && catDescriptions[val]) {
+                helper.textContent = catDescriptions[val];
+            }
+        }
+
+        function selectDifficultyChip(val) {
+            const select = document.getElementById('difficulty');
+            if (select) {
+                select.value = val;
+                syncDifficultySelect();
+            }
+        }
+
+        function syncDifficultySelect() {
+            const select = document.getElementById('difficulty');
+            if (!select) return;
+            const val = select.value;
+            document.querySelectorAll('.segment-btn[data-diff]').forEach(btn => {
+                const isActive = btn.getAttribute('data-diff') === val;
+                btn.classList.toggle('active', isActive);
+                if (btn.getAttribute('data-diff') === 'adaptive') {
+                    btn.classList.toggle('ai-active', isActive);
+                }
+            });
+        }
+
+        function selectModeType(type) {
+            const select = document.getElementById('mode');
+            if (select) {
+                select.value = type;
+                updateModeLabel();
+            }
+        }
+
+        function setPresetValue(val) {
+            const input = document.getElementById('mode_value');
+            if (input) {
+                input.value = val;
+            }
+            document.querySelectorAll('.preset-chip').forEach(chip => {
+                chip.classList.toggle('active', parseInt(chip.textContent) === val);
+            });
+        }
+
         function updateModeLabel() {
             const mode = document.getElementById('mode').value;
             const label = document.getElementById('mode_label');
             const input = document.getElementById('mode_value');
+            const timeBtn = document.getElementById('mode-btn-time');
+            const questBtn = document.getElementById('mode-btn-questions');
+            const presets = document.getElementById('presets-row');
+
             if (mode === 'time') {
-                label.textContent = "Time in seconds (5-300):";
-                input.min = 5;
-                input.max = 300;
-                if (input.value < 5 || input.value > 300) input.value = 20;
+                if (label) label.textContent = "Time in seconds (5-300):";
+                if (input) {
+                    input.min = 5;
+                    input.max = 300;
+                    if (input.value < 5 || input.value > 300) input.value = 20;
+                }
+                if (timeBtn) timeBtn.classList.add('active');
+                if (questBtn) questBtn.classList.remove('active');
+                if (presets) {
+                    presets.innerHTML = `
+                        <button type="button" class="preset-chip" onclick="setPresetValue(15)">15s</button>
+                        <button type="button" class="preset-chip ${input && input.value == 20 ? 'active' : ''}" onclick="setPresetValue(20)">20s (Std)</button>
+                        <button type="button" class="preset-chip" onclick="setPresetValue(45)">45s</button>
+                        <button type="button" class="preset-chip" onclick="setPresetValue(60)">60s Blitz</button>
+                    `;
+                }
             } else {
-                label.textContent = "Number of questions (1-100):";
-                input.min = 1;
-                input.max = 100;
-                if (input.value < 1 || input.value > 100) input.value = 10;
+                if (label) label.textContent = "Number of questions (1-100):";
+                if (input) {
+                    input.min = 1;
+                    input.max = 100;
+                    if (input.value < 1 || input.value > 100) input.value = 10;
+                }
+                if (timeBtn) timeBtn.classList.remove('active');
+                if (questBtn) questBtn.classList.add('active');
+                if (presets) {
+                    presets.innerHTML = `
+                        <button type="button" class="preset-chip" onclick="setPresetValue(5)">5 Qs</button>
+                        <button type="button" class="preset-chip ${input && input.value == 10 ? 'active' : ''}" onclick="setPresetValue(10)">10 Qs (Std)</button>
+                        <button type="button" class="preset-chip" onclick="setPresetValue(20)">20 Qs</button>
+                        <button type="button" class="preset-chip" onclick="setPresetValue(50)">50 Marathon</button>
+                    `;
+                }
             }
         }
 
         function setGameType(type) {
             const radio = document.getElementById(type);
-            radio.checked = true;
-            syncTabs();
-            // Dispatch event for any other listeners
-            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            if (radio) {
+                radio.checked = true;
+                syncTabs();
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         }
 
         function syncTabs() {
@@ -879,7 +1728,7 @@
                 const tab = document.getElementById('tab-' + t);
                 if (radio && radio.checked) {
                     activeType = t;
-                    tab.classList.add('active');
+                    if (tab) tab.classList.add('active');
                 } else if (tab) {
                     tab.classList.remove('active');
                 }
@@ -889,6 +1738,8 @@
             const standardOptions = document.getElementById('standard-options');
             const startupInfo = document.getElementById('startup-info');
             const lobbySection = document.getElementById('lobby-section');
+            const arenaLayout = document.getElementById('arena-layout');
+            const modeTag = document.getElementById('mode-state-tag');
             const gamerId = document.getElementById('player_name').value.trim();
 
             if (gamerId) {
@@ -896,30 +1747,46 @@
                 btn.classList.remove('hidden');
                 if (activeType === 'startup_challenge') {
                     btn.textContent = "Start Startup Quest";
+                    btn.style.background = 'linear-gradient(135deg, #db2777 0%, #be185d 100%)';
                     standardOptions.classList.add('hidden');
                     startupInfo.classList.remove('hidden');
-                } else {
-                    btn.textContent = (activeType === 'multiplayer') ? "Create Multiplayer Lobby" : "Start Solo Challenge";
+                    if (arenaLayout) arenaLayout.classList.add('single-column');
+                    if (lobbySection) lobbySection.style.display = 'none';
+                } else if (activeType === 'single') {
+                    btn.textContent = "Start Solo Challenge";
+                    btn.style.background = '';
+                    if (modeTag) modeTag.textContent = 'Solo Sprint';
                     standardOptions.classList.remove('hidden');
                     startupInfo.classList.add('hidden');
+                    if (arenaLayout) arenaLayout.classList.add('single-column');
+                    if (lobbySection) lobbySection.style.display = 'none';
+                } else {
+                    btn.textContent = "Create Multiplayer Lobby";
+                    btn.style.background = '';
+                    if (modeTag) modeTag.textContent = 'Multiplayer Lobby';
+                    standardOptions.classList.remove('hidden');
+                    startupInfo.classList.add('hidden');
+                    if (arenaLayout) arenaLayout.classList.remove('single-column');
+                    if (lobbySection) lobbySection.style.display = 'flex';
                 }
-                lobbySection.style.display = (activeType === 'multiplayer') ? 'block' : 'none';
             } else {
                 // Hide options
                 btn.classList.add('hidden');
                 standardOptions.classList.add('hidden');
                 startupInfo.classList.add('hidden');
-                lobbySection.style.display = 'none';
+                if (lobbySection) lobbySection.style.display = 'none';
             }
         }
 
         window.onload = function() {
-            // Default to multiplayer if nothing selected
             if (!document.querySelector('input[name="game_type"]:checked')) {
-                document.getElementById('multiplayer').checked = true;
+                const multiRadio = document.getElementById('multiplayer');
+                if (multiRadio) multiRadio.checked = true;
             }
             setupGamerId();
             syncTabs();
+            syncCategorySelect();
+            syncDifficultySelect();
             updateModeLabel();
         };
 

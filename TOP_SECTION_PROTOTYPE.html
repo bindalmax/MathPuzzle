@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathPuzzle - Top Section UX/UI Redesign Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: rgba(79, 70, 229, 0.08);
+            --primary-glow: rgba(79, 70, 229, 0.25);
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --unicorn: #ec4899;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --bg-canvas: #f8fafc;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 35px -8px rgba(79, 70, 229, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Prototype Control Toolbar */
+        .proto-toolbar {
+            width: 100%;
+            max-width: 1080px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-md);
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .proto-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e2e8f0;
+        }
+
+        .proto-title span {
+            background: var(--primary);
+            color: white;
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .proto-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .proto-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .proto-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+        }
+
+        .proto-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        /* Frame container simulating device viewports */
+        .viewport-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .device-frame {
+            width: 100%;
+            max-width: 980px;
+            background: var(--bg-canvas);
+            color: var(--text-dark);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* Math Graph Background Accent */
+        .math-grid-bg {
+            background-color: var(--bg-canvas);
+            background-image: 
+                radial-gradient(rgba(79, 70, 229, 0.07) 1px, transparent 1px),
+                linear-gradient(to right, rgba(226, 232, 240, 0.5) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(226, 232, 240, 0.5) 1px, transparent 1px);
+            background-size: 20px 20px, 40px 40px, 40px 40px;
+            padding: 24px 20px 32px 20px;
+        }
+
+        /* ===== 1. HERO SECTION (Immersive & Mathematical) ===== */
+        .hero-banner {
+            position: relative;
+            text-align: center;
+            padding: 12px 16px 20px 16px;
+            overflow: hidden;
+        }
+
+        /* Floating mathematical glyphs in background */
+        .math-symbol-watermark {
+            position: absolute;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            color: rgba(79, 70, 229, 0.06);
+            user-select: none;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sym-1 { top: -5px; left: 6%; font-size: 3.5rem; transform: rotate(-12deg); }
+        .sym-2 { top: 15px; right: 8%; font-size: 3rem; transform: rotate(15deg); }
+        .sym-3 { bottom: 0; left: 18%; font-size: 2.5rem; transform: rotate(8deg); }
+        .sym-4 { bottom: -8px; right: 16%; font-size: 3.8rem; transform: rotate(-18deg); }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: clamp(1.6rem, 4vw, 2.3rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--text-dark);
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            max-width: 540px;
+            margin: 0 auto 14px auto;
+            line-height: 1.5;
+        }
+
+        /* Feature Pills below title */
+        .hero-feature-tags {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-tag.highlight {
+            border-color: rgba(79, 70, 229, 0.3);
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        /* ===== 2. UNIFIED PLAYER IDENTITY PASSPORT ===== */
+        .player-passport {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            margin: 12px auto 20px auto;
+            max-width: 680px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .player-passport:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-md);
+        }
+
+        .passport-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            flex-shrink: 0;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.8);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .player-passport:hover .player-avatar {
+            transform: scale(1.05) rotate(-3deg);
+        }
+
+        .passport-input-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .passport-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .passport-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gamer-input {
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            outline: none;
+            width: 100%;
+            padding: 2px 0;
+        }
+
+        .gamer-input[readonly] {
+            color: var(--primary);
+            cursor: default;
+        }
+
+        .dice-btn {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .dice-btn:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: rotate(18deg);
+        }
+
+        /* Passport Right: Google Auth Status */
+        .passport-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            padding-left: 12px;
+            border-left: 1px solid var(--border);
+        }
+
+        .auth-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .auth-badge.verified {
+            color: var(--secondary);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 5px 10px;
+            border-radius: 999px;
+        }
+
+        .auth-badge .logout-link {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-left: 4px;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .google-sign-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+
+        .google-sign-pill:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            transform: translateY(-1px);
+        }
+
+        .google-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ===== 3. GAME MODE SELECTOR (Tactile 3D Cards) ===== */
+        .mode-deck {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            max-width: 840px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .mode-tile {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 12px;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mode-tile:hover {
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .mode-tile.active {
+            border-color: var(--primary);
+            background: linear-gradient(180deg, #ffffff 0%, rgba(79, 70, 229, 0.03) 100%);
+            box-shadow: 0 10px 24px -6px var(--primary-glow);
+            transform: translateY(-3px);
+        }
+
+        .mode-tile.active::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 20%;
+            right: 20%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 999px;
+        }
+
+        .mode-badge {
+            align-self: flex-start;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .badge-solo { background: #e0e7ff; color: #4338ca; }
+        .badge-multi { background: #ecfdf5; color: #047857; }
+        .badge-quest { background: #fdf2f8; color: #be185d; }
+
+        .mode-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mode-icon {
+            font-size: 1.4rem;
+        }
+
+        .mode-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .mode-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        /* ===== 4. MAIN ACTION ARENA (Console Layout) ===== */
+        .arena-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 18px;
+            max-width: 840px;
+            margin: 0 auto;
+            align-items: start;
+            width: 100%;
+            transition: all 0.25s ease;
+        }
+
+        .arena-layout.single-column {
+            grid-template-columns: 1fr;
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        .arena-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .card-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-subtitle-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        /* Modern Segmented / Chip Form Controls */
+        .setting-group {
+            margin-bottom: 16px;
+        }
+
+        .setting-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-helper {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+
+        /* Pill Group for Category */
+        .category-pill-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .cat-chip {
+            background: var(--bg-canvas);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-align: left;
+        }
+
+        .cat-chip:hover {
+            border-color: #cbd5e1;
+            background: #fff;
+        }
+
+        .cat-chip.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* Segmented Difficulty Slider / Tabs */
+        .segmented-row {
+            display: flex;
+            background: var(--bg-canvas);
+            border: 1px solid var(--border);
+            padding: 3px;
+            border-radius: 10px;
+            gap: 4px;
+        }
+
+        .segment-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 8px 4px;
+            border-radius: 7px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .segment-btn.active {
+            background: white;
+            color: var(--text-dark);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .segment-btn.active.ai-active {
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            color: white;
+        }
+
+        /* Mode & Presets Row */
+        .presets-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .preset-chip {
+            flex: 1;
+            padding: 6px;
+            background: var(--bg-canvas);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .preset-chip:hover {
+            border-color: var(--primary);
+        }
+
+        .preset-chip.active {
+            background: var(--text-dark);
+            color: white;
+            border-color: var(--text-dark);
+        }
+
+        /* Launch Arena Action Button */
+        .launch-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px -4px var(--primary-glow);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+            box-sizing: border-box;
+            max-width: 100%;
+            text-align: center;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .launch-btn span {
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.35;
+            text-align: center;
+        }
+
+        .launch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -4px var(--primary-glow);
+            background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+        }
+
+        .launch-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ===== STARTUP QUEST INFO BOX (When Quest Selected) ===== */
+        .quest-hero-card {
+            background: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 100%);
+            border: 1.5px solid #fbcfe8;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .quest-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quest-badge {
+            background: #db2777;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .quest-rounds {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #be185d;
+            background: rgba(219, 39, 119, 0.1);
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .quest-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #831843;
+            margin-bottom: 6px;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .quest-desc {
+            font-size: 0.82rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .quest-milestones {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .milestone-pill {
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: white;
+            border: 1px solid #fbcfe8;
+            color: #831843;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .milestone-pill.highlight {
+            background: #fdf2f8;
+            border-color: #db2777;
+            color: #db2777;
+        }
+
+        .milestone-arrow {
+            font-size: 0.7rem;
+            color: #db2777;
+        }
+
+        /* ===== 5. LOBBY & HALL OF FAME CARD (Right Column) ===== */
+        .lobby-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--secondary);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--secondary);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .room-item-row {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            transition: border-color 0.15s;
+        }
+
+        .room-item-row:hover {
+            border-color: #94a3b8;
+        }
+
+        .room-details-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .room-id-tag {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .room-sub-meta {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .join-pill-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .join-pill-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .hall-of-fame-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            padding: 12px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            margin-top: 4px;
+        }
+
+        .hall-of-fame-link:hover {
+            background: rgba(79, 70, 229, 0.1);
+            transform: translateX(2px);
+        }
+
+        /* ===== CONTAINER QUERIES & CLASS-BASED SIMULATION ===== */
+        .device-frame {
+            container-type: inline-size;
+            container-name: device-viewport;
+        }
+
+        /* Mobile status bar simulation (only appears in mobile view) */
+        .mobile-bezel-bar {
+            display: none;
+            background: #1e293b;
+            color: #94a3b8;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.3px;
+        }
+        .mode-mobile .mobile-bezel-bar {
+            display: flex;
+        }
+        .bezel-notch {
+            width: 80px;
+            height: 14px;
+            background: #0f172a;
+            border-radius: 999px;
+        }
+
+        /* ===== RESPONSIVE & DEVICE SIMULATOR RULES ===== */
+
+        /* 1. Simulator Class Overrides (Tablet & Mobile frames) */
+        .mode-tablet .arena-layout,
+        .mode-mobile .arena-layout {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+        }
+        .mode-tablet .mode-deck,
+        .mode-mobile .mode-deck {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+        .mode-tablet .mode-tile,
+        .mode-mobile .mode-tile {
+            padding: 12px 14px !important;
+        }
+        .mode-tablet .player-passport,
+        .mode-mobile .player-passport {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 12px 14px !important;
+            gap: 10px !important;
+        }
+        .mode-tablet .passport-left,
+        .mode-mobile .passport-left {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+        .mode-tablet .passport-right,
+        .mode-mobile .passport-right {
+            border-left: none !important;
+            border-top: 1px solid var(--border) !important;
+            padding-left: 0 !important;
+            padding-top: 10px !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+        }
+
+        /* Specific simulator tight mobile optimizations (390px phone screen) */
+        .mode-mobile .math-grid-bg {
+            padding: 14px 10px 24px 10px !important;
+        }
+        .mode-mobile .hero-banner {
+            padding: 6px 4px 12px 4px !important;
+        }
+        .mode-mobile .hero-title {
+            font-size: 1.35rem !important;
+        }
+        .mode-mobile .hero-subtitle {
+            font-size: 0.82rem !important;
+            margin-bottom: 10px !important;
+        }
+        .mode-mobile .hero-feature-tags {
+            gap: 4px !important;
+        }
+        .mode-mobile .feature-tag {
+            font-size: 0.68rem !important;
+            padding: 2px 7px !important;
+        }
+        .mode-mobile .math-symbol-watermark {
+            display: none !important;
+        }
+        .mode-mobile .arena-card,
+        .mode-mobile .lobby-card {
+            padding: 14px 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .mode-mobile .quest-hero-card {
+            padding: 12px 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            margin-bottom: 12px !important;
+        }
+        .mode-mobile .quest-title {
+            font-size: 0.95rem !important;
+        }
+        .mode-mobile .quest-desc {
+            font-size: 0.78rem !important;
+        }
+        .mode-mobile .category-pill-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 5px !important;
+        }
+        .mode-mobile .cat-chip {
+            font-size: 0.72rem !important;
+            padding: 7px 6px !important;
+        }
+        .mode-mobile .segmented-row {
+            gap: 2px !important;
+            padding: 2px !important;
+        }
+        .mode-mobile .segment-btn {
+            font-size: 0.69rem !important;
+            padding: 6px 2px !important;
+        }
+        .mode-mobile .presets-row {
+            gap: 4px !important;
+        }
+        .mode-mobile .preset-chip {
+            font-size: 0.7rem !important;
+            padding: 5px 2px !important;
+        }
+        .mode-mobile .launch-btn {
+            padding: 12px 10px !important;
+            font-size: 0.86rem !important;
+        }
+        .mode-mobile .room-item-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+        }
+        .mode-mobile .join-pill-btn {
+            width: 100% !important;
+            text-align: center !important;
+            padding: 8px 10px !important;
+        }
+
+        /* 2. Container Query Overrides (Embedded viewports) */
+        @container device-viewport (max-width: 768px) {
+            .arena-layout {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
+            }
+            .mode-deck {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            .mode-tile {
+                padding: 12px 14px !important;
+            }
+            .player-passport {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 12px 14px !important;
+                gap: 10px !important;
+            }
+            .passport-left {
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+            .passport-right {
+                border-left: none !important;
+                border-top: 1px solid var(--border) !important;
+                padding-left: 0 !important;
+                padding-top: 10px !important;
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+        }
+
+        @container device-viewport (max-width: 440px) {
+            .math-grid-bg {
+                padding: 14px 10px 24px 10px !important;
+            }
+            .hero-banner {
+                padding: 6px 4px 12px 4px !important;
+            }
+            .hero-title {
+                font-size: 1.35rem !important;
+            }
+            .hero-subtitle {
+                font-size: 0.82rem !important;
+                margin-bottom: 10px !important;
+            }
+            .hero-feature-tags {
+                gap: 4px !important;
+            }
+            .feature-tag {
+                font-size: 0.68rem !important;
+                padding: 2px 7px !important;
+            }
+            .math-symbol-watermark {
+                display: none !important;
+            }
+            .arena-card,
+            .lobby-card {
+                padding: 14px 12px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .quest-hero-card {
+                padding: 12px 10px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                margin-bottom: 12px !important;
+            }
+            .quest-title {
+                font-size: 0.95rem !important;
+            }
+            .quest-desc {
+                font-size: 0.78rem !important;
+            }
+            .category-pill-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 5px !important;
+            }
+            .cat-chip {
+                font-size: 0.72rem !important;
+                padding: 7px 6px !important;
+            }
+            .segmented-row {
+                gap: 2px !important;
+                padding: 2px !important;
+            }
+            .segment-btn {
+                font-size: 0.69rem !important;
+                padding: 6px 2px !important;
+            }
+            .presets-row {
+                gap: 4px !important;
+            }
+            .preset-chip {
+                font-size: 0.7rem !important;
+                padding: 5px 2px !important;
+            }
+            .launch-btn {
+                padding: 12px 10px !important;
+                font-size: 0.86rem !important;
+            }
+            .room-item-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 8px !important;
+            }
+            .join-pill-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 8px 10px !important;
+            }
+        }
+
+        /* 3. Media Queries (Direct browser viewports) */
+        @media (max-width: 768px) {
+            .arena-layout {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
+            }
+            .mode-deck {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            .mode-tile {
+                padding: 12px 14px !important;
+            }
+            .player-passport {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 12px 14px !important;
+                gap: 10px !important;
+            }
+            .passport-left {
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+            .passport-right {
+                border-left: none !important;
+                border-top: 1px solid var(--border) !important;
+                padding-left: 0 !important;
+                padding-top: 10px !important;
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .math-grid-bg {
+                padding: 14px 10px 24px 10px !important;
+            }
+            .hero-banner {
+                padding: 6px 4px 12px 4px !important;
+            }
+            .hero-title {
+                font-size: 1.35rem !important;
+            }
+            .hero-subtitle {
+                font-size: 0.82rem !important;
+                margin-bottom: 10px !important;
+            }
+            .hero-feature-tags {
+                gap: 4px !important;
+            }
+            .feature-tag {
+                font-size: 0.68rem !important;
+                padding: 2px 7px !important;
+            }
+            .math-symbol-watermark {
+                display: none !important;
+            }
+            .arena-card,
+            .lobby-card {
+                padding: 14px 12px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .quest-hero-card {
+                padding: 12px 10px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                margin-bottom: 12px !important;
+            }
+            .quest-title {
+                font-size: 0.95rem !important;
+            }
+            .quest-desc {
+                font-size: 0.78rem !important;
+            }
+            .category-pill-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 5px !important;
+            }
+            .cat-chip {
+                font-size: 0.72rem !important;
+                padding: 7px 6px !important;
+            }
+            .segmented-row {
+                gap: 2px !important;
+                padding: 2px !important;
+            }
+            .segment-btn {
+                font-size: 0.69rem !important;
+                padding: 6px 2px !important;
+            }
+            .presets-row {
+                gap: 4px !important;
+            }
+            .preset-chip {
+                font-size: 0.7rem !important;
+                padding: 5px 2px !important;
+            }
+            .launch-btn {
+                padding: 12px 10px !important;
+                font-size: 0.86rem !important;
+            }
+            .room-item-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 8px !important;
+            }
+            .join-pill-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 8px 10px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Prototype Interactive Simulator Toolbar -->
+    <div class="proto-toolbar">
+        <div class="proto-title">
+            🧮 MathPuzzle Top Section <span>Prototype</span>
+        </div>
+        <div class="proto-controls">
+            <button class="proto-btn active" onclick="setDevice('desktop', this)">💻 Desktop View</button>
+            <button class="proto-btn" onclick="setDevice('tablet', this)">📱 Tablet (768px)</button>
+            <button class="proto-btn" onclick="setDevice('mobile', this)">📱 Mobile (390px)</button>
+            <button class="proto-btn" onclick="toggleAuth(this)" id="auth-toggle-btn">👤 Toggle Google Auth (Guest)</button>
+        </div>
+    </div>
+
+    <!-- Viewport Simulator Frame -->
+    <div class="viewport-wrapper">
+        <div class="device-frame mode-desktop" id="sim-frame">
+            <div class="mobile-bezel-bar">
+                <span>9:41</span>
+                <div class="bezel-notch"></div>
+                <span>5G 100%</span>
+            </div>
+            <div class="math-grid-bg">
+
+                <!-- 1. Hero Banner with Mathematical Ambient Background -->
+                <section class="hero-banner">
+                    <span class="math-symbol-watermark sym-1">∑</span>
+                    <span class="math-symbol-watermark sym-2">π</span>
+                    <span class="math-symbol-watermark sym-3">√x</span>
+                    <span class="math-symbol-watermark sym-4">∫</span>
+
+                    <div class="hero-content">
+                        <h1 class="hero-title">Master Math. <span class="gradient-text">Challenge Minds.</span></h1>
+                        <p class="hero-subtitle">High-speed mental arithmetic, AI-adaptive puzzles, and real-time multiplayer duels.</p>
+                        
+                        <div class="hero-feature-tags">
+                            <span class="feature-tag highlight">🤖 AI-Adaptive Engine</span>
+                            <span class="feature-tag">⚔️ Live Synchronized Duels</span>
+                            <span class="feature-tag">🦄 $1B Unicorn Quest</span>
+                            <span class="feature-tag">⚡ 20s Blitz Mode</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. Unified Player Identity Passport -->
+                <div class="player-passport" id="player-passport">
+                    <div class="passport-left">
+                        <div class="player-avatar" id="avatar-icon">🧙‍♂️</div>
+                        <div class="passport-input-group">
+                            <label class="passport-label" for="player_name">
+                                <span>GamerId</span> • <span id="gamer-status">Guest</span>
+                            </label>
+                            <div class="passport-input-wrapper">
+                                <input type="text" id="player_name" name="player_name" class="gamer-input" value="QuantumWizard42" maxlength="20" placeholder="Enter GamerId">
+                                <button type="button" class="dice-btn" onclick="randomizeName()" title="Randomize name">🎲</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="passport-right" id="auth-badge-container">
+                        <!-- Swapped dynamically via prototype toolbar -->
+                        <div class="google-sign-pill" onclick="simulateGoogleLogin()" title="Sign in with Google to save career stats">
+                            <svg class="google-icon" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                            </svg>
+                            <span>Save Career Stats</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Tactile 3D Game Mode Deck -->
+                <div class="mode-deck" role="tablist">
+                    <!-- Mode 1: Solo -->
+                    <div class="mode-tile" id="tile-single" onclick="selectGameMode('single')">
+                        <span class="mode-badge badge-solo">Solo Blitz</span>
+                        <div class="mode-header">
+                            <span class="mode-icon">🎯</span>
+                            <div class="mode-name">Solo Challenge</div>
+                        </div>
+                        <div class="mode-desc">Beat your personal records with AI difficulty calibration.</div>
+                    </div>
+
+                    <!-- Mode 2: Multiplayer (Active by default) -->
+                    <div class="mode-tile active" id="tile-multiplayer" onclick="selectGameMode('multiplayer')">
+                        <span class="mode-badge badge-multi">Live Battle</span>
+                        <div class="mode-header">
+                            <span class="mode-icon">⚔️</span>
+                            <div class="mode-name">Arena Duels</div>
+                        </div>
+                        <div class="mode-desc">Synchronized room duels with live score progression.</div>
+                    </div>
+
+                    <!-- Mode 3: Startup Quest -->
+                    <div class="mode-tile" id="tile-startup" onclick="selectGameMode('startup')">
+                        <span class="mode-badge badge-quest">RPG Quest</span>
+                        <div class="mode-header">
+                            <span class="mode-icon">🦄</span>
+                            <div class="mode-name">Startup Quest</div>
+                        </div>
+                        <div class="mode-desc">$100K Seed ➔ $1B Unicorn executive business puzzles.</div>
+                    </div>
+                </div>
+
+                <!-- 4. Action Arena (Configuration Console & Lobbies) -->
+                <div class="arena-layout">
+                    
+                    <!-- Left: Configuration Console -->
+                    <div class="arena-card">
+                        
+                        <!-- Standard Settings (Solo & Multiplayer) -->
+                        <div id="standard-settings-box">
+                            <div class="card-header-row">
+                                <span class="card-title">⚙️ Arena Configuration</span>
+                                <span class="card-subtitle-tag" id="mode-state-tag">Multiplayer Lobby</span>
+                            </div>
+
+                            <!-- Category Selection (Visual Chips) -->
+                            <div class="setting-group">
+                                <label class="setting-label">
+                                    <span>Category</span>
+                                    <span class="setting-helper" id="cat-desc">Growth, discounts & change</span>
+                                </label>
+                                <div class="category-pill-grid">
+                                    <div class="cat-chip" onclick="setCategory(this, 'Basic arithmetic drills')">📚 Basic Math</div>
+                                    <div class="cat-chip" onclick="setCategory(this, 'Decimals & fractions')">📊 Decimals</div>
+                                    <div class="cat-chip active" onclick="setCategory(this, 'Growth, discounts & change')">📈 Percentages</div>
+                                    <div class="cat-chip" onclick="setCategory(this, 'Markup vs margins')">💰 Profit & Loss</div>
+                                    <div class="cat-chip" onclick="setCategory(this, 'Equations & variables')">🔢 Algebra</div>
+                                    <div class="cat-chip" onclick="setCategory(this, 'Mixed multi-discipline')">🎲 Random Mix</div>
+                                </div>
+                            </div>
+
+                            <!-- Difficulty Selection (Segmented Switch) -->
+                            <div class="setting-group">
+                                <label class="setting-label">
+                                    <span>Difficulty Mode</span>
+                                </label>
+                                <div class="segmented-row">
+                                    <button type="button" class="segment-btn" onclick="setDifficulty(this)">🟢 Easy</button>
+                                    <button type="button" class="segment-btn" onclick="setDifficulty(this)">🟡 Medium</button>
+                                    <button type="button" class="segment-btn" onclick="setDifficulty(this)">🔴 Hard</button>
+                                    <button type="button" class="segment-btn active ai-active" onclick="setDifficulty(this)">🤖 Adaptive</button>
+                                </div>
+                            </div>
+
+                            <!-- Game Mode & Time/Questions Presets -->
+                            <div class="setting-group">
+                                <label class="setting-label">
+                                    <span id="speed-label">⏱️ Duration / Limit</span>
+                                    <span class="setting-helper">Quick tap</span>
+                                </label>
+                                <div class="segmented-row">
+                                    <button type="button" class="segment-btn active" onclick="setModeType('time', this)">⏱️ Time Mode</button>
+                                    <button type="button" class="segment-btn" onclick="setModeType('questions', this)">❓ Questions</button>
+                                </div>
+                                <div class="presets-row" id="presets-row">
+                                    <div class="preset-chip" onclick="setPreset(this, 15)">15s</div>
+                                    <div class="preset-chip active" onclick="setPreset(this, 20)">20s (Std)</div>
+                                    <div class="preset-chip" onclick="setPreset(this, 45)">45s</div>
+                                    <div class="preset-chip" onclick="setPreset(this, 60)">60s Blitz</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Startup Quest Box (Visible when Startup selected) -->
+                        <div id="startup-settings-box" style="display: none;">
+                            <div class="quest-hero-card">
+                                <div class="quest-header-row">
+                                    <span class="quest-badge">Executive Simulation</span>
+                                    <span class="quest-rounds">10 Decision Rounds</span>
+                                </div>
+                                <div class="quest-title">CEO Quest: The Unicorn Hunt 🦄</div>
+                                <p class="quest-desc">Solve 10 high-stakes financial, equity dilution, burn-rate, and valuation decisions. Take your startup from a $100K Angel Seed to a $1B Unicorn Exit!</p>
+                                <div class="quest-milestones">
+                                    <span class="milestone-pill">🌱 $100K Seed</span>
+                                    <span class="milestone-arrow">➔</span>
+                                    <span class="milestone-pill">📈 Series A</span>
+                                    <span class="milestone-arrow">➔</span>
+                                    <span class="milestone-pill highlight">🦄 $1B Unicorn</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Submit Button -->
+                        <button type="button" class="launch-btn" id="launch-button">
+                            <span>🚀 Create Multiplayer Lobby</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Column: Live Lobbies & Hall of Fame -->
+                    <div class="lobby-card" id="side-lobby-panel">
+                        <div class="card-header-row">
+                            <span class="card-title">⚔️ Active Lobbies</span>
+                            <span class="live-indicator"><span class="pulse-dot"></span> 3 Rooms Live</span>
+                        </div>
+
+                        <div class="room-item-row">
+                            <div class="room-details-left">
+                                <span class="room-id-tag">🎮 Room 7824 <span style="font-size:0.75rem; color:#6366f1;">• 👥 2/4</span></span>
+                                <span class="room-sub-meta">Percentages • Adaptive (20s)</span>
+                            </div>
+                            <button type="button" class="join-pill-btn" onclick="alert('Joining Room 7824 as ' + document.getElementById('player_name').value)">Join Battle</button>
+                        </div>
+
+                        <div class="room-item-row">
+                            <div class="room-details-left">
+                                <span class="room-id-tag">🎮 Room 9102 <span style="font-size:0.75rem; color:#6366f1;">• 👥 1/2</span></span>
+                                <span class="room-sub-meta">Basic Math • Hard (10 Qs)</span>
+                            </div>
+                            <button type="button" class="join-pill-btn" onclick="alert('Joining Room 9102 as ' + document.getElementById('player_name').value)">Join Battle</button>
+                        </div>
+
+                        <a href="#leaderboard" class="hall-of-fame-link">
+                            <span>🏆 Global Hall of Fame</span>
+                            <span>Top Players ➔</span>
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Prototype Interactive JavaScript -->
+    <script>
+        let isAuth = false;
+        let currentMode = 'multiplayer';
+
+        const avatars = ['🧙‍♂️', '⚡', '🧠', '🦄', '🎯', '🦊', '🚀', '👑'];
+        const adjectives = ['Quantum', 'Hyper', 'Swift', 'Prime', 'Apex', 'Cyber', 'Neon', 'Cosmic'];
+        const nouns = ['Wizard', 'Solver', 'Matrix', 'Thinker', 'Vector', 'Knight', 'Puzzler'];
+
+        function randomizeName() {
+            if (isAuth) return;
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const noun = nouns[Math.floor(Math.random() * nouns.length)];
+            const num = Math.floor(10 + Math.random() * 89);
+            const input = document.getElementById('player_name');
+            input.value = `${adj}${noun}${num}`;
+            
+            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+            document.getElementById('avatar-icon').textContent = randomAvatar;
+        }
+
+        function setDevice(device, btn) {
+            document.querySelectorAll('.proto-controls .proto-btn').forEach(b => {
+                if (b.textContent.includes('View') || b.textContent.includes('px')) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+
+            const frame = document.getElementById('sim-frame');
+            frame.classList.remove('mode-desktop', 'mode-tablet', 'mode-mobile');
+
+            if (device === 'mobile') {
+                frame.style.maxWidth = '390px';
+                frame.classList.add('mode-mobile');
+            } else if (device === 'tablet') {
+                frame.style.maxWidth = '768px';
+                frame.classList.add('mode-tablet');
+            } else {
+                frame.style.maxWidth = '980px';
+                frame.classList.add('mode-desktop');
+            }
+        }
+
+        function toggleAuth(btn) {
+            isAuth = !isAuth;
+            const container = document.getElementById('auth-badge-container');
+            const input = document.getElementById('player_name');
+            const status = document.getElementById('gamer-status');
+
+            if (isAuth) {
+                btn.textContent = "👤 Toggle Google Auth (Signed In)";
+                btn.classList.add('active');
+                input.value = "Dr. Jane Scholar";
+                input.readOnly = true;
+                status.textContent = "Verified";
+                status.style.color = "#10b981";
+                document.getElementById('avatar-icon').textContent = "👩‍🔬";
+                
+                container.innerHTML = `
+                    <div class="auth-badge verified">
+                        <span>✓ Google Synced</span>
+                        <span class="logout-link" onclick="toggleAuth(document.getElementById('auth-toggle-btn'))">Logout</span>
+                    </div>
+                `;
+            } else {
+                btn.textContent = "👤 Toggle Google Auth (Guest)";
+                btn.classList.remove('active');
+                input.readOnly = false;
+                status.textContent = "Guest";
+                status.style.color = "#64748b";
+                randomizeName();
+                
+                container.innerHTML = `
+                    <div class="google-sign-pill" onclick="simulateGoogleLogin()">
+                        <svg class="google-icon" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                        </svg>
+                        <span>Save Career Stats</span>
+                    </div>
+                `;
+            }
+        }
+
+        function simulateGoogleLogin() {
+            toggleAuth(document.getElementById('auth-toggle-btn'));
+        }
+
+        function selectGameMode(mode) {
+            currentMode = mode;
+            ['single', 'multiplayer', 'startup'].forEach(m => {
+                document.getElementById('tile-' + m).classList.remove('active');
+            });
+            document.getElementById('tile-' + mode).classList.add('active');
+
+            const stdBox = document.getElementById('standard-settings-box');
+            const questBox = document.getElementById('startup-settings-box');
+            const lobbyPanel = document.getElementById('side-lobby-panel');
+            const launchBtn = document.getElementById('launch-button');
+            const modeTag = document.getElementById('mode-state-tag');
+            const arenaLayout = document.querySelector('.arena-layout');
+
+            if (mode === 'startup') {
+                stdBox.style.display = 'none';
+                questBox.style.display = 'block';
+                lobbyPanel.style.display = 'none';
+                arenaLayout.classList.add('single-column');
+                launchBtn.style.background = 'linear-gradient(135deg, #db2777 0%, #be185d 100%)';
+                launchBtn.innerHTML = '<span>🦄 Launch Startup Quest ($100K Seed)</span>';
+            } else if (mode === 'single') {
+                stdBox.style.display = 'block';
+                questBox.style.display = 'none';
+                lobbyPanel.style.display = 'none';
+                arenaLayout.classList.add('single-column');
+                launchBtn.style.background = '';
+                modeTag.textContent = 'Solo Sprint';
+                launchBtn.innerHTML = '<span>🎯 Start Solo Challenge</span>';
+            } else {
+                stdBox.style.display = 'block';
+                questBox.style.display = 'none';
+                lobbyPanel.style.display = 'flex';
+                arenaLayout.classList.remove('single-column');
+                launchBtn.style.background = '';
+                modeTag.textContent = 'Multiplayer Lobby';
+                launchBtn.innerHTML = '<span>🚀 Create Multiplayer Lobby</span>';
+            }
+        }
+
+        function setCategory(chip, helperText) {
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            document.getElementById('cat-desc').textContent = helperText;
+        }
+
+        function setDifficulty(btn) {
+            document.querySelectorAll('.segmented-row .segment-btn').forEach(b => {
+                b.classList.remove('active', 'ai-active');
+            });
+            btn.classList.add('active');
+            if (btn.textContent.includes('Adaptive')) {
+                btn.classList.add('ai-active');
+            }
+        }
+
+        function setModeType(type, btn) {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const presets = document.getElementById('presets-row');
+            if (type === 'time') {
+                document.getElementById('speed-label').textContent = '⏱️ Duration';
+                presets.innerHTML = `
+                    <div class="preset-chip" onclick="setPreset(this, 15)">15s</div>
+                    <div class="preset-chip active" onclick="setPreset(this, 20)">20s (Std)</div>
+                    <div class="preset-chip" onclick="setPreset(this, 45)">45s</div>
+                    <div class="preset-chip" onclick="setPreset(this, 60)">60s Blitz</div>
+                `;
+            } else {
+                document.getElementById('speed-label').textContent = '❓ Question Count';
+                presets.innerHTML = `
+                    <div class="preset-chip" onclick="setPreset(this, 5)">5 Qs</div>
+                    <div class="preset-chip active" onclick="setPreset(this, 10)">10 Qs (Std)</div>
+                    <div class="preset-chip" onclick="setPreset(this, 20)">20 Qs</div>
+                    <div class="preset-chip" onclick="setPreset(this, 50)">50 Marathon</div>
+                `;
+            }
+        }
+
+        function setPreset(chip, val) {
+            chip.parentElement.querySelectorAll('.preset-chip').forEach(p => p.classList.remove('active'));
+            chip.classList.add('active');
+        }
+    </script>
+</body>
+</html>
