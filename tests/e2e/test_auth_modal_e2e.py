@@ -83,17 +83,27 @@ class TestAuthModalE2E(unittest.TestCase):
                     raise
                 time.sleep(0.5)
 
+    def open_modal_safe(self, trigger_id="passport-auth-btn"):
+        """Safely opens the auth modal with retries against PWA / SW reloads."""
+        for i in range(5):
+            try:
+                self.click_safe(By.ID, trigger_id)
+                modal = WebDriverWait(self.driver, 3).until(
+                    EC.visibility_of_element_located((By.ID, "authModalBackdrop"))
+                )
+                return modal
+            except Exception:
+                if i == 4:
+                    raise
+                time.sleep(0.5)
+
     def test_open_auth_modal_shows_popular_options(self):
         """Verify clicking Sign In opens the modal with Google, Apple, and GitHub options."""
         self.driver.get(self.base_url)
         time.sleep(0.5)
 
         # 1. Click the passport Sign In / Register trigger button
-        self.click_safe(By.ID, "passport-auth-btn")
-
-        # 2. Assert modal is visible
-        wait = WebDriverWait(self.driver, 10)
-        modal = wait.until(EC.visibility_of_element_located((By.ID, "authModalBackdrop")))
+        modal = self.open_modal_safe("passport-auth-btn")
         self.assertTrue(modal.is_displayed())
 
         # 3. Assert title and options
@@ -110,21 +120,31 @@ class TestAuthModalE2E(unittest.TestCase):
         self.assertIn("Continue with GitHub", page_text)
         self.assertIn("Coming Soon", page_text)
 
-        # 4. Check guest progress auto-sync reassurance
-        guest_banner = self.driver.find_element(By.ID, "guestTransitionAlert")
-        self.assertTrue(guest_banner.is_displayed())
-        self.assertIn("Guest Progress Auto-Sync", guest_banner.text)
+        # 4. Check guest progress auto-sync reassurance is hidden by default
+        guest_banners = self.driver.find_elements(By.ID, "guestTransitionAlert")
+        self.assertEqual(len(guest_banners), 0)
+
+    def test_guest_transition_alert_visible_when_flag_enabled(self):
+        """Verify guest progress auto-sync reassurance appears when feature flag is enabled."""
+        app.config['ENABLE_SSO_GUEST_MIGRATION'] = True
+        try:
+            self.driver.get(self.base_url)
+            time.sleep(0.5)
+            modal = self.open_modal_safe("passport-auth-btn")
+            self.assertTrue(modal.is_displayed())
+            guest_banner = self.driver.find_element(By.ID, "guestTransitionAlert")
+            self.assertTrue(guest_banner.is_displayed())
+            self.assertIn("Guest Progress Auto-Sync", guest_banner.text)
+        finally:
+            app.config['ENABLE_SSO_GUEST_MIGRATION'] = False
 
     def test_auth_modal_close_via_escape_or_button(self):
         """Verify modal closes when clicking close button or pressing Escape."""
         self.driver.get(self.base_url)
         time.sleep(0.5)
 
-        # Open modal via nav button
-        self.click_safe(By.ID, "nav-signin-btn")
-
-        wait = WebDriverWait(self.driver, 10)
-        modal = wait.until(EC.visibility_of_element_located((By.ID, "authModalBackdrop")))
+        # Open modal via nav button or passport button
+        modal = self.open_modal_safe("nav-signin-btn")
         self.assertTrue(modal.is_displayed())
 
         # Close via button
