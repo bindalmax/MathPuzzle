@@ -12,6 +12,15 @@ spec:
       labels:
         app: mathpuzzle-web
     spec:
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: timeout
+          value: "2"
+        - name: attempts
+          value: "3"
       initContainers:
       - name: db-init
         image: ghcr.io/bindalmax/mathpuzzle:latest
