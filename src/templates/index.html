@@ -1095,32 +1095,6 @@
     }
 {% endblock %}
 
-{% block scripts %}
-    {% if config.get('GOOGLE_CLIENT_ID') %}
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script>
-        function handleCredentialResponse(response) {
-            fetch('/api/auth/google', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ id_token: response.credential })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.reload();
-                } else {
-                    alert('Login failed: ' + data.message);
-                }
-            });
-        }
-    </script>
-    {% endif %}
-{% endblock %}
-
 {% block content %}
     <!-- 1. Hero Banner -->
     <section class="hero-banner">
@@ -1164,19 +1138,12 @@
                     <span>✓ Google Synced</span>
                     <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
                 </div>
-            {% elif config.get('GOOGLE_CLIENT_ID') %}
-                <div class="google-auth-passport-pill">
-                    <div id="g_id_onload"
-                         data-client_id="{{ config.get('GOOGLE_CLIENT_ID') }}"
-                         data-callback="handleCredentialResponse"
-                         data-auto_prompt="false">
-                    </div>
-                    <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="medium" data-text="signin_with"></div>
-                </div>
             {% else %}
-                <div class="auth-badge guest">
-                    <span>Guest Mode</span>
-                </div>
+                <button type="button" class="passport-auth-btn" onclick="openAuthModal()" id="passport-auth-btn" title="Sign In or Register with Google">
+                    <span class="passport-auth-icon">🔑</span>
+                    <span class="passport-auth-text">Sign In / Register</span>
+                    <span class="passport-auth-badge">Sync Stats</span>
+                </button>
             {% endif %}
         </div>
     </div>

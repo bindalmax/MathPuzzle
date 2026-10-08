@@ -1,0 +1,557 @@
+<!-- Modern Unified Sign In / Register Modal with Guest Transition Support -->
+<div id="authModalBackdrop" class="auth-modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event)">
+    <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <button type="button" class="auth-modal-close" onclick="closeAuthModal()" aria-label="Close dialog">✕</button>
+
+        <div class="auth-modal-header">
+            <div class="auth-modal-brand-badge">🧮 SharpHuman</div>
+            <h2 id="authModalTitle" class="auth-modal-title">Sign In / Register</h2>
+            <p class="auth-modal-subtitle">Save your high scores, preserve streaks, and sync your AI learning stats across all devices.</p>
+        </div>
+
+        <!-- Guest Transition Alert -->
+        <div class="guest-transition-alert" id="guestTransitionAlert">
+            <div class="transition-alert-icon">⚡</div>
+            <div class="transition-alert-body">
+                <div class="transition-alert-title">Guest Progress Auto-Sync</div>
+                <div class="transition-alert-desc">
+                    Playing as <strong id="modalGuestNameDisplay">MathWizard</strong>? Your active score, problem history, and streak will be automatically linked to your account upon signing in!
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Notification / Toast inside modal -->
+        <div id="authModalNotice" class="auth-modal-notice" style="display: none;"></div>
+
+        <!-- Provider Options (Top 3 Popular: Google, Apple, GitHub) -->
+        <div class="auth-provider-stack">
+            <!-- 1. Google (Active) -->
+            <div class="auth-provider-card active-card">
+                {% if config.get('GOOGLE_CLIENT_ID') %}
+                <div id="modalGoogleGsiWrapper">
+                    <div id="g_id_onload"
+                         data-client_id="{{ config.get('GOOGLE_CLIENT_ID') }}"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-shape="rectangular"
+                         data-theme="outline"
+                         data-text="continue_with"
+                         data-size="large"
+                         data-logo_alignment="left"
+                         data-width="340">
+                    </div>
+                </div>
+                {% else %}
+                <button type="button" class="sso-btn google-sso-btn" onclick="signInWithGoogleMock()" id="btn-google-login">
+                    <svg class="sso-icon" viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- 2. Apple (Disabled / Coming Soon) -->
+            <div class="auth-provider-card disabled-card">
+                <button type="button" class="sso-btn apple-sso-btn" onclick="notifyComingSoon('Apple')" title="Apple Sign-In is coming soon">
+                    <svg class="sso-icon" viewBox="0 0 170 170" width="18" height="18" fill="currentColor">
+                        <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.69-7.85-11.97-14.42-6.53-10.12-11.75-21.78-15.66-34.98-3.92-13.2-5.88-25.79-5.88-37.76 0-15.02 3.81-27.42 11.43-37.2 7.62-9.79 17.08-14.79 28.38-15.01 5.44 0 11.21 1.41 17.31 4.24 6.1 2.83 10.02 4.29 11.76 4.38 1.53 0 5.67-1.57 12.43-4.7 6.75-3.14 12.49-4.51 17.2-4.12 13.06.76 23.51 5.34 31.34 13.73-11.32 6.86-16.87 16.32-16.66 28.39.22 9.58 3.92 17.63 11.11 24.16 7.18 6.53 15.78 10.23 25.79 11.11-2.18 6.53-4.8 13.28-7.87 20.25zM119.22 31.84c0-7.72 2.72-15.02 8.16-21.87 5.44-6.86 12.19-11.1 20.25-12.73.22 1.09.33 2.07.33 2.94 0 7.62-2.83 15.02-8.49 22.2-5.66 7.18-12.63 11.43-20.9 12.74-.22-1.09-.35-2.18-.35-3.28z"/>
+                    </svg>
+                    <span>Continue with Apple</span>
+                    <span class="coming-soon-chip">Coming Soon</span>
+                </button>
+            </div>
+
+            <!-- 3. GitHub (Disabled / Coming Soon) -->
+            <div class="auth-provider-card disabled-card">
+                <button type="button" class="sso-btn github-sso-btn" onclick="notifyComingSoon('GitHub')" title="GitHub Sign-In is coming soon">
+                    <svg class="sso-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                    </svg>
+                    <span>Continue with GitHub</span>
+                    <span class="coming-soon-chip">Coming Soon</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="auth-modal-footer">
+            <span class="lock-icon">🔒</span>
+            <span>By continuing, you agree to our <a href="{{ url_for('terms') }}" target="_blank">Terms</a> and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a>.</span>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ===== AUTH MODAL STYLES ===== */
+.auth-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    animation: fadeInModalBackdrop 0.2s ease-out;
+}
+
+@keyframes fadeInModalBackdrop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.auth-modal-dialog {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 28px 24px 22px 24px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    position: relative;
+    box-sizing: border-box;
+    text-align: center;
+    animation: scaleInModalDialog 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleInModalDialog {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.auth-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--text-light);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.auth-modal-close:hover {
+    background: var(--paper-grid);
+    color: var(--text-color);
+}
+
+.auth-modal-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(14, 165, 233, 0.1) 100%);
+    color: var(--primary-color);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.auth-modal-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin: 4px 0 6px 0;
+    letter-spacing: -0.5px;
+    color: var(--text-color);
+}
+
+.auth-modal-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin: 0 0 16px 0;
+    line-height: 1.45;
+}
+
+/* Guest Transition Alert Banner */
+.guest-transition-alert {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.08) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+}
+
+.transition-alert-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.transition-alert-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--vibrant-orange);
+    margin-bottom: 2px;
+}
+
+.transition-alert-desc {
+    font-size: 0.78rem;
+    color: var(--text-color);
+    line-height: 1.4;
+}
+
+.transition-alert-desc strong {
+    color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.08);
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.auth-modal-notice {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+    animation: fadeInModalBackdrop 0.2s ease;
+}
+
+.auth-modal-notice.info {
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.auth-modal-notice.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Provider Stack */
+.auth-provider-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.auth-provider-card {
+    width: 100%;
+}
+
+.sso-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 16px;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-light);
+    box-sizing: border-box;
+    position: relative;
+}
+
+.google-sso-btn {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.google-sso-btn:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+    transform: translateY(-1px);
+}
+
+.apple-sso-btn {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #333333;
+    opacity: 0.65;
+    cursor: pointer;
+}
+
+body.dark-mode .apple-sso-btn {
+    background: #111827;
+    border-color: #374151;
+}
+
+.apple-sso-btn:hover {
+    opacity: 0.85;
+}
+
+.github-sso-btn {
+    background: #24292f;
+    color: #ffffff;
+    border: 1px solid #32383f;
+    opacity: 0.65;
+    cursor: pointer;
+}
+
+body.dark-mode .github-sso-btn {
+    background: #161b22;
+    border-color: #30363d;
+}
+
+.github-sso-btn:hover {
+    opacity: 0.85;
+}
+
+.sso-icon {
+    flex-shrink: 0;
+}
+
+.coming-soon-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+}
+
+.auth-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    color: var(--text-light);
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.auth-modal-footer a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Nav & Passport Trigger Styling */
+.nav-signin-btn {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0ea5e9 100%);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.nav-signin-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.nav-user-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper-grid);
+    border: 1px solid var(--border-light);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.nav-user-pill .user-name-tiny {
+    color: var(--primary-color);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-logout-link {
+    color: #ef4444 !important;
+    font-size: 0.74rem !important;
+    text-decoration: underline !important;
+    margin-left: 2px;
+    font-weight: bold;
+}
+
+.passport-auth-btn {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%);
+    color: var(--primary-color);
+    border: 1px solid rgba(79, 70, 229, 0.3);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.passport-auth-btn:hover {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0ea5e9 100%);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+}
+
+.passport-auth-badge {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+    text-transform: uppercase;
+}
+
+.passport-auth-btn:hover .passport-auth-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+</style>
+
+<script>
+function openAuthModal() {
+    const modal = document.getElementById('authModalBackdrop');
+    if (!modal) return;
+    
+    // Resolve guest display name
+    const inputEl = document.getElementById('player_name');
+    const guestName = (inputEl && inputEl.value.trim()) || 
+                      localStorage.getItem('mathpuzzle_gamer_id') || 
+                      "{{ session.get('player_name', 'Guest') }}";
+    
+    const displayEl = document.getElementById('modalGuestNameDisplay');
+    if (displayEl) {
+        displayEl.textContent = guestName;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModalBackdrop');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    const notice = document.getElementById('authModalNotice');
+    if (notice) {
+        notice.style.display = 'none';
+    }
+}
+
+function handleModalBackdropClick(e) {
+    if (e.target && e.target.id === 'authModalBackdrop') {
+        closeAuthModal();
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAuthModal();
+    }
+});
+
+function notifyComingSoon(providerName) {
+    const notice = document.getElementById('authModalNotice');
+    if (notice) {
+        notice.className = 'auth-modal-notice info';
+        notice.innerHTML = '✨ <strong>' + providerName + '</strong> sign-in is coming soon! Please continue with <strong>Google</strong> to sync your stats today.';
+        notice.style.display = 'block';
+    }
+}
+
+function handleCredentialResponse(response) {
+    const inputEl = document.getElementById('player_name');
+    const guestName = (inputEl && inputEl.value.trim()) || 
+                      localStorage.getItem('mathpuzzle_gamer_id') || 
+                      "{{ session.get('player_name', '') }}";
+    const gamerId = localStorage.getItem('mathpuzzle_gamer_id') || '';
+
+    const notice = document.getElementById('authModalNotice');
+    if (notice) {
+        notice.className = 'auth-modal-notice info';
+        notice.textContent = '🔄 Linking guest progress to your account...';
+        notice.style.display = 'block';
+    }
+
+    fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ 
+            id_token: response.credential,
+            guest_name: guestName,
+            gamer_id: gamerId
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            if (notice) {
+                notice.className = 'auth-modal-notice info';
+                notice.textContent = '✅ Synced successfully! Reloading...';
+            }
+            setTimeout(() => {
+                window.location.reload();
+            }, 400);
+        } else {
+            if (notice) {
+                notice.className = 'auth-modal-notice error';
+                notice.textContent = 'Login failed: ' + (data.message || 'Unknown error');
+            } else {
+                alert('Login failed: ' + data.message);
+            }
+        }
+    })
+    .catch(err => {
+        if (notice) {
+            notice.className = 'auth-modal-notice error';
+            notice.textContent = 'Connection error during login: ' + err;
+        }
+    });
+}
+
+function signInWithGoogleMock() {
+    const inputEl = document.getElementById('player_name');
+    const guestName = (inputEl && inputEl.value.trim()) || 
+                      localStorage.getItem('mathpuzzle_gamer_id') || 
+                      'gamer';
+    const mockToken = 'mock-' + guestName.replace(/[^a-zA-Z0-9]/g, '_');
+    handleCredentialResponse({ credential: mockToken });
+}
+</script>

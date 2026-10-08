@@ -435,6 +435,9 @@
         document.addEventListener('DOMContentLoaded', renderMath);
         window.addEventListener('load', renderMath);
     </script>
+    {% if config.get('GOOGLE_CLIENT_ID') %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    {% endif %}
     {% block scripts %}{% endblock %}
 </head>
 <body>
@@ -448,6 +451,18 @@
             <li><a href="{{ url_for('analytics') }}">📊 AI Stats</a></li>
         </ul>
         <div class="nav-controls">
+            {% if session.get('user_id') %}
+            <div class="nav-user-pill" id="nav-user-profile">
+                <span class="user-avatar-badge">🧙‍♂️</span>
+                <span class="user-name-tiny">{{ session.get('player_name', 'Verified') }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-logout-link" title="Sign Out">Logout</a>
+            </div>
+            {% else %}
+            <button type="button" class="nav-signin-btn" onclick="openAuthModal()" id="nav-signin-btn" title="Sign In or Register">
+                <span class="signin-icon">👤</span>
+                <span class="signin-text">Sign In</span>
+            </button>
+            {% endif %}
             <button id="music-toggle" class="nav-icon-btn music-btn" onclick="SoundEngine.toggleMusic()" title="Toggle Background Music">🎵</button>
             <button id="sound-toggle" class="nav-icon-btn sound-btn" onclick="SoundEngine.toggleSound()" title="Toggle Sound Effects">🔊</button>
             <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
@@ -505,5 +520,6 @@
             } catch(e) {}
         })();
     </script>
+    {% include 'components/auth_modal.html' %}
 </body>
 </html>

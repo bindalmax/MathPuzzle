@@ -3,10 +3,10 @@ REST API Resources for MathPuzzle.
 Implements endpoints for questions, answers, scoring, and multiplayer game management.
 """
 
-from flask import request, session
+from flask import request, session, current_app
 from flask_restful import Resource, reqparse
 from questions import QuestionFactory
-from database import db, Highscore, User
+from database import db, Highscore, User, UserLearningProfile, ProblemAttempt
 from highscore_manager import HighscoreManager
 from sqlalchemy.exc import IntegrityError
 from room_storage import rooms # Import shared rooms dictionary
@@ -617,7 +617,7 @@ class GoogleAuthResource(Resource):
         }
         """
         try:
-            data = request.get_json()
+            data = request.get_json() or {}
             token = data.get('id_token')
             
             if not token:
@@ -635,8 +635,11 @@ class GoogleAuthResource(Resource):
                 email = idinfo.get('email')
                 name = idinfo.get('name', email.split('@')[0] if email else 'User')
             except Exception as e:
-                # Fallback for development if token is "mock-token" or similar
-                if os.environ.get('FLASK_ENV') == 'development' and token.startswith('mock-'):
+                # Fallback for development/testing if token is "mock-token" or similar
+                is_dev_or_test = (os.environ.get('FLASK_ENV') in ['development', 'test'] or 
+                                  current_app.config.get('TESTING') or 
+                                  not GOOGLE_CLIENT_ID)
+                if is_dev_or_test and token.startswith('mock-'):
                     google_id = f"google-{token}"
                     email = f"{token}@example.com"
                     name = f"Mock {token}"
@@ -656,14 +659,77 @@ class GoogleAuthResource(Resource):
                 db.session.add(user)
                 db.session.commit()
             
-            # Store in session for Web clients
+            # ===== GUEST TO GOOGLE SSO TRANSITION =====
+            # Check for existing guest identity in request payload or active session
+            guest_name = data.get('guest_name') or session.get('player_name')
+            gamer_id = data.get('gamer_id') or session.get('gamer_id')
+            migrated_scores_count = 0
+
+            if guest_name:
+                # 1. Migrate orphan Highscores (unlinked or recorded under guest name)
+                orphan_scores = Highscore.query.filter(
+                    Highscore.user_id.is_(None),
+                    (Highscore.name == guest_name) | (Highscore.name == user.display_name)
+                ).all()
+                for score_record in orphan_scores:
+                    score_record.user_id = user.id
+                    score_record.name = user.display_name
+                    migrated_scores_count += 1
+
+                # 2. Migrate or merge AI Learning Profile
+                if guest_name != user.display_name:
+                    guest_profile = UserLearningProfile.query.filter_by(user_name=guest_name).first()
+                    user_profile = UserLearningProfile.query.filter_by(user_name=user.display_name).first()
+
+                    if guest_profile:
+                        if not user_profile:
+                            guest_profile.user_name = user.display_name
+                        else:
+                            user_profile.total_problems_attempted = (user_profile.total_problems_attempted or 0) + (guest_profile.total_problems_attempted or 0)
+                            user_profile.total_problems_correct = (user_profile.total_problems_correct or 0) + (guest_profile.total_problems_correct or 0)
+
+                            g_mastered = set(guest_profile.topics_mastered or [])
+                            u_mastered = set(user_profile.topics_mastered or [])
+                            user_profile.topics_mastered = list(u_mastered.union(g_mastered))
+
+                            g_weak = set(guest_profile.weak_topics or [])
+                            u_weak = set(user_profile.weak_topics or [])
+                            user_profile.weak_topics = list((u_weak.union(g_weak)) - set(user_profile.topics_mastered))
+
+                            if (guest_profile.total_problems_attempted or 0) > 0:
+                                user_profile.current_skill_level = (user_profile.current_skill_level + guest_profile.current_skill_level) / 2.0
+                                user_profile.preferred_difficulty = max(user_profile.preferred_difficulty, guest_profile.preferred_difficulty)
+
+                            db.session.delete(guest_profile)
+
+                    # 3. Migrate ProblemAttempt records
+                    ProblemAttempt.query.filter_by(user_name=guest_name).update({'user_name': user.display_name})
+
+                # 4. Migrate any active multiplayer rooms
+                room_id = session.get('room_id')
+                if room_id and room_id in rooms:
+                    room = rooms[room_id]
+                    if guest_name in room.get('players', []):
+                        room['players'] = [user.display_name if p == guest_name else p for p in room['players']]
+                    if guest_name in room.get('scores', {}):
+                        score_val = room['scores'].pop(guest_name)
+                        room['scores'][user.display_name] = score_val
+                    if room.get('creator') == guest_name:
+                        room['creator'] = user.display_name
+
+            db.session.commit()
+
+            # Store in session for Web clients - preserving active streak/game state
             session['user_id'] = user.id
             session['player_name'] = user.display_name
+            if gamer_id:
+                session['gamer_id'] = gamer_id
             
             return api_success({
                 'user_id': user.id,
                 'display_name': user.display_name,
-                'email': user.email
+                'email': user.email,
+                'migrated_scores': migrated_scores_count
             }), 200
             
         except Exception as e:
