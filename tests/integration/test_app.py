@@ -213,9 +213,10 @@ class TestWebApp(unittest.TestCase):
             self.assertIsNotNone(user)
 
     def test_api_google_auth_guest_migration(self):
-        """Verify that Guest high scores and profiles migrate upon Google Sign-In."""
+        """Verify that Guest high scores and profiles migrate upon Google Sign-In when feature flag is enabled."""
         from database import Highscore, UserLearningProfile, User
         os.environ['FLASK_ENV'] = 'development'
+        self.app.config['ENABLE_SSO_GUEST_MIGRATION'] = True
         
         with self.app.app_context():
             # Seed an orphan guest highscore
@@ -254,6 +255,44 @@ class TestWebApp(unittest.TestCase):
             score = Highscore.query.filter_by(user_id=user.id).first()
             self.assertIsNotNone(score)
             self.assertEqual(score.score, 100)
+        
+        self.app.config['ENABLE_SSO_GUEST_MIGRATION'] = False
+
+    def test_api_google_auth_without_guest_migration_by_default(self):
+        """Verify that Guest high scores are NOT migrated upon Google Sign-In when feature flag is disabled by default."""
+        from database import Highscore, User
+        os.environ['FLASK_ENV'] = 'development'
+        self.app.config['ENABLE_SSO_GUEST_MIGRATION'] = False
+
+        with self.app.app_context():
+            guest_score = Highscore(
+                name='GuestUnmigrated',
+                score=120,
+                category='basic',
+                difficulty='easy'
+            )
+            db.session.add(guest_score)
+            db.session.commit()
+
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = 'GuestUnmigrated'
+
+        response = self.client.post('/api/auth/google', json={
+            'id_token': 'mock-unmigrated-user',
+            'guest_name': 'GuestUnmigrated'
+        })
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data['status'], 'success')
+        self.assertEqual(data['data']['migrated_scores'], 0)
+
+        with self.app.app_context():
+            user = User.query.filter_by(google_id='google-mock-unmigrated-user').first()
+            self.assertIsNotNone(user)
+            # Highscore should NOT be linked to user
+            score = Highscore.query.filter_by(name='GuestUnmigrated').first()
+            self.assertIsNone(score.user_id)
 
     def test_api_google_auth_service_unavailable_in_production(self):
         """Verify that when Google certs fail in production, a 503 AUTH_SERVICE_UNAVAILABLE is returned."""

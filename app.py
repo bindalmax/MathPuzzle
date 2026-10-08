@@ -74,6 +74,8 @@ app.secret_key = SECRET_KEY
 
 # Google SSO Configuration
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+# Feature Flag: SSO to Guest Linking/Migration (Default: OFF per user instruction)
+app.config['ENABLE_SSO_GUEST_MIGRATION'] = os.environ.get('ENABLE_SSO_GUEST_MIGRATION', 'false').lower() in ('true', '1', 'yes')
 if app.config['GOOGLE_CLIENT_ID'] or FLASK_ENV == 'production':
     import threading
     try:
@@ -155,7 +157,10 @@ APP_VERSION = get_version()
 
 @app.context_processor
 def inject_version():
-    return dict(app_version=APP_VERSION)
+    return dict(
+        app_version=APP_VERSION,
+        enable_sso_guest_migration=app.config.get('ENABLE_SSO_GUEST_MIGRATION', False)
+    )
 
 @app.route('/version')
 def show_version():

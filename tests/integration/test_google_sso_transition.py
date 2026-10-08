@@ -19,6 +19,7 @@ class TestGoogleSSOTransition(unittest.TestCase):
         self.app.config['WTF_CSRF_ENABLED'] = False
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        self.app.config['ENABLE_SSO_GUEST_MIGRATION'] = True
         os.environ['FLASK_ENV'] = 'development'
         self.client = self.app.test_client()
         rooms.clear()
@@ -31,6 +32,7 @@ class TestGoogleSSOTransition(unittest.TestCase):
             db.session.remove()
             db.drop_all()
         rooms.clear()
+        self.app.config['ENABLE_SSO_GUEST_MIGRATION'] = False
 
     def test_guest_highscores_migration_to_google_user(self):
         """Verify that highscores recorded by a guest are transferred to the newly authenticated user."""
@@ -183,6 +185,65 @@ class TestGoogleSSOTransition(unittest.TestCase):
         self.assertEqual(rooms[room_id]['scores'][new_name], 40)
         self.assertEqual(rooms[room_id]['creator'], new_name)
 
+    def test_guest_migration_disabled_when_flag_is_off(self):
+        """Verify that when ENABLE_SSO_GUEST_MIGRATION is False, guest records and lobby are unchanged."""
+        self.app.config['ENABLE_SSO_GUEST_MIGRATION'] = False
+        guest_name = "GuestIndependent"
+
+        with self.app.app_context():
+            score = Highscore(
+                name=guest_name,
+                score=200,
+                category="calculus",
+                difficulty="hard",
+                time_taken=30.0,
+                questions_attempted=10,
+                user_id=None
+            )
+            profile = UserLearningProfile(
+                user_name=guest_name,
+                current_skill_level=0.95,
+                total_problems_attempted=20,
+                total_problems_correct=19
+            )
+            db.session.add_all([score, profile])
+            db.session.commit()
+
+        room_id = "ROOM_OFF"
+        rooms[room_id] = {
+            'players': [guest_name, 'Opponent2'],
+            'scores': {guest_name: 50, 'Opponent2': 30},
+            'creator': guest_name,
+            'is_started': False
+        }
+
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = guest_name
+            sess['room_id'] = room_id
+
+        res = self.client.post('/api/auth/google', json={
+            'id_token': 'mock-flag-off-sso',
+            'guest_name': guest_name
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        self.assertEqual(data['status'], 'success')
+        self.assertEqual(data['data']['migrated_scores'], 0)
+
+        # Highscore and profile should NOT be migrated
+        with self.app.app_context():
+            unlinked_score = Highscore.query.filter_by(name=guest_name).first()
+            self.assertIsNotNone(unlinked_score)
+            self.assertIsNone(unlinked_score.user_id)
+
+            unlinked_profile = UserLearningProfile.query.filter_by(user_name=guest_name).first()
+            self.assertIsNotNone(unlinked_profile)
+
+        # Room should still contain the original guest name
+        self.assertIn(guest_name, rooms[room_id]['players'])
+        self.assertEqual(rooms[room_id]['creator'], guest_name)
+
 
 if __name__ == '__main__':
     unittest.main()
+
