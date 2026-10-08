@@ -212,6 +212,75 @@ class TestWebApp(unittest.TestCase):
             user = User.query.filter_by(google_id='google-mock-123').first()
             self.assertIsNotNone(user)
 
+    def test_api_google_auth_guest_migration(self):
+        """Verify that Guest high scores and profiles migrate upon Google Sign-In."""
+        from database import Highscore, UserLearningProfile, User
+        os.environ['FLASK_ENV'] = 'development'
+        
+        with self.app.app_context():
+            # Seed an orphan guest highscore
+            guest_score = Highscore(
+                name='GuestPro',
+                score=100,
+                category='basic',
+                difficulty='easy'
+            )
+            guest_profile = UserLearningProfile(
+                user_name='GuestPro',
+                total_problems_attempted=10,
+                total_problems_correct=8
+            )
+            db.session.add(guest_score)
+            db.session.add(guest_profile)
+            db.session.commit()
+
+        with self.client.session_transaction() as sess:
+            sess['player_name'] = 'GuestPro'
+
+        response = self.client.post('/api/auth/google', json={
+            'id_token': 'mock-pro-user',
+            'guest_name': 'GuestPro'
+        })
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data['status'], 'success')
+        self.assertEqual(data['data']['migrated_scores'], 1)
+
+        with self.app.app_context():
+            user = User.query.filter_by(google_id='google-mock-pro-user').first()
+            self.assertIsNotNone(user)
+            # Verify highscore record is now linked to this registered user
+            score = Highscore.query.filter_by(user_id=user.id).first()
+            self.assertIsNotNone(score)
+            self.assertEqual(score.score, 100)
+
+    def test_api_google_auth_service_unavailable_in_production(self):
+        """Verify that when Google certs fail in production, a 503 AUTH_SERVICE_UNAVAILABLE is returned."""
+        from unittest.mock import patch
+        from google_auth_service import GoogleAuthServiceUnavailableError
+        
+        # Simulate production environment with configured client id
+        os.environ['FLASK_ENV'] = 'production'
+        os.environ['GOOGLE_CLIENT_ID'] = 'prod-client-id-xyz'
+
+        with patch('src.api_blueprint.api.resources.GoogleAuthService.verify_id_token') as mock_verify:
+            mock_verify.side_effect = GoogleAuthServiceUnavailableError("Failed to resolve www.googleapis.com")
+            
+            response = self.client.post('/api/auth/google', json={
+                'id_token': 'some-real-google-token'
+            })
+
+            self.assertEqual(response.status_code, 503)
+            data = response.get_json()
+            self.assertEqual(data['status'], 'error')
+            self.assertEqual(data['code'], 'AUTH_SERVICE_UNAVAILABLE')
+            self.assertIn('Authentication service is temporarily unavailable', data['message'])
+
+        # Reset environment back to development for remaining tests
+        os.environ['FLASK_ENV'] = 'development'
+        os.environ.pop('GOOGLE_CLIENT_ID', None)
+
     def test_singleplayer_time_over_transitions_to_game_over(self):
         """Verify that when time is expired in singleplayer, /game redirects to /game_over with 200 OK."""
         with self.client.session_transaction() as sess:

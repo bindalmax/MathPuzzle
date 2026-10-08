@@ -10,12 +10,14 @@ from database import db, Highscore, User, UserLearningProfile, ProblemAttempt
 from highscore_manager import HighscoreManager
 from sqlalchemy.exc import IntegrityError
 from room_storage import rooms # Import shared rooms dictionary
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+from google_auth_service import GoogleAuthService, GoogleAuthServiceUnavailableError, InvalidTokenError
+from logger import get_logger
 import uuid
 import time
 import os
 from .errors import api_success, api_error
+
+logger = get_logger('api_resources')
 
 
 class CategoriesResource(Resource):
@@ -623,28 +625,36 @@ class GoogleAuthResource(Resource):
             if not token:
                 return api_error('ID Token is required', 400, 'MISSING_TOKEN')
             
-            # In a real app, verify with Google. 
-            # For this local/demo context, we'll try to verify but provide a fallback if no Client ID is set.
+            # Verify token using resilient GoogleAuthService (caching, retries, stale fallback)
             GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+            is_dev_or_test = (os.environ.get('FLASK_ENV') in ['development', 'test'] or 
+                              current_app.config.get('TESTING') or 
+                              not GOOGLE_CLIENT_ID)
             
             try:
-                idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID)
+                idinfo = GoogleAuthService.verify_id_token(
+                    token, 
+                    audience=GOOGLE_CLIENT_ID if GOOGLE_CLIENT_ID else None,
+                    is_dev_or_test=is_dev_or_test
+                )
                 
                 # ID token is valid. Get user's Google ID from the 'sub' claim.
                 google_id = idinfo['sub']
                 email = idinfo.get('email')
                 name = idinfo.get('name', email.split('@')[0] if email else 'User')
+            except GoogleAuthServiceUnavailableError as e:
+                logger.error(f"Google auth service unavailable: {e}")
+                return api_error(
+                    'Authentication service is temporarily unavailable. Please try again in a few moments.',
+                    503,
+                    'AUTH_SERVICE_UNAVAILABLE'
+                )
+            except InvalidTokenError as e:
+                logger.warning(f"Invalid Google ID Token provided: {e}")
+                return api_error(f'Invalid ID Token: {str(e)}', 401, 'INVALID_TOKEN')
             except Exception as e:
-                # Fallback for development/testing if token is "mock-token" or similar
-                is_dev_or_test = (os.environ.get('FLASK_ENV') in ['development', 'test'] or 
-                                  current_app.config.get('TESTING') or 
-                                  not GOOGLE_CLIENT_ID)
-                if is_dev_or_test and token.startswith('mock-'):
-                    google_id = f"google-{token}"
-                    email = f"{token}@example.com"
-                    name = f"Mock {token}"
-                else:
-                    return api_error(f'Invalid ID Token: {str(e)}', 401, 'INVALID_TOKEN')
+                logger.error(f"Unexpected error verifying ID Token: {e}", exc_info=True)
+                return api_error(f'Token verification failed: {str(e)}', 401, 'INVALID_TOKEN')
 
             # Check if user exists
             user = User.query.filter_by(google_id=google_id).first()

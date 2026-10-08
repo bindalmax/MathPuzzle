@@ -74,6 +74,13 @@ app.secret_key = SECRET_KEY
 
 # Google SSO Configuration
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+if app.config['GOOGLE_CLIENT_ID'] or FLASK_ENV == 'production':
+    import threading
+    try:
+        from google_auth_service import GoogleAuthService
+        threading.Thread(target=GoogleAuthService.get_google_certs, daemon=True, name="google-certs-warm").start()
+    except Exception as e:
+        logger.warning(f"Could not initialize Google certs pre-fetch: {e}")
 
 # CSRF Protection
 csrf = CSRFProtect(app)
