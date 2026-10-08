@@ -416,6 +416,8 @@
         gap: 6px;
         text-align: left;
         font-family: inherit;
+        outline: none;
+        user-select: none;
     }
 
     .cat-chip:hover {
@@ -425,45 +427,29 @@
 
     .cat-chip.active {
         border-color: var(--primary-color);
-        background: rgba(79, 70, 229, 0.08);
-        color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.12);
+        color: var(--primary-color) !important;
+        font-weight: 700;
     }
 
-    .styled-form-select {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1.5px solid var(--border-light);
-        border-radius: 8px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-        outline: none;
-        transition: border-color 0.2s;
-        font-family: inherit;
+    body.dark-mode .cat-chip.active {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: #818cf8;
+        color: #a5b4fc !important;
     }
 
-    .styled-form-select:focus {
-        border-color: var(--primary-color);
-    }
-
+    .styled-form-select,
     .styled-number-input {
-        width: 100%;
-        margin-top: 6px;
-        padding: 8px 12px;
-        border: 1.5px solid var(--border-light);
-        border-radius: 8px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        font-size: 0.85rem;
-        font-weight: 600;
-        font-family: inherit;
-        outline: none;
-    }
-
-    .styled-number-input:focus {
-        border-color: var(--primary-color);
+        position: absolute !important;
+        opacity: 0 !important;
+        width: 20px !important;
+        height: 20px !important;
+        clip-path: polygon(0 0, 0 0, 0 0) !important;
+        z-index: -1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
     }
 
     /* Segmented Controls */
@@ -493,6 +479,13 @@
         justify-content: center;
         gap: 4px;
         font-family: inherit;
+        box-shadow: none;
+    }
+
+    .segment-btn:hover {
+        transform: none;
+        box-shadow: none;
+        color: var(--text-color);
     }
 
     .segment-btn.active {
@@ -526,6 +519,8 @@
         text-align: center;
         transition: all 0.15s;
         font-family: inherit;
+        user-select: none;
+        outline: none;
     }
 
     .preset-chip:hover {
@@ -533,9 +528,9 @@
     }
 
     .preset-chip.active {
-        background: var(--text-color);
-        color: var(--bg-color);
-        border-color: var(--text-color);
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
     }
 
     /* Launch Button */
@@ -1268,11 +1263,11 @@
                             <span class="setting-helper" id="cat-desc">Growth, discounts & change shortcuts</span>
                         </label>
                         <div class="category-pill-grid">
-                            <button type="button" class="cat-chip" data-cat="basic" onclick="selectCategoryChip('basic')">📚 Basic Math</button>
-                            <button type="button" class="cat-chip" data-cat="decimal" onclick="selectCategoryChip('decimal')">📊 Decimals</button>
-                            <button type="button" class="cat-chip active" data-cat="percentage" onclick="selectCategoryChip('percentage')">📈 Percentages</button>
-                            <button type="button" class="cat-chip" data-cat="profit" onclick="selectCategoryChip('profit')">💰 Profit & Loss</button>
-                            <button type="button" class="cat-chip" data-cat="algebra" onclick="selectCategoryChip('algebra')">🔢 Algebra</button>
+                            <div class="cat-chip" data-cat="basic" role="button" tabindex="0" onclick="selectCategoryChip('basic')">📚 Basic Math</div>
+                            <div class="cat-chip" data-cat="decimal" role="button" tabindex="0" onclick="selectCategoryChip('decimal')">📊 Decimals</div>
+                            <div class="cat-chip active" data-cat="percentage" role="button" tabindex="0" onclick="selectCategoryChip('percentage')">📈 Percentages</div>
+                            <div class="cat-chip" data-cat="profit" role="button" tabindex="0" onclick="selectCategoryChip('profit')">💰 Profit & Loss</div>
+                            <div class="cat-chip" data-cat="algebra" role="button" tabindex="0" onclick="selectCategoryChip('algebra')">🔢 Algebra</div>
                         </div>
                         <select id="category" name="category" class="styled-form-select" onchange="syncCategorySelect()">
                             <option value="basic">📚 Basic Arithmetic</option>
@@ -1313,10 +1308,10 @@
                             <button type="button" class="segment-btn" id="mode-btn-questions" onclick="selectModeType('questions')">❓ Questions</button>
                         </div>
                         <div class="presets-row" id="presets-row">
-                            <button type="button" class="preset-chip" onclick="setPresetValue(15)">15s</button>
-                            <button type="button" class="preset-chip active" onclick="setPresetValue(20)">20s (Std)</button>
-                            <button type="button" class="preset-chip" onclick="setPresetValue(45)">45s</button>
-                            <button type="button" class="preset-chip" onclick="setPresetValue(60)">60s Blitz</button>
+                            <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(15)">15s</div>
+                            <div class="preset-chip active" role="button" tabindex="0" onclick="setPresetValue(20)">20s (Std)</div>
+                            <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(45)">45s</div>
+                            <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(60)">60s Blitz</div>
                         </div>
                         <select id="mode" name="mode" class="styled-form-select" onchange="updateModeLabel()">
                             <option value="time" selected>⏱️ Time Mode</option>
@@ -1684,10 +1679,10 @@
                 if (questBtn) questBtn.classList.remove('active');
                 if (presets) {
                     presets.innerHTML = `
-                        <button type="button" class="preset-chip" onclick="setPresetValue(15)">15s</button>
-                        <button type="button" class="preset-chip ${input && input.value == 20 ? 'active' : ''}" onclick="setPresetValue(20)">20s (Std)</button>
-                        <button type="button" class="preset-chip" onclick="setPresetValue(45)">45s</button>
-                        <button type="button" class="preset-chip" onclick="setPresetValue(60)">60s Blitz</button>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(15)">15s</div>
+                        <div class="preset-chip ${input && input.value == 20 ? 'active' : ''}" role="button" tabindex="0" onclick="setPresetValue(20)">20s (Std)</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(45)">45s</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(60)">60s Blitz</div>
                     `;
                 }
             } else {
@@ -1701,10 +1696,10 @@
                 if (questBtn) questBtn.classList.add('active');
                 if (presets) {
                     presets.innerHTML = `
-                        <button type="button" class="preset-chip" onclick="setPresetValue(5)">5 Qs</button>
-                        <button type="button" class="preset-chip ${input && input.value == 10 ? 'active' : ''}" onclick="setPresetValue(10)">10 Qs (Std)</button>
-                        <button type="button" class="preset-chip" onclick="setPresetValue(20)">20 Qs</button>
-                        <button type="button" class="preset-chip" onclick="setPresetValue(50)">50 Marathon</button>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(5)">5 Qs</div>
+                        <div class="preset-chip ${input && input.value == 10 ? 'active' : ''}" role="button" tabindex="0" onclick="setPresetValue(10)">10 Qs (Std)</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(20)">20 Qs</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(50)">50 Marathon</div>
                     `;
                 }
             }
@@ -1793,6 +1788,13 @@
         window.addEventListener('pageshow', function(event) {
             if (event.persisted) {
                 window.location.reload();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target && (e.target.classList.contains('cat-chip') || e.target.classList.contains('preset-chip'))) {
+                e.preventDefault();
+                e.target.click();
             }
         });
     </script>
