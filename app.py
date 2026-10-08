@@ -59,10 +59,11 @@ app.config['WTF_CSRF_ENABLED'] = (FLASK_ENV == 'production')
 app.config['WTF_CSRF_TIME_LIMIT'] = None  # Valid for full session lifetime
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # 7 days
 
-if FLASK_ENV == 'production':
+# Session Cookie Hardening
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+if FLASK_ENV == 'production' or os.environ.get('SESSION_COOKIE_SECURE', '').lower() == 'true':
     app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Security: Hardened Secret Key management
 SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -121,6 +122,40 @@ def _before_request_handler():
     except Exception:
         # If limiter isn't available for any reason, skip toggling
         pass
+
+# Content Security Policy (CSP) Directives
+DEFAULT_CSP_DIRECTIVES = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://*.adtrafficquality.google https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net https://cdn.jsdelivr.net https://cdn.socket.io",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' ws: wss: https://accounts.google.com https://*.adtrafficquality.google https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net https://cdn.jsdelivr.net",
+    "frame-src 'self' https://accounts.google.com https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net https://*.adtrafficquality.google",
+    "object-src 'none'",
+    "base-uri 'self'",
+]
+DEFAULT_CSP_POLICY = "; ".join(DEFAULT_CSP_DIRECTIVES)
+
+# Attach Security Headers & CSP to all responses
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+
+    # Attach HSTS header on HTTPS connections, when forwarded as HTTPS, or in production
+    is_https = request.is_secure or (request.headers.get('X-Forwarded-Proto', '').lower() == 'https')
+    if is_https or (FLASK_ENV == 'production'):
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+
+    # Apply Content-Security-Policy
+    csp_header = app.config.get('CONTENT_SECURITY_POLICY', DEFAULT_CSP_POLICY)
+    if csp_header:
+        response.headers['Content-Security-Policy'] = csp_header
+
+    return response
 
 # Database Configuration
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///math_game.db')
