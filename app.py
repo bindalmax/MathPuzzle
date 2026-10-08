@@ -33,7 +33,8 @@ from flask_limiter.util import get_remote_address
 import bleach
 from questions import QuestionFactory
 from highscore_manager import HighscoreManager
-from database import init_db
+from database import init_db, db
+from sqlalchemy import text
 from logger import setup_app_logging, get_logger
 from room_storage import rooms
 from datetime import timedelta
@@ -130,6 +131,16 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Database Connection Resiliency & Pooling Options
+engine_options = {
+    'pool_pre_ping': True,
+    'pool_recycle': 1800,
+}
+if db_url.startswith("postgresql"):
+    engine_options['pool_size'] = 10
+    engine_options['max_overflow'] = 20
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
+
 # Initialize database manager and perform safe migrations
 highscore_manager = HighscoreManager(app)
 init_db(app)
@@ -153,6 +164,24 @@ def inject_version():
 @app.route('/version')
 def show_version():
     return {"version": APP_VERSION}
+
+@app.route('/health')
+@limiter.exempt
+def health_check():
+    health_status = {
+        'status': 'healthy',
+        'database': 'connected',
+        'version': APP_VERSION,
+    }
+    status_code = 200
+    try:
+        db.session.execute(text('SELECT 1'))
+    except Exception as e:
+        logger.error(f"Health check database failure: {e}")
+        health_status['status'] = 'unhealthy'
+        health_status['database'] = 'disconnected'
+        status_code = 503
+    return jsonify(health_status), status_code
 
 # Security: Restrict CORS origins
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*')

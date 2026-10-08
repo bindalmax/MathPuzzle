@@ -103,7 +103,7 @@ This checklist separates **P0 (Must-Haves for Public Preview Launch)** from **P1
 | Priority | Item | Current State | Decision / Implementation Action | Verification Criteria |
 |---|---|---|---|---|
 | **🔴 P0** | **PostgreSQL Automated Backups** | 2Gi PersistentVolumeClaim with no backup CronJob | If Hetzner node or PVC corrupts, all user accounts and learning profiles are lost. Deploy a Kubernetes `CronJob` (`k8s/base/backup-cronjob.yaml`) executing `pg_dump` daily and streaming compressed dumps to an offsite S3/Storage Box. | Automated daily `.sql.gz` dump created and tested with restore script |
-| **🔴 P0** | **Database Connection Resiliency** | Default SQLAlchemy pool | Configure `pool_pre_ping=True`, `pool_recycle=1800`, and `pool_size=10` in `app.config['SQLALCHEMY_ENGINE_OPTIONS']` to prevent stale connection drops on Hetzner K3s. | No `psycopg2.OperationalError: server closed the connection unexpectedly` under idle recovery |
+| **🔴 P0** | **Database Connection Resiliency** | Configured with `pool_pre_ping=True`, `pool_recycle=1800`, `pool_size=10` | Configure `pool_pre_ping=True`, `pool_recycle=1800`, and `pool_size=10` in `app.config['SQLALCHEMY_ENGINE_OPTIONS']` to prevent stale connection drops on Hetzner K3s. | ✅ Verified via integration test `test_sqlalchemy_engine_options_configuration` |
 | **🟡 P1** | **Multiplayer Architecture (Single-Pod vs Redis)** | `replicas: 1`, in-memory Python dictionary (`room_storage.py`) | **Decision for Preview**: Keep `replicas: 1` with 100 threads for Preview Mode (supports up to ~1,500 concurrent players).  <br>**Decision for GA Scale**: Deploy Redis pod in K3s and migrate `room_storage.py` and Flask-SocketIO `message_queue="redis://redis:6379/0"`. | Architecture document signed off; single-pod capacity benchmarks recorded |
 | **🟡 P1** | **Cluster-Wide Rate Limiting** | Flask-Limiter uses `memory://` storage | When the web pod restarts, rate limiting counts reset to zero. Point Flask-Limiter to Redis or SQLite storage once Redis is provisioned. | Limits persist across pod restarts |
 | **🟢 P2** | **Horizontal Pod Autoscaling (HPA)** | Static 1 replica | Add Kubernetes metrics-server and define HPA (`minReplicas: 2`, `maxReplicas: 10`, CPU threshold 70%). | Verified with `kubectl autoscale` |
@@ -114,7 +114,7 @@ This checklist separates **P0 (Must-Haves for Public Preview Launch)** from **P1
 
 | Priority | Item | Current State | Decision / Implementation Action | Verification Criteria |
 |---|---|---|---|---|
-| **🔴 P0** | **Kubernetes Health Probes** | Missing `livenessProbe` and `readinessProbe` in `app.yaml` | Add `@app.route('/health')` returning `{"status": "ok", "db": true}`. Add HTTP probes in `k8s/base/app.yaml`: initialDelay 10s, period 15s. Traefik will automatically stop routing traffic to unhealthy pods during restarts. | `kubectl describe pod mathpuzzle-web` shows clean probe events |
+| **🔴 P0** | **Kubernetes Health Probes** | Implemented `/health` and k8s probes in `app.yaml` | Add `@app.route('/health')` returning `{"status": "ok", "db": true}`. Add HTTP probes in `k8s/base/app.yaml`: initialDelay 10s, period 15s. Traefik will automatically stop routing traffic to unhealthy pods during restarts. | ✅ Verified via integration test `test_health_probe.py` (200 OK & 503 DB failure) |
 | **🔴 P0** | **Real-Time Error Tracking (Sentry)** | Standard logging to local file and stdout | Backend and frontend exceptions in production may go unnoticed. Integrate Sentry (`sentry-sdk[flask]`) with environment filtering (`production` only) and release tracking tied to Git SHA. | Test error sent from production triggers instant Slack/email alert |
 | **🔴 P0** | **Product & Conversion Analytics (GA4)** | AdSense tag in place, no web telemetry | Add Google Analytics 4 (GA4) or privacy-friendly Plausible/PostHog script to measure: (1) Visitor acquisition, (2) Game start rate, (3) Game completion rate, (4) Sign-in conversion rate. | Live events visible in Analytics Realtime dashboard |
 | **🟡 P1** | **Uptime Monitoring & Heartbeat** | No external uptime ping | Set up external uptime probe (BetterStack / UptimeRobot / Uptime Kuma) checking `https://sharphuman.app/health` every 60 seconds with push notifications. | Synthetic downtime test triggers notification within 2 minutes |
@@ -137,7 +137,7 @@ This checklist separates **P0 (Must-Haves for Public Preview Launch)** from **P1
 
 ### T-Minus 48 Hours:
 1. [ ] Apply security headers middleware in [app.py](file:///Users/keshavbindal/IdeaProjects/AIHandsOn/app.py) (HSTS, CSP, X-Frame-Options).
-2. [ ] Add `/health` endpoint and configure Kubernetes `livenessProbe` and `readinessProbe` in [k8s/base/app.yaml](file:///Users/keshavbindal/IdeaProjects/AIHandsOn/k8s/base/app.yaml).
+2. [x] Add `/health` endpoint and configure Kubernetes `livenessProbe` and `readinessProbe` in [k8s/base/app.yaml](file:///Users/keshavbindal/IdeaProjects/AIHandsOn/k8s/base/app.yaml).
 3. [ ] Configure PostgreSQL backup CronJob to offsite storage.
 4. [ ] Implement Sentry and GA4 measurement ID in production environment.
 5. [ ] Implement 3-minute TTL caching on `/leaderboard`.
