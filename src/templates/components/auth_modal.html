@@ -9,7 +9,8 @@
             <p class="auth-modal-subtitle">Save your high scores, preserve streaks, and sync your AI learning stats across all devices.</p>
         </div>
 
-        <!-- Guest Transition Alert -->
+        {% if enable_sso_guest_migration %}
+        <!-- Guest Transition Alert (Feature Flagged) -->
         <div class="guest-transition-alert" id="guestTransitionAlert">
             <div class="transition-alert-icon">⚡</div>
             <div class="transition-alert-body">
@@ -19,6 +20,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Feedback Notification / Toast inside modal -->
         <div id="authModalNotice" class="auth-modal-notice" style="display: none;"></div>
@@ -494,6 +496,7 @@ function notifyComingSoon(providerName) {
 }
 
 function handleCredentialResponse(response) {
+    const enableGuestMigration = {{ 'true' if enable_sso_guest_migration else 'false' }};
     const inputEl = document.getElementById('player_name');
     const guestName = (inputEl && inputEl.value.trim()) || 
                       localStorage.getItem('mathpuzzle_gamer_id') || 
@@ -503,8 +506,16 @@ function handleCredentialResponse(response) {
     const notice = document.getElementById('authModalNotice');
     if (notice) {
         notice.className = 'auth-modal-notice info';
-        notice.textContent = '🔄 Linking guest progress to your account...';
+        notice.textContent = enableGuestMigration ? '🔄 Linking guest progress to your account...' : '🔄 Signing in with Google...';
         notice.style.display = 'block';
+    }
+
+    const payload = { 
+        id_token: response.credential 
+    };
+    if (enableGuestMigration) {
+        payload.guest_name = guestName;
+        payload.gamer_id = gamerId;
     }
 
     fetch('/api/auth/google', {
@@ -513,18 +524,14 @@ function handleCredentialResponse(response) {
             'Content-Type': 'application/json',
             'X-CSRFToken': '{{ csrf_token() }}'
         },
-        body: JSON.stringify({ 
-            id_token: response.credential,
-            guest_name: guestName,
-            gamer_id: gamerId
-        })
+        body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(data => {
         if (data.status === 'success') {
             if (notice) {
                 notice.className = 'auth-modal-notice info';
-                notice.textContent = '✅ Synced successfully! Reloading...';
+                notice.textContent = enableGuestMigration ? '✅ Synced successfully! Reloading...' : '✅ Signed in successfully! Reloading...';
             }
             setTimeout(() => {
                 window.location.reload();

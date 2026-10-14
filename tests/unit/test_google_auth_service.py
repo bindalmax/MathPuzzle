@@ -64,11 +64,49 @@ class TestGoogleAuthService(unittest.TestCase):
             certs = GoogleAuthService.get_google_certs(force_refresh=True)
             self.assertEqual(certs, fake_certs)
 
-    def test_service_unavailable_when_no_cache_and_network_fails(self):
-        """Verify that GoogleAuthServiceUnavailableError is raised if network fails without cache."""
+    def test_cold_start_dns_failure_falls_back_to_bundled_certs(self):
+        """Verify that when DNS fails on a cold start, bundled certs are loaded instead of raising 503."""
         GoogleAuthService.reset_cache()
+        bundled_data = {'bundled_key': 'bundled_cert'}
+
+        with patch.object(GoogleAuthService, '_create_http_session') as mock_session_factory, \
+             patch.object(GoogleAuthService, '_load_bundled_certs', return_value=bundled_data):
+            mock_session = MagicMock()
+            mock_session.get.side_effect = Exception("Failed to resolve 'www.googleapis.com'")
+            mock_session_factory.return_value = mock_session
+
+            certs = GoogleAuthService.get_google_certs()
+            self.assertEqual(certs, bundled_data)
+            self.assertIsNotNone(GoogleAuthService._certs_cache)
+
+    def test_primary_endpoint_failure_fails_over_to_secondary(self):
+        """Verify that if primary cert URL fails, it automatically tries the secondary endpoint."""
+        GoogleAuthService.reset_cache()
+        fake_certs = {'secondary_key': 'secondary_cert'}
 
         with patch.object(GoogleAuthService, '_create_http_session') as mock_session_factory:
+            mock_session = MagicMock()
+            # Primary fails, secondary succeeds
+            res_primary = MagicMock()
+            res_primary.status_code = 500
+            res_secondary = MagicMock()
+            res_secondary.status_code = 200
+            res_secondary.json.return_value = fake_certs
+            res_secondary.headers = {'Cache-Control': 'max-age=3600'}
+
+            mock_session.get.side_effect = [res_primary, res_secondary]
+            mock_session_factory.return_value = mock_session
+
+            certs = GoogleAuthService.get_google_certs()
+            self.assertEqual(certs, fake_certs)
+            self.assertEqual(mock_session.get.call_count, 2)
+
+    def test_service_unavailable_when_no_cache_no_bundle_and_network_fails(self):
+        """Verify that GoogleAuthServiceUnavailableError is raised if network fails without cache and without bundled fallback."""
+        GoogleAuthService.reset_cache()
+
+        with patch.object(GoogleAuthService, '_create_http_session') as mock_session_factory, \
+             patch.object(GoogleAuthService, '_load_bundled_certs', return_value=None):
             mock_session = MagicMock()
             mock_session.get.side_effect = Exception("Failed to resolve 'www.googleapis.com'")
             mock_session_factory.return_value = mock_session

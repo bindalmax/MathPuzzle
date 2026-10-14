@@ -627,9 +627,11 @@ class GoogleAuthResource(Resource):
             
             # Verify token using resilient GoogleAuthService (caching, retries, stale fallback)
             GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+            allow_offline = os.environ.get('GOOGLE_AUTH_OFFLINE_FALLBACK', 'false').lower() in ('true', '1', 'yes')
             is_dev_or_test = (os.environ.get('FLASK_ENV') in ['development', 'test'] or 
                               current_app.config.get('TESTING') or 
-                              not GOOGLE_CLIENT_ID)
+                              not GOOGLE_CLIENT_ID or
+                              allow_offline)
             
             try:
                 idinfo = GoogleAuthService.verify_id_token(
@@ -669,13 +671,16 @@ class GoogleAuthResource(Resource):
                 db.session.add(user)
                 db.session.commit()
             
-            # ===== GUEST TO GOOGLE SSO TRANSITION =====
-            # Check for existing guest identity in request payload or active session
-            guest_name = data.get('guest_name') or session.get('player_name')
+            # ===== GUEST TO GOOGLE SSO TRANSITION (FEATURE FLAGGED - OFF BY DEFAULT) =====
+            enable_guest_linking = (
+                current_app.config.get('ENABLE_SSO_GUEST_MIGRATION', False) or 
+                (os.environ.get('ENABLE_SSO_GUEST_MIGRATION', 'false').lower() in ('true', '1', 'yes'))
+            )
+            guest_name = (data.get('guest_name') or session.get('player_name')) if enable_guest_linking else None
             gamer_id = data.get('gamer_id') or session.get('gamer_id')
             migrated_scores_count = 0
 
-            if guest_name:
+            if enable_guest_linking and guest_name:
                 # 1. Migrate orphan Highscores (unlinked or recorded under guest name)
                 orphan_scores = Highscore.query.filter(
                     Highscore.user_id.is_(None),
