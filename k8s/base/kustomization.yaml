@@ -1,0 +1,9 @@
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - issuer.yaml
+  - app.yaml
+  - ingress.yaml
+  - selfsigned-issuer.yaml
+
+namespace: mathpuzzle

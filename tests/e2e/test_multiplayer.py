@@ -13,6 +13,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from app import app, socketio, rooms
 
+def get_free_port():
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
 class TestMultiplayerE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -21,17 +27,24 @@ class TestMultiplayerE2E(unittest.TestCase):
         with app.app_context():
             from database import db
             db.create_all()
+        cls.port = get_free_port()
         # Run the Flask app with SocketIO in a separate thread
-        cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': 5005, 'debug': False, 'allow_unsafe_werkzeug': True})
+        cls.server_thread = threading.Thread(target=socketio.run, args=(app,), kwargs={'port': cls.port, 'debug': False, 'allow_unsafe_werkzeug': True})
         cls.server_thread.daemon = True
         cls.server_thread.start()
         time.sleep(2)
 
     def setUp(self):
-        self.base_url = "http://127.0.0.1:5005/"
+        self.base_url = f"http://127.0.0.1:{self.port}/"
         self.drivers = []
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless=new')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        
         for _ in range(2):
-            driver = webdriver.Chrome()
+            driver = webdriver.Chrome(options=options)
             driver.implicitly_wait(5)
             self.drivers.append(driver)
         # Ensure a clean state for each test
@@ -40,6 +53,21 @@ class TestMultiplayerE2E(unittest.TestCase):
     def tearDown(self):
         for driver in self.drivers:
             driver.quit()
+
+    def click_safe(self, driver, by, value, retries=5):
+        """Helper to click an element that might go stale during PWA service worker initialization."""
+        for i in range(retries):
+            try:
+                element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((by, value)))
+                try:
+                    element.click()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", element)
+                return
+            except Exception:
+                if i == retries - 1:
+                    raise
+                time.sleep(1)
 
     def test_multiplayer_sync_and_independence(self):
         """Test question synchronization and individual game end."""
@@ -51,25 +79,23 @@ class TestMultiplayerE2E(unittest.TestCase):
 
         # 1. Player 1 creates lobby
         p1.get(self.base_url)
-        # Multiplayer is default now, so just fill name and create
-        p1.find_element(By.ID, "player_name").send_keys("Host")
-        p1.find_element(By.ID, "start_btn").click()
+        wait1.until(EC.presence_of_element_located((By.ID, "player_name"))).send_keys("Host")
+        self.click_safe(p1, By.ID, "start_btn")
         wait1.until(EC.url_contains("multiplayer_lobby"))
 
         # 2. Player 2 joins
         p2.get(self.base_url)
-        wait2.until(EC.presence_of_element_located((By.CLASS_NAME, "room-item")))
-        room_item = p2.find_element(By.CLASS_NAME, "room-item")
+        room_item = wait2.until(EC.presence_of_element_located((By.CLASS_NAME, "room-item")))
         room_item.find_element(By.NAME, "player_name").send_keys("Guest")
-        room_item.find_element(By.XPATH, ".//button[contains(text(), 'Join')]").click()
+        self.click_safe(p2, By.XPATH, "//button[contains(text(), 'Join')]")
         wait2.until(EC.url_contains("multiplayer_lobby"))
 
         # 3. Start Game
-        wait1.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Start Game')]"))).click()
+        self.click_safe(p1, By.XPATH, "//button[contains(text(), 'Start Game')]")
         wait1.until(EC.url_contains("game"))
         wait2.until(EC.url_contains("game"))
 
-        # 4. Verify Sync (Using new .question-box p selector)
+        # 4. Verify Sync (Using .question-box p selector)
         q1 = p1.find_element(By.CSS_SELECTOR, ".question-box p").text
         q2 = p2.find_element(By.CSS_SELECTOR, ".question-box p").text
         self.assertEqual(q1, q2, "Questions are not synchronized!")

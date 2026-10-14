@@ -2,6 +2,12 @@ import random
 from fractions import Fraction
 from .base import Question
 
+def format_fraction(f: Fraction) -> str:
+    return f"\\frac{{{f.numerator}}}{{{f.denominator}}}"
+
+def format_mixed(whole: int, f: Fraction) -> str:
+    return f"{whole}\\frac{{{f.numerator}}}{{{f.denominator}}}"
+
 class DecimalFractionQuestion(Question):
     def generate(self, difficulty):
         question = ""
@@ -31,11 +37,11 @@ class DecimalFractionQuestion(Question):
 
                 if operator == '+':
                     result_fraction = f1 + f2
-                    question = f"What is {f1} + {f2}? (Answer as decimal, round to 2 places) "
+                    question = f"What is \\({format_fraction(f1)} + {format_fraction(f2)}\\)? (Answer as decimal, round to 2 places) "
                 else:
                     if f1 < f2: f1, f2 = f2, f1
                     result_fraction = f1 - f2
-                    question = f"What is {f1} - {f2}? (Answer as decimal, round to 2 places) "
+                    question = f"What is \\({format_fraction(f1)} - {format_fraction(f2)}\\)? (Answer as decimal, round to 2 places) "
                 
                 answer = round(float(result_fraction), 2)
 
@@ -69,17 +75,16 @@ class DecimalFractionQuestion(Question):
 
                 if operator == '+':
                     result_fraction = f1 + f2
-                    question = f"What is {f1} + {f2}? (Answer as decimal, round to 2 places) "
                 elif operator == '-':
                     if f1 < f2: f1, f2 = f2, f1
                     result_fraction = f1 - f2
-                    question = f"What is {f1} - {f2}? (Answer as decimal, round to 2 places) "
                 elif operator == '*':
                     result_fraction = f1 * f2
-                    question = f"What is {f1} * {f2}? (Answer as decimal, round to 2 places) "
                 else: # '/'
                     result_fraction = f1 / f2
-                    question = f"What is {f1} / {f2}? (Answer as decimal, round to 2 places) "
+
+                op_symbol = '\\times' if operator == '*' else ('\\div' if operator == '/' else operator)
+                question = f"What is \\({format_fraction(f1)} {op_symbol} {format_fraction(f2)}\\)? (Answer as decimal, round to 2 places) "
                 answer = round(float(result_fraction), 2)
 
             else: # mixed
@@ -93,17 +98,16 @@ class DecimalFractionQuestion(Question):
 
                 if operator == '+':
                     result = mixed1 + mixed2
-                    question = f"What is {whole1} {frac1} + {whole2} {frac2}? (Answer as decimal, round to 2 places) "
                 elif operator == '-':
                     if mixed1 < mixed2: mixed1, mixed2, whole1, frac1, whole2, frac2 = mixed2, mixed1, whole2, frac2, whole1, frac1
                     result = mixed1 - mixed2
-                    question = f"What is {whole1} {frac1} - {whole2} {frac2}? (Answer as decimal, round to 2 places) "
                 elif operator == '*':
                     result = mixed1 * mixed2
-                    question = f"What is {whole1} {frac1} * {whole2} {frac2}? (Answer as decimal, round to 2 places) "
                 else: # '/'
                     result = mixed1 / mixed2
-                    question = f"What is {whole1} {frac1} / {whole2} {frac2}? (Answer as decimal, round to 2 places) "
+
+                op_symbol = '\\times' if operator == '*' else ('\\div' if operator == '/' else operator)
+                question = f"What is \\({format_mixed(whole1, frac1)} {op_symbol} {format_mixed(whole2, frac2)}\\)? (Answer as decimal, round to 2 places) "
                 answer = round(float(result), 2)
 
         elif difficulty == 'hard':
@@ -136,17 +140,16 @@ class DecimalFractionQuestion(Question):
 
                 if operator == '+':
                     result_fraction = f1 + f2
-                    question = f"What is {f1} + {f2}? (Answer as decimal, round to 2 places) "
                 elif operator == '-':
                     if f1 < f2: f1, f2 = f2, f1
                     result_fraction = f1 - f2
-                    question = f"What is {f1} - {f2}? (Answer as decimal, round to 2 places) "
                 elif operator == '*':
                     result_fraction = f1 * f2
-                    question = f"What is {f1} * {f2}? (Answer as decimal, round to 2 places) "
                 else: # '/'
                     result_fraction = f1 / f2
-                    question = f"What is {f1} / {f2}? (Answer as decimal, round to 2 places) "
+
+                op_symbol = '\\times' if operator == '*' else ('\\div' if operator == '/' else operator)
+                question = f"What is \\({format_fraction(f1)} {op_symbol} {format_fraction(f2)}\\)? (Answer as decimal, round to 2 places) "
                 answer = round(float(result_fraction), 2)
 
             else: # mixed
@@ -160,17 +163,16 @@ class DecimalFractionQuestion(Question):
 
                 if operator == '+':
                     result = mixed1 + mixed2
-                    question = f"What is {whole1} {frac1} + {whole2} {frac2}? (Answer as decimal, round to 2 places) "
                 elif operator == '-':
                     if mixed1 < mixed2: mixed1, mixed2, whole1, frac1, whole2, frac2 = mixed2, mixed1, whole2, frac2, whole1, frac1
                     result = mixed1 - mixed2
-                    question = f"What is {whole1} {frac1} - {whole2} {frac2}? (Answer as decimal, round to 2 places) "
                 elif operator == '*':
                     result = mixed1 * mixed2
-                    question = f"What is {whole1} {frac1} * {whole2} {frac2}? (Answer as decimal, round to 2 places) "
                 else: # '/'
                     result = mixed1 / mixed2
-                    question = f"What is {whole1} {frac1} / {whole2} {frac2}? (Answer as decimal, round to 2 places) "
+
+                op_symbol = '\\times' if operator == '*' else ('\\div' if operator == '/' else operator)
+                question = f"What is \\({format_mixed(whole1, frac1)} {op_symbol} {format_mixed(whole2, frac2)}\\)? (Answer as decimal, round to 2 places) "
                 answer = round(float(result), 2)
         else:
             raise NotImplementedError(f"Decimal and Fraction questions for {difficulty} difficulty are not yet implemented.")

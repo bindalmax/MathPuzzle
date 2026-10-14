@@ -37,11 +37,81 @@
         function startGame() {
             socket.emit('start_game_request', { room: roomId });
         }
+
+        function shareLobby() {
+            const shareData = {
+                title: 'MathPuzzle Challenge',
+                text: `Challenge me in a MathPuzzle! Join my lobby with code: ${roomId}`,
+                url: window.location.origin + "/join/" + roomId
+            };
+
+            if (navigator.share) {
+                navigator.share(shareData).catch(err => console.log('Error sharing', err));
+            } else {
+                copyLink();
+            }
+        }
+
+        function toggleQR() {
+            const container = document.getElementById('qr-container');
+            const img = document.getElementById('qr-image');
+            const btn = document.getElementById('qr-btn');
+            
+            if (container.style.display === 'none' || container.style.display === '') {
+                const inviteUrl = encodeURIComponent(window.location.origin + "/join/" + roomId);
+                img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${inviteUrl}`;
+                container.style.display = 'flex';
+                btn.textContent = "✖ Close QR Code";
+            } else {
+                container.style.display = 'none';
+                btn.textContent = "🔳 Show QR Code";
+            }
+        }
+
+        function copyLink() {
+            const link = window.location.origin + "/join/" + roomId;
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.getElementById('copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = "✅ Link Copied!";
+                btn.style.background = "#10b981";
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = "#64748b";
+                }, 2000);
+            });
+        }
     </script>
 {% endblock %}
 
 {% block content %}
     <h1>Multiplayer Lobby</h1>
+    
+    <!-- Invite Center -->
+    <section class="setup-box" style="margin-bottom: 30px; border: 2px dashed #cbd5e1; background: #f8fafc;">
+        <h2 style="font-size: 1.1rem; color: #64748b; margin-bottom: 10px;">Invite Friends</h2>
+        <div style="font-family: 'Fira Code', monospace; font-size: 2rem; font-weight: 800; letter-spacing: 4px; color: var(--primary-color); margin-bottom: 15px;">
+            {{ session.get('room_id', '') }}
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px; margin: 0 auto;">
+            <button id="share-btn" onclick="shareLobby()" style="background: var(--secondary-color); font-size: 0.9rem;">
+                📱 Invite via WhatsApp / SMS
+            </button>
+            <button id="qr-btn" onclick="toggleQR()" style="background: var(--vibrant-purple); font-size: 0.9rem;">
+                🔳 Show QR Code
+            </button>
+            <button id="copy-btn" onclick="copyLink()" style="background: #64748b; font-size: 0.9rem;">
+                🔗 Copy Invite Link
+            </button>
+        </div>
+
+        <div id="qr-container" style="display:none; margin-top: 20px; padding: 15px; background: white; border-radius: 12px; display: none; flex-direction: column; align-items: center;">
+            <img id="qr-image" src="" alt="Lobby QR Code" style="width: 180px; height: 180px; border: 10px solid white;">
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 10px;">Friends can scan this to join!</p>
+        </div>
+    </section>
+
     <p style="color:#666; font-style:italic;">Waiting for players to join...</p>
 
     <section style="margin: 30px 0; text-align: left; background: #f9f9f9; padding: 20px; border-radius: 8px;">
@@ -64,4 +134,4 @@
     <p style="margin-top: 40px;">
         <a href="{{ url_for('quit_game') }}" style="color:var(--error-color); text-decoration:none;">Leave Lobby</a>
     </p>
-{% endblock %}
+    {% endblock %}

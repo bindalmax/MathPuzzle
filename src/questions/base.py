@@ -15,48 +15,46 @@ class Question(ABC):
 
     def generate_choices(self, correct_answer, is_integer=True):
         """Generates 3 distractors and returns a shuffled list of 4 choices.
-
-        This implementation guards against infinite loops when random-generated
-        distractors collide with the correct answer or each other. It will
-        attempt randomized distractors a limited number of times and then
-        fall back to deterministic offsets.
         """
+        # Normalize correct_answer to int or float based on is_integer
+        if is_integer:
+            correct_answer = int(correct_answer)
+        else:
+            correct_answer = float(correct_answer)
+
         choices = {correct_answer}
         attempts = 0
-        # Try randomized distractors but limit attempts to avoid exhausting
-        # patched side_effect sequences during unit tests.
         while len(choices) < 4 and attempts < 10:
             attempts += 1
-            try:
-                if is_integer:
-                    # Generate a close number
-                    offset = random.choice([-1, 1]) * random.randint(1, 10)
-                    distractor = correct_answer + offset
-                else:
-                    # Float logic
-                    offset = random.choice([-1, 1]) * random.uniform(0.1, 5.0)
-                    # handle weird types that may be returned by patched choice()
-                    try:
-                        distractor = round(float(correct_answer) + float(offset), 2)
-                    except Exception:
-                        distractor = round(correct_answer + offset, 2)
-                choices.add(distractor)
-            except StopIteration:
-                # Mock side_effect exhausted in tests — break and fill deterministically
-                break
+            if is_integer:
+                offset = random.choice([-1, 1]) * random.randint(1, 10)
+                distractor = int(correct_answer) + offset
+            else:
+                offset = random.choice([-1, 1]) * random.uniform(0.1, 5.0)
+                distractor = round(float(correct_answer) + float(offset), 2)
+            choices.add(distractor)
 
-        # If still short (due to collisions or early stop), fill deterministically without
-        # calling random functions to keep behavior stable for tests.
+        # Fill deterministically
         i = 1
         while len(choices) < 4:
             if is_integer:
-                distractor = correct_answer + i
+                distractor = int(correct_answer) + i
             else:
-                distractor = round(correct_answer + i * 0.5, 2)
+                distractor = round(float(correct_answer) + i * 0.5, 2)
             choices.add(distractor)
             i += 1
 
-        choices_list = list(choices)
+        # Final formatting: ensure all choices are consistent
+        if not is_integer:
+            formatted_choices = [float(f"{c:.2f}") for c in choices]
+            choices_list = list(set(formatted_choices))
+        else:
+            choices_list = [int(c) for c in choices]
+            
+        # Ensure we always have 4 choices even if set resulted in fewer
+        while len(choices_list) < 4:
+            choices_list.append(choices_list[-1] + (1 if is_integer else 0.5))
+
         random.shuffle(choices_list)
         return choices_list
 
@@ -74,6 +72,7 @@ class QuestionFactory:
         from .percentage import PercentageQuestion
         from .profit_loss import ProfitLossQuestion
         from .algebra import AlgebraQuestion
+        from .startup import StartupQuestion
 
         # Support both short keys and API-friendly names
         categories = {
@@ -82,12 +81,30 @@ class QuestionFactory:
             "decimal": DecimalFractionQuestion,
             "decimal_fraction": DecimalFractionQuestion,
             "percentage": PercentageQuestion,
+            "profit": ProfitLossQuestion,
             "profit_loss": ProfitLossQuestion,
             "algebra": AlgebraQuestion,
+            "startup": StartupQuestion,
         }
         return categories.get(self.category)
 
     def create_question(self):
         if not self.question_class:
             raise ValueError("Invalid question category selected.")
-        return self.question_class().generate(self.difficulty)
+        
+        # Ensure difficulty is a string key for the question classes
+        # Question classes currently expect 'easy', 'medium', or 'hard'
+        diff_key = self.difficulty
+        if isinstance(diff_key, (int, float)):
+            if diff_key <= 0.7:
+                diff_key = 'easy'
+            elif diff_key <= 1.5:
+                diff_key = 'medium'
+            else:
+                diff_key = 'hard'
+        elif isinstance(diff_key, str):
+            diff_key = diff_key.lower()
+            if diff_key not in ['easy', 'medium', 'hard']:
+                diff_key = 'medium' # Default
+            
+        return self.question_class().generate(diff_key)

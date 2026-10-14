@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - MathPuzzle{% endblock %}
+
+{% block extra_style %}
+    .policy-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        text-align: left;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        line-height: 1.7;
+    }
+
+    .policy-container h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .policy-container .last-updated {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 1rem;
+    }
+
+    .policy-container h2 {
+        font-size: 1.3rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-color);
+    }
+
+    .policy-container p, .policy-container ul {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+
+    .policy-container ul {
+        padding-left: 1.5rem;
+    }
+
+    .policy-container li {
+        margin-bottom: 0.5rem;
+    }
+
+    .policy-container a {
+        color: var(--primary-color);
+        text-decoration: underline;
+    }
+
+    .policy-container .highlight-box {
+        background: rgba(79, 70, 229, 0.05);
+        border-left: 4px solid var(--primary-color);
+        padding: 1rem 1.25rem;
+        border-radius: 0 8px 8px 0;
+        margin: 1.5rem 0;
+    }
+
+    .back-nav {
+        margin-top: 2.5rem;
+        text-align: center;
+    }
+
+    .back-nav a {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white !important;
+        text-decoration: none !important;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: transform 0.2s;
+    }
+
+    .back-nav a:hover {
+        transform: translateY(-2px);
+    }
+{% endblock %}
+
+{% block content %}
+<div class="policy-container">
+    <h1>Privacy Policy</h1>
+    <div class="last-updated">Last Updated: October 4, 2026</div>
+
+    <p>Welcome to <strong>MathPuzzle</strong> (operated at <a href="https://sharphuman.app/">sharphuman.app</a>). We are committed to protecting your privacy and providing a safe, educational, and engaging environment. This Privacy Policy explains how information is collected, used, and safeguarded when you use our website and Progressive Web Application (PWA).</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>We believe in data minimization. You do not need to create an account or provide personal information like email addresses or real names to play MathPuzzle.</p>
+    <ul>
+        <li><strong>Gamer Identifier (GamerId):</strong> An anonymous nickname you choose or that is randomly generated (e.g., <code>MathWizard42</code>). This is stored locally on your device and linked to your gameplay scores.</li>
+        <li><strong>Gameplay Data:</strong> Problem attempts, accuracy rates, problem solving times, high scores, and adaptive difficulty skill levels to power our AI learning engine and global leaderboard.</li>
+        <li><strong>Technical Information:</strong> Standard server logs including IP address, browser type, device information, and timestamps used solely for security, abuse prevention, and rate-limiting purposes.</li>
+    </ul>
+
+    <h2>2. Cookies and Local Storage</h2>
+    <p>MathPuzzle uses cookies and local browser storage (<code>localStorage</code>) to enable essential website functionality:</p>
+    <ul>
+        <li><strong>Essential Session Cookies:</strong> Secure, HttpOnly session cookies used to preserve game state across turns, handle multiplayer room synchronization, and protect against Cross-Site Request Forgery (CSRF).</li>
+        <li><strong>Local Storage:</strong> Storing your preferred GamerId, dark mode preference, and audio settings so you do not have to reconfigure them each time you visit.</li>
+    </ul>
+
+    <div class="highlight-box">
+        <h3>3. Google AdSense & Third-Party Advertising</h3>
+        <p>We use <strong>Google AdSense</strong> to serve non-intrusive advertisements on our website. Please note the following regarding Google advertising:</p>
+        <ul>
+            <li>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to this website or other websites.</li>
+            <li>Google's use of advertising cookies enables it and its partners to serve ads to users based on their visit to this site and/or other sites on the Internet.</li>
+            <li>Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
+            <li>Alternatively, users can opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer">aboutads.info</a>.</li>
+        </ul>
+    </div>
+
+    <h2>4. Children's Privacy</h2>
+    <p>MathPuzzle is designed as a family-friendly educational platform for all ages. We do not knowingly collect, store, or solicit personally identifiable information from children under the age of 13. If you believe personal information of a minor has been collected, please contact us so we can immediately delete it.</p>
+
+    <h2>5. GDPR and CCPA / State Privacy Rights</h2>
+    <p>If you reside in the European Economic Area (EEA), UK, or California, you are entitled to certain privacy rights:</p>
+    <ul>
+        <li><strong>Access & Portability:</strong> You may request information about the data we hold relating to your session.</li>
+        <li><strong>Deletion:</strong> You may clear your game data at any time by clearing your browser's local storage and cookies, or by clicking "Reset Data" in settings.</li>
+        <li><strong>Opt-Out of Sale:</strong> We do not sell any personal information to third parties.</li>
+    </ul>
+
+    <h2>6. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Any updates will be reflected on this page with an updated "Last Updated" date.</p>
+
+    <h2>7. Contact Us</h2>
+    <p>If you have any questions, feedback, or concerns regarding this Privacy Policy, please reach out to us at:</p>
+    <p><strong>Email:</strong> <a href="mailto:support@sharphuman.app">support@sharphuman.app</a><br>
+    <strong>Website:</strong> <a href="https://sharphuman.app/">https://sharphuman.app</a></p>
+
+    <div class="back-nav">
+        <a href="{{ url_for('index') }}">← Back to MathPuzzle</a>
+    </div>
+</div>
+{% endblock %}

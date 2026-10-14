@@ -4,24 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MathPuzzle{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8821650129943864"
+            crossorigin="anonymous"></script>
+    <link rel="manifest" href="/manifest.json?v={{ app_version }}">
+    <meta name="theme-color" content="#4f46e5">
+    <!-- iOS support -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MathPuzzle">
+    <meta name="google-adsense-account" content="ca-pub-8821650129943864">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ app_version }}">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Lexend:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- KaTeX Mathematical Notation -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous" onload="renderMath()"></script>
     <style>
         :root {
-            --primary-color: #4f46e5; /* Vibrant Indigo */
-            --accent-color: #0ea5e9;  /* Bright Sky Blue */
-            --secondary-color: #10b981; /* Fresh Emerald */
-            --bg-color: #f8fafc;      /* Soft Slate Background */
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --accent-color: #0ea5e9;
+            --bg-color: #f8fafc;
             --card-bg: #ffffff;
-            --text-color: #1e293b;    /* Deep Slate Text */
-            --error-color: #f43f5e;   /* Rose Red */
-            --chalkboard-bg: #334155; /* Refined Slate Chalkboard */
-            --paper-grid: #e2e8f0;    /* Visible Grid lines */
+            --text-color: #1e293b;
+            --text-light: #64748b;
+            --error-color: #f43f5e;
+            --chalkboard-bg: #334155;
+            --paper-grid: #e2e8f0;
             --vibrant-purple: #8b5cf6;
             --vibrant-orange: #f59e0b;
             --header-gradient: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+            --border-light: #e2e8f0;
         }
+
+        body.dark-mode {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-light: #94a3b8;
+            --paper-grid: #334155;
+            --border-light: #334155;
+        }
+
         * { box-sizing: border-box; }
+        
         body {
             font-family: 'Lexend', sans-serif;
             line-height: 1.6;
@@ -33,20 +60,106 @@
             background-size: 25px 25px;
             color: var(--text-color);
             margin: 0;
-            padding: 10px;
+            padding: 0;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
+
+        /* ===== NAVIGATION ===== */
+        nav {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.25rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .dark-mode-toggle,
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: var(--text-color);
+        }
+
+        .dark-mode-toggle:hover,
+        .nav-icon-btn:hover {
+            background-color: var(--paper-grid);
+        }
+
+        .nav-icon-btn.active {
+            color: white;
+        }
+        .nav-icon-btn.sound-btn.active {
+            background: var(--secondary-color);
+        }
+        .nav-icon-btn.music-btn.active {
+            background: var(--vibrant-purple);
+        }
+
         .main-container {
             width: 100%;
             max-width: 1000px;
             margin: 20px auto;
             background: var(--card-bg);
             padding: 35px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(79, 70, 229, 0.1);
-            border: 1px solid var(--paper-grid);
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-light);
             position: relative;
             overflow: hidden;
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         @keyframes float {
@@ -69,13 +182,9 @@
         .decor-4 { bottom: 40%; left: 10px; animation-delay: 6s; font-size: 3.5rem; }
 
         .sound-controls {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 12px;
+            display: none;
         }
+        
         .control-group {
             display: flex;
             flex-direction: column;
@@ -86,21 +195,21 @@
             font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: #94a3b8;
+            color: var(--text-light);
             letter-spacing: 0.5px;
         }
         .icon-btn {
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-color);
+            border: 1px solid var(--border-light);
             border-radius: 12px;
-            width: 46px;
-            height: 46px;
+            width: 42px;
+            height: 42px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
@@ -119,34 +228,50 @@
         }
 
         h1, h2, h3 {
-            color: #0f172a;
+            color: var(--text-color);
             font-weight: 800;
             margin-top: 0;
         }
 
         button, input, select {
-            min-height: 50px;
+            min-height: 48px;
             font-size: 16px;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border-light);
             font-family: inherit;
+            background: var(--bg-color);
+            color: var(--text-color);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        button:not(.icon-btn) {
+        button:not(.icon-btn, .tab, .dark-mode-toggle, .cat-chip, .segment-btn, .preset-chip, .dice-btn, .mode-tile) {
             background: var(--header-gradient);
             color: white;
             border: none;
             font-weight: 700;
             box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            cursor: pointer;
         }
-        button:not(.icon-btn):hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
+        button:not(.icon-btn, .tab, .dark-mode-toggle, .cat-chip, .segment-btn, .preset-chip, .dice-btn, .mode-tile):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -5px rgba(79, 70, 229, 0.4);
         }
-        button:not(.icon-btn):active {
-            transform: translateY(1px);
+
+        .error {
+            background-color: #fef2f2;
+            color: #b91c1c;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid #fee2e2;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+        
+        body.dark-mode .error {
+            background-color: #450a0a;
+            color: #fecaca;
+            border-color: #7f1d1d;
         }
 
         {% block extra_style %}{% endblock %}
@@ -231,8 +356,24 @@
             }
         };
 
+        // Dark Mode Logic
+        function toggleDarkMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             SoundEngine.updateUI();
+            
+            // Initialize Dark Mode
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeIcon').textContent = '☀️';
+            }
+
             const startHandler = () => {
                 if (SoundEngine.musicEnabled) SoundEngine.startMusic();
                 window.removeEventListener('click', startHandler);
@@ -240,21 +381,97 @@
             window.addEventListener('click', startHandler);
         });
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("/sw.js")
+                    .then(reg => {
+                        console.log('SW Registered', reg);
+                        
+                        // Check for updates periodically or when registration finishes
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available, notify user
+                                    if (confirm('A new version of MathPuzzle is available! Refresh now to update?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.log('SW Registration failed', err));
+
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        window.location.reload();
+                        refreshing = true;
+                    }
+                });
+            });
+        }
+
+        function renderMath() {
+            if (typeof renderMathInElement === 'function') {
+                const mathContainers = document.querySelectorAll('.question-box, .choice-btn, p');
+                mathContainers.forEach(el => {
+                    if (el.innerHTML && el.innerHTML.includes('$') && el.innerHTML.includes('\\')) {
+                        el.innerHTML = el.innerHTML.replace(/(?<!\\)\$([^\$\n]*?\\[a-zA-Z]+[^\$\n]*?)\$/g, '\\($1\\)');
+                    }
+                });
+
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '\\[', right: '\\]', display: true},
+                        {left: '\\(', right: '\\)', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+        document.addEventListener('DOMContentLoaded', renderMath);
+        window.addEventListener('load', renderMath);
+    </script>
+    {% if config.get('GOOGLE_CLIENT_ID') %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    {% endif %}
     {% block scripts %}{% endblock %}
 </head>
 <body>
-    <div class="main-container">
-        <div class="sound-controls">
-            <div class="control-group">
-                <span class="control-label">Music</span>
-                <button id="music-toggle" class="icon-btn music-btn" onclick="SoundEngine.toggleMusic()" title="Toggle Background Music">🎵</button>
+    <nav>
+        <a href="{{ url_for('index') }}" class="nav-brand">🧮 MathPuzzle</a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Play</a></li>
+            <li><a href="{{ url_for('leaderboard') }}">Leaderboard</a></li>
+            <li><a href="{{ url_for('how_to_play') }}">How to Play</a></li>
+            <li><a href="{{ url_for('about') }}">About</a></li>
+            <li><a href="{{ url_for('analytics') }}">📊 AI Stats</a></li>
+        </ul>
+        <div class="nav-controls">
+            {% if session.get('user_id') %}
+            <div class="nav-user-pill" id="nav-user-profile">
+                <span class="user-avatar-badge">🧙‍♂️</span>
+                <span class="user-name-tiny">{{ session.get('player_name', 'Verified') }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-logout-link" title="Sign Out">Logout</a>
             </div>
-            <div class="control-group">
-                <span class="control-label">SFX</span>
-                <button id="sound-toggle" class="icon-btn sound-btn" onclick="SoundEngine.toggleSound()" title="Toggle Sound Effects">🔊</button>
-            </div>
+            {% else %}
+            <button type="button" class="nav-signin-btn" onclick="openAuthModal()" id="nav-signin-btn" title="Sign In or Register">
+                <span class="signin-icon">👤</span>
+                <span class="signin-text">Sign In</span>
+            </button>
+            {% endif %}
+            <button id="music-toggle" class="nav-icon-btn music-btn" onclick="SoundEngine.toggleMusic()" title="Toggle Background Music">🎵</button>
+            <button id="sound-toggle" class="nav-icon-btn sound-btn" onclick="SoundEngine.toggleSound()" title="Toggle Sound Effects">🔊</button>
+            <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">
+                <span id="darkModeIcon">🌙</span>
+            </button>
         </div>
+    </nav>
 
+    <div class="main-container">
         <div class="math-decor decor-1">∫ π Σ</div>
         <div class="math-decor decor-2">√ x² ∞</div>
         <div class="math-decor decor-3">λ φ Δ</div>
@@ -263,6 +480,46 @@
         <div style="position:relative; z-index: 1;">
             {% block content %}{% endblock %}
         </div>
+
+        <footer style="margin-top: 50px; font-size: 0.85rem; color: var(--text-light); border-top: 1px solid var(--border-light); padding-top: 25px; text-align: center;">
+            <div style="display: flex; justify-content: center; gap: 1.25rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <a href="{{ url_for('index') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">Home</a>
+                <a href="{{ url_for('about') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">About</a>
+                <a href="{{ url_for('how_to_play') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">How to Play</a>
+                <a href="{{ url_for('leaderboard') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">Leaderboard</a>
+                <a href="{{ url_for('faq') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">FAQ</a>
+                <a href="{{ url_for('privacy') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">Privacy Policy</a>
+                <a href="{{ url_for('terms') }}" style="color: var(--text-color); font-weight: 500; text-decoration: none;">Terms of Service</a>
+            </div>
+            <p>&copy; 2026 <strong>SharpHuman.app</strong> • MathPuzzle v{{ app_version }} • Support: <a href="mailto:support@sharphuman.app" style="color: var(--primary-color);">support@sharphuman.app</a></p>
+            <p style="margin-top: 0.5rem; font-size: 0.75rem;">📱 Progressive Web App (PWA) • Works Offline • Adaptive Learning Engine</p>
+        </footer>
     </div>
+
+    <!-- Cookie & Ad Consent Banner -->
+    <div id="cookieConsentBanner" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: var(--card-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 1rem 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 9999; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.9rem;">
+        <div style="flex: 1; text-align: left; color: var(--text-color);">
+            🍪 We use cookies and local storage to personalize content and support Google AdSense advertising. Read our <a href="{{ url_for('privacy') }}" style="color: var(--primary-color); text-decoration: underline; font-weight: 600;">Privacy Policy</a>.
+        </div>
+        <button id="acceptCookiesBtn" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">Got it!</button>
+    </div>
+
+    <script>
+        (function() {
+            try {
+                if (!localStorage.getItem('mathpuzzle_cookie_consent')) {
+                    const banner = document.getElementById('cookieConsentBanner');
+                    if (banner) {
+                        banner.style.display = 'flex';
+                        document.getElementById('acceptCookiesBtn').addEventListener('click', function() {
+                            localStorage.setItem('mathpuzzle_cookie_consent', 'accepted');
+                            banner.style.display = 'none';
+                        });
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
+    {% include 'components/auth_modal.html' %}
 </body>
 </html>

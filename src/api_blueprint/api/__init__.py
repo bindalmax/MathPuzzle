@@ -5,12 +5,6 @@ Provides REST endpoints for question fetching, answer validation, scoring, and l
 
 from flask import Blueprint
 from flask_restful import Api
-
-# Create API blueprint
-api_bp = Blueprint('api', __name__, url_prefix='/api')
-api = Api(api_bp, catch_all_404s=False)
-
-# Import resources after creating api object to avoid circular imports
 from .resources import (
     QuestionResource,
     AnswerResource,
@@ -20,9 +14,14 @@ from .resources import (
     MultiplayerJoinResource,
     MultiplayerRoomsResource,
     MultiplayerResultsResource,
+    GoogleAuthResource,
     CategoriesResource,
     DifficultiesResource
 )
+
+# Initialize Blueprint
+api_bp = Blueprint('api', __name__, url_prefix='/api')
+api = Api(api_bp)
 
 # Register REST API endpoints
 api.add_resource(CategoriesResource, '/categories')
@@ -35,3 +34,4 @@ api.add_resource(MultiplaryCreateResource, '/multiplayer/create')
 api.add_resource(MultiplayerJoinResource, '/multiplayer/join/<string:room_id>')
 api.add_resource(MultiplayerRoomsResource, '/multiplayer/rooms')
 api.add_resource(MultiplayerResultsResource, '/multiplayer/results/<string:room_id>')
+api.add_resource(GoogleAuthResource, '/auth/google')

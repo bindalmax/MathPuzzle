@@ -10,6 +10,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - DATABASE_URL=${DATABASE_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     # Cloud-optimized Gunicorn command (no local SSL certs, as proxy handles it)
     command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 100 app:app
     restart: always

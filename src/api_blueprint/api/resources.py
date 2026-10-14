@@ -3,16 +3,21 @@ REST API Resources for MathPuzzle.
 Implements endpoints for questions, answers, scoring, and multiplayer game management.
 """
 
-from flask import request, session
+from flask import request, session, current_app
 from flask_restful import Resource, reqparse
 from questions import QuestionFactory
-from database import db, Highscore
+from database import db, Highscore, User, UserLearningProfile, ProblemAttempt
 from highscore_manager import HighscoreManager
 from sqlalchemy.exc import IntegrityError
 from room_storage import rooms # Import shared rooms dictionary
+from google_auth_service import GoogleAuthService, GoogleAuthServiceUnavailableError, InvalidTokenError
+from logger import get_logger
 import uuid
 import time
+import os
 from .errors import api_success, api_error
+
+logger = get_logger('api_resources')
 
 
 class CategoriesResource(Resource):
@@ -190,7 +195,8 @@ class ScoreResource(Resource):
             "category": "basic_arithmetic",
             "difficulty": "easy",
             "time_taken": 45.5,
-            "questions_attempted": 10
+            "questions_attempted": 10,
+            "user_id": 1  # Optional
         }
         
         Response:
@@ -221,6 +227,7 @@ class ScoreResource(Resource):
             time_taken = float(data.get('time_taken', 0))
             questions_attempted = int(data.get('questions_attempted', 0))
             room_id = data.get('room_id')
+            user_id = data.get('user_id')
             
             # Validate inputs
             if not player_name or len(player_name) > 80:
@@ -246,7 +253,8 @@ class ScoreResource(Resource):
                 category=category,
                 difficulty=difficulty,
                 time_taken=time_taken,
-                questions_attempted=questions_attempted
+                questions_attempted=questions_attempted,
+                user_id=user_id
             )
             
             db.session.add(highscore)
@@ -586,3 +594,158 @@ class MultiplayerResultsResource(Resource):
             
         except Exception as e:
             return api_error(f'Error fetching game results: {str(e)}', 500, 'FETCH_ERROR')
+
+
+class GoogleAuthResource(Resource):
+    """POST /api/auth/google - Authenticate with Google ID Token"""
+    
+    def post(self):
+        """
+        Verify Google ID token and return user profile.
+        
+        Request Body:
+        {
+            "id_token": "google_id_token_string"
+        }
+        
+        Response:
+        {
+            "status": "success",
+            "data": {
+                "user_id": 1,
+                "display_name": "John Doe",
+                "email": "john@example.com"
+            }
+        }
+        """
+        try:
+            data = request.get_json() or {}
+            token = data.get('id_token')
+            
+            if not token:
+                return api_error('ID Token is required', 400, 'MISSING_TOKEN')
+            
+            # Verify token using resilient GoogleAuthService (caching, retries, stale fallback)
+            GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+            allow_offline = os.environ.get('GOOGLE_AUTH_OFFLINE_FALLBACK', 'false').lower() in ('true', '1', 'yes')
+            is_dev_or_test = (os.environ.get('FLASK_ENV') in ['development', 'test'] or 
+                              current_app.config.get('TESTING') or 
+                              not GOOGLE_CLIENT_ID or
+                              allow_offline)
+            
+            try:
+                idinfo = GoogleAuthService.verify_id_token(
+                    token, 
+                    audience=GOOGLE_CLIENT_ID if GOOGLE_CLIENT_ID else None,
+                    is_dev_or_test=is_dev_or_test
+                )
+                
+                # ID token is valid. Get user's Google ID from the 'sub' claim.
+                google_id = idinfo['sub']
+                email = idinfo.get('email')
+                name = idinfo.get('name', email.split('@')[0] if email else 'User')
+            except GoogleAuthServiceUnavailableError as e:
+                logger.error(f"Google auth service unavailable: {e}")
+                return api_error(
+                    'Authentication service is temporarily unavailable. Please try again in a few moments.',
+                    503,
+                    'AUTH_SERVICE_UNAVAILABLE'
+                )
+            except InvalidTokenError as e:
+                logger.warning(f"Invalid Google ID Token provided: {e}")
+                return api_error(f'Invalid ID Token: {str(e)}', 401, 'INVALID_TOKEN')
+            except Exception as e:
+                logger.error(f"Unexpected error verifying ID Token: {e}", exc_info=True)
+                return api_error(f'Token verification failed: {str(e)}', 401, 'INVALID_TOKEN')
+
+            # Check if user exists
+            user = User.query.filter_by(google_id=google_id).first()
+            
+            if not user:
+                # Create new user
+                user = User(
+                    google_id=google_id,
+                    email=email,
+                    display_name=name
+                )
+                db.session.add(user)
+                db.session.commit()
+            
+            # ===== GUEST TO GOOGLE SSO TRANSITION (FEATURE FLAGGED - OFF BY DEFAULT) =====
+            enable_guest_linking = (
+                current_app.config.get('ENABLE_SSO_GUEST_MIGRATION', False) or 
+                (os.environ.get('ENABLE_SSO_GUEST_MIGRATION', 'false').lower() in ('true', '1', 'yes'))
+            )
+            guest_name = (data.get('guest_name') or session.get('player_name')) if enable_guest_linking else None
+            gamer_id = data.get('gamer_id') or session.get('gamer_id')
+            migrated_scores_count = 0
+
+            if enable_guest_linking and guest_name:
+                # 1. Migrate orphan Highscores (unlinked or recorded under guest name)
+                orphan_scores = Highscore.query.filter(
+                    Highscore.user_id.is_(None),
+                    (Highscore.name == guest_name) | (Highscore.name == user.display_name)
+                ).all()
+                for score_record in orphan_scores:
+                    score_record.user_id = user.id
+                    score_record.name = user.display_name
+                    migrated_scores_count += 1
+
+                # 2. Migrate or merge AI Learning Profile
+                if guest_name != user.display_name:
+                    guest_profile = UserLearningProfile.query.filter_by(user_name=guest_name).first()
+                    user_profile = UserLearningProfile.query.filter_by(user_name=user.display_name).first()
+
+                    if guest_profile:
+                        if not user_profile:
+                            guest_profile.user_name = user.display_name
+                        else:
+                            user_profile.total_problems_attempted = (user_profile.total_problems_attempted or 0) + (guest_profile.total_problems_attempted or 0)
+                            user_profile.total_problems_correct = (user_profile.total_problems_correct or 0) + (guest_profile.total_problems_correct or 0)
+
+                            g_mastered = set(guest_profile.topics_mastered or [])
+                            u_mastered = set(user_profile.topics_mastered or [])
+                            user_profile.topics_mastered = list(u_mastered.union(g_mastered))
+
+                            g_weak = set(guest_profile.weak_topics or [])
+                            u_weak = set(user_profile.weak_topics or [])
+                            user_profile.weak_topics = list((u_weak.union(g_weak)) - set(user_profile.topics_mastered))
+
+                            if (guest_profile.total_problems_attempted or 0) > 0:
+                                user_profile.current_skill_level = (user_profile.current_skill_level + guest_profile.current_skill_level) / 2.0
+                                user_profile.preferred_difficulty = max(user_profile.preferred_difficulty, guest_profile.preferred_difficulty)
+
+                            db.session.delete(guest_profile)
+
+                    # 3. Migrate ProblemAttempt records
+                    ProblemAttempt.query.filter_by(user_name=guest_name).update({'user_name': user.display_name})
+
+                # 4. Migrate any active multiplayer rooms
+                room_id = session.get('room_id')
+                if room_id and room_id in rooms:
+                    room = rooms[room_id]
+                    if guest_name in room.get('players', []):
+                        room['players'] = [user.display_name if p == guest_name else p for p in room['players']]
+                    if guest_name in room.get('scores', {}):
+                        score_val = room['scores'].pop(guest_name)
+                        room['scores'][user.display_name] = score_val
+                    if room.get('creator') == guest_name:
+                        room['creator'] = user.display_name
+
+            db.session.commit()
+
+            # Store in session for Web clients - preserving active streak/game state
+            session['user_id'] = user.id
+            session['player_name'] = user.display_name
+            if gamer_id:
+                session['gamer_id'] = gamer_id
+            
+            return api_success({
+                'user_id': user.id,
+                'display_name': user.display_name,
+                'email': user.email,
+                'migrated_scores': migrated_scores_count
+            }), 200
+            
+        except Exception as e:
+            return api_error(f'Authentication error: {str(e)}', 500, 'AUTH_ERROR')

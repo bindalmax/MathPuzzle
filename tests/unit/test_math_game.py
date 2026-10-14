@@ -5,8 +5,10 @@ from unittest.mock import patch, MagicMock
 from flask import Flask
 from fractions import Fraction # Import Fraction for DecimalFractionQuestion tests
 
-# Add project root to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Add project root and src to path for imports
+root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(root_path)
+sys.path.append(os.path.join(root_path, 'src'))
 
 from math_game import Game
 from questions import QuestionFactory
@@ -16,7 +18,7 @@ from questions.percentage import PercentageQuestion
 from questions.profit_loss import ProfitLossQuestion
 from questions.algebra import AlgebraQuestion
 from highscore_manager import HighscoreManager
-from database import db
+from database import db, User
 
 class TestHighscoreManager(unittest.TestCase):
     def setUp(self):
@@ -37,15 +39,61 @@ class TestHighscoreManager(unittest.TestCase):
         self.ctx.pop()
 
     def test_load_empty(self):
-        self.assertEqual(self.manager.load(), [])
+        self.assertEqual(self.manager.load()['scores'], [])
 
     def test_add_and_load_score(self):
         self.manager.add_score('Player1', 10, 'basic', 'easy', time_taken=5.0, questions_attempted=10)
-        scores = self.manager.load()
+        result = self.manager.load()
+        scores = result['scores']
         self.assertEqual(len(scores), 1)
         self.assertEqual(scores[0]['name'], 'Player1')
         self.assertEqual(scores[0]['score'], 10)
         self.assertEqual(scores[0]['time_taken'], 5.0)
+
+    def test_add_score_with_user(self):
+        # Create a user
+        user = User(google_id='google123', email='test@example.com', display_name='TestUser')
+        db.session.add(user)
+        db.session.commit()
+        
+        # Add score linked to user
+        self.manager.add_score('TestUser', 20, 'basic', 'hard', user_id=user.id)
+        
+        result = self.manager.load()
+        scores = result['scores']
+        self.assertEqual(len(scores), 1)
+        self.assertEqual(scores[0]['name'], 'TestUser')
+        
+        # Verify foreign key in database
+        from database import Highscore
+        db_score = Highscore.query.first()
+        self.assertEqual(db_score.user_id, user.id)
+        self.assertEqual(db_score.user.display_name, 'TestUser')
+
+class TestUserModel(unittest.TestCase):
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db.init_app(self.app)
+        self.ctx = self.app.app_context()
+        self.ctx.push()
+        db.create_all()
+
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.ctx.pop()
+
+    def test_create_user(self):
+        user = User(google_id='abc', email='abc@example.com', display_name='ABC')
+        db.session.add(user)
+        db.session.commit()
+        
+        saved_user = User.query.filter_by(google_id='abc').first()
+        self.assertIsNotNone(saved_user)
+        self.assertEqual(saved_user.display_name, 'ABC')
+
 
 class TestQuestionFactory(unittest.TestCase):
     def test_creates_basic_arithmetic_question(self):
@@ -70,8 +118,8 @@ class TestBasicArithmeticQuestion(unittest.TestCase):
         self.assertIn(answer, choices)
 
 class TestDecimalFractionQuestion(unittest.TestCase):
-    @patch('questions.decimal_fraction.random.choice', side_effect=['decimal', '+', Fraction(1,2), Fraction(1,4), 1, 2, 3])
-    @patch('questions.decimal_fraction.random.uniform', side_effect=[2.5, 3.5, 0.1, 0.2, 0.3])
+    @patch('questions.decimal_fraction.random.choice', side_effect=['decimal', '+'] + [Fraction(1,2), Fraction(1,4), 1, 2, 3, -1, 1] * 10)
+    @patch('questions.decimal_fraction.random.uniform', side_effect=[2.5, 3.5] + [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7] * 10)
     def test_easy_decimal_addition_with_choices(self, mock_uniform, mock_choice):
         question, answer, choices = DecimalFractionQuestion().generate('easy')
         self.assertEqual(question, "What is 2.5 + 3.5? ")
@@ -79,6 +127,12 @@ class TestDecimalFractionQuestion(unittest.TestCase):
         self.assertIsInstance(choices, list)
         self.assertEqual(len(choices), 4)
         self.assertIn(answer, choices)
+
+    @patch('questions.decimal_fraction.random.choice', side_effect=['fraction', '+', Fraction(1, 2), Fraction(3, 4), 1, 2, 3, -1, 1, 2])
+    def test_easy_fraction_addition_latex(self, mock_choice):
+        question, answer, choices = DecimalFractionQuestion().generate('easy')
+        self.assertEqual(question, "What is \\(\\frac{1}{2} + \\frac{3}{4}\\)? (Answer as decimal, round to 2 places) ")
+        self.assertEqual(answer, 1.25)
 
 class TestPercentageQuestion(unittest.TestCase):
     @patch('questions.percentage.random.choice', side_effect=[25, 1, 2, 3]) # Mock random.choice for percent and generate_choices
@@ -105,11 +159,26 @@ class TestAlgebraQuestion(unittest.TestCase):
     @patch('questions.algebra.random.randint', side_effect=[5, 8, 1, 2, 3]) # Mock for x, a, and generate_choices
     def test_easy_algebra_with_choices(self, mock_randint):
         question, answer, choices = AlgebraQuestion().generate('easy')
-        self.assertEqual(question, "Solve for x: x + 8 = 13")
+        self.assertEqual(question, "Solve for x: \\(x + 8 = 13\\)")
         self.assertEqual(answer, 5)
         self.assertIsInstance(choices, list)
         self.assertEqual(len(choices), 4)
         self.assertIn(answer, choices)
+
+    @patch('questions.algebra.random.choice', side_effect=['division', 1, -1, 1, 1, -1])
+    @patch('questions.algebra.random.randint', side_effect=[4, 3, 1, 2, 3, 4, 5])
+    def test_medium_algebra_division_latex(self, mock_randint, mock_choice):
+        question, answer, choices = AlgebraQuestion().generate('medium')
+        self.assertEqual(question, "Solve for x: \\(\\frac{x}{3} = 4\\)")
+        self.assertEqual(answer, 12)
+
+    @patch('questions.algebra.random.choice', side_effect=['fraction', 1, -1, 1, 1, -1])
+    @patch('questions.algebra.random.randint', side_effect=[6, 2, 3, 1, 1, 2, 3, 4, 5])
+    def test_hard_algebra_fraction_latex(self, mock_randint, mock_choice):
+        # x=6, coeff_num=2, coeff_den=3 -> coeff=2/3 -> 2/3*6 + 1 = 5
+        question, answer, choices = AlgebraQuestion().generate('hard')
+        self.assertEqual(question, "Solve for x: \\(\\frac{2}{3}x + 1 = 5\\)")
+        self.assertEqual(answer, 6)
 
 # --- Game Class Tests (now expects choices) ---
 class TestGame(unittest.TestCase):
@@ -136,6 +205,27 @@ class TestGame(unittest.TestCase):
         game = Game("TestPlayer", mock_factory, mode='questions', value=3)
         score = game.run()
         self.assertEqual(score, 3)
+
+from math_game import StartupChallengeGame
+
+class TestStartupChallengeGame(unittest.TestCase):
+    @patch('builtins.input', side_effect=['10', '20', 'quit'])
+    @patch('questions.QuestionFactory.create_question')
+    def test_startup_challenge_run(self, mock_create, mock_input):
+        # Mocking alternating questions
+        mock_create.side_effect = [
+            ("What is 10% of 100? ", 10, [5, 10, 15, 20]),
+            ("Profit? bought 80, sold 100", 20, [10, 20, 30, 40]),
+            ("What is 50% of 200? ", 100, [50, 100, 150, 200])
+        ]
+        game = StartupChallengeGame("CEO_Tester")
+        # 100,000 -> correct (10) -> 100,000 + 159% = 259,000 -> correct (20) -> 259,000 + 159% = 670,810 -> quit
+        ceo_score, title = game.run()
+        
+        self.assertEqual(game.score, 2)
+        self.assertAlmostEqual(game.startup_value, 670810.0)
+        self.assertEqual(ceo_score, 6708)
+        self.assertEqual(title, "Centimillionaire Founder 💎")
 
 if __name__ == '__main__':
     unittest.main()

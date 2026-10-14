@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mathpuzzle-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mathpuzzle-web
+  template:
+    metadata:
+      labels:
+        app: mathpuzzle-web
+    spec:
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: timeout
+          value: "2"
+        - name: attempts
+          value: "3"
+      initContainers:
+      - name: db-init
+        image: ghcr.io/bindalmax/mathpuzzle:latest
+        command: ["python3", "-c", "import sys; sys.path.append('/app/src'); from database import db; from app import app; app.app_context().push(); db.create_all(); print('✅ DB Initialized')"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: DATABASE_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: SECRET_KEY
+      containers:
+      - name: web
+        image: ghcr.io/bindalmax/mathpuzzle:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: DATABASE_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: SECRET_KEY
+        - name: ALLOWED_ORIGINS
+          value: "http://localhost:5000" # Default local, overridden in overlays
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: mathpuzzle-secrets
+              key: GOOGLE_CLIENT_ID
+              optional: true
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mathpuzzle-service
+spec:
+  selector:
+    app: mathpuzzle-web
+  ports:
+  - port: 80
+    targetPort: 5000

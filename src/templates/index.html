@@ -1,123 +1,1768 @@
 {% extends "base.html" %}
 
-{% block title %}MathPuzzle - Welcome{% endblock %}
+{% block title %}MathPuzzle - Master Math, Challenge Friends{% endblock %}
+
+{% block extra_style %}
+    :root {
+        --primary-glow: rgba(79, 70, 229, 0.25);
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* ===== HERO SECTION ===== */
+    .hero-banner {
+        position: relative;
+        text-align: center;
+        padding: 1.25rem 0.5rem 2rem 0.5rem;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-size: clamp(1.6rem, 4vw, 2.3rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--text-color);
+        line-height: 1.2;
+        margin-bottom: 0.4rem;
+    }
+
+    .hero-title .gradient-text {
+        background: var(--header-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        color: var(--text-light);
+        max-width: 580px;
+        margin: 0 auto 1.2rem auto;
+        line-height: 1.5;
+    }
+
+    .hero-feature-tags {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .feature-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        color: var(--text-light);
+        padding: 4px 10px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .feature-tag.highlight {
+        border-color: rgba(79, 70, 229, 0.3);
+        color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.05);
+    }
+
+    /* ===== UNIFIED PLAYER IDENTITY PASSPORT ===== */
+    .player-passport {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 10px 16px;
+        margin: 0 auto 1.75rem auto;
+        max-width: 680px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: all 0.2s ease;
+    }
+
+    .player-passport:focus-within {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .passport-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 220px;
+    }
+
+    .player-avatar {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(14, 165, 233, 0.15) 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        transition: transform 0.2s;
+    }
+
+    .player-passport:hover .player-avatar {
+        transform: scale(1.05) rotate(-3deg);
+    }
+
+    .passport-input-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        text-align: left;
+    }
+
+    .passport-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--text-light);
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .passport-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .gamer-input {
+        border: none;
+        background: transparent;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-color);
+        outline: none;
+        width: 100%;
+        padding: 2px 0;
+        font-family: inherit;
+    }
+
+    .gamer-input[readonly] {
+        color: var(--primary-color);
+        cursor: default;
+    }
+
+    .dice-btn {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        color: var(--text-light);
+        font-size: 0.9rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .dice-btn:hover {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        transform: rotate(18deg);
+    }
+
+    .passport-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        padding-left: 12px;
+        border-left: 1px solid var(--border-light);
+    }
+
+    .auth-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .auth-badge.verified {
+        color: var(--secondary-color);
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        padding: 5px 10px;
+        border-radius: 999px;
+    }
+
+    .auth-badge.guest {
+        color: var(--text-light);
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+    }
+
+    .auth-badge .logout-link {
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-left: 4px;
+        text-decoration: underline;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    /* ===== TACTILE 3D GAME MODE DECK ===== */
+    .mode-deck {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+        max-width: 840px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .mode-tile {
+        background: var(--card-bg);
+        border: 2px solid var(--border-light);
+        border-radius: 14px;
+        padding: 14px 12px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        outline: none;
+        font-family: inherit;
+    }
+
+    .mode-tile:hover {
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .mode-tile.active {
+        border-color: var(--primary-color);
+        background: linear-gradient(180deg, var(--card-bg) 0%, rgba(79, 70, 229, 0.03) 100%);
+        box-shadow: 0 10px 24px -6px var(--primary-glow);
+        transform: translateY(-3px);
+    }
+
+    .mode-tile.active::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: 20%;
+        right: 20%;
+        height: 3px;
+        background: var(--primary-color);
+        border-radius: 999px;
+    }
+
+    .mode-badge {
+        align-self: flex-start;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+
+    .badge-solo { background: #e0e7ff; color: #4338ca; }
+    .badge-multi { background: #ecfdf5; color: #047857; }
+    .badge-quest { background: #fdf2f8; color: #be185d; }
+
+    .mode-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mode-icon {
+        font-size: 1.4rem;
+    }
+
+    .mode-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .mode-desc {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        line-height: 1.35;
+    }
+
+    /* ===== MAIN ACTION ARENA LAYOUT ===== */
+    .arena-layout {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 18px;
+        max-width: 840px;
+        margin: 0 auto;
+        align-items: start;
+        width: 100%;
+        transition: all 0.25s ease;
+    }
+
+    .arena-layout.single-column {
+        grid-template-columns: 1fr;
+        max-width: 580px;
+        margin: 0 auto;
+    }
+
+    .arena-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        text-align: left;
+    }
+
+    .card-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .card-subtitle-tag {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.08);
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    /* Setting Controls */
+    .setting-group {
+        margin-bottom: 16px;
+    }
+
+    .setting-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .setting-helper {
+        font-size: 0.72rem;
+        color: var(--text-light);
+        font-weight: normal;
+    }
+
+    .category-pill-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+
+    .cat-chip {
+        background: var(--bg-color);
+        border: 1.5px solid var(--border-light);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-align: left;
+        font-family: inherit;
+        outline: none;
+        user-select: none;
+    }
+
+    .cat-chip:hover {
+        border-color: #cbd5e1;
+        background: var(--card-bg);
+    }
+
+    .cat-chip.active {
+        border-color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.12);
+        color: var(--primary-color) !important;
+        font-weight: 700;
+    }
+
+    body.dark-mode .cat-chip.active {
+        background: rgba(99, 102, 241, 0.25);
+        border-color: #818cf8;
+        color: #a5b4fc !important;
+    }
+
+    .styled-form-select,
+    .styled-number-input {
+        position: absolute !important;
+        opacity: 0 !important;
+        width: 20px !important;
+        height: 20px !important;
+        clip-path: polygon(0 0, 0 0, 0 0) !important;
+        z-index: -1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Segmented Controls */
+    .segmented-row {
+        display: flex;
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        padding: 3px;
+        border-radius: 10px;
+        gap: 4px;
+        margin-bottom: 6px;
+    }
+
+    .segment-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 8px 4px;
+        border-radius: 7px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-light);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-family: inherit;
+        box-shadow: none;
+    }
+
+    .segment-btn:hover {
+        transform: none;
+        box-shadow: none;
+        color: var(--text-color);
+    }
+
+    .segment-btn.active {
+        background: var(--card-bg);
+        color: var(--text-color);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .segment-btn.active.ai-active {
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        color: white;
+    }
+
+    .presets-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        margin-bottom: 6px;
+    }
+
+    .preset-chip {
+        flex: 1;
+        padding: 6px;
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 6px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--text-color);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s;
+        font-family: inherit;
+        user-select: none;
+        outline: none;
+    }
+
+    .preset-chip:hover {
+        border-color: var(--primary-color);
+    }
+
+    .preset-chip.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    /* Launch Button */
+    .launch-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        color: white;
+        border: none;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 20px -4px var(--primary-glow);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 12px;
+        box-sizing: border-box;
+        max-width: 100%;
+        text-align: center;
+        white-space: normal;
+        word-break: break-word;
+        font-family: inherit;
+    }
+
+    .launch-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px -4px var(--primary-glow);
+        background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    }
+
+    .launch-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Startup Quest Card */
+    .quest-hero-card {
+        background: linear-gradient(135deg, #fdf2f8 0%, #f5f3ff 100%);
+        border: 1.5px solid #fbcfe8;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .quest-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    .quest-badge {
+        background: #db2777;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .quest-rounds {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #be185d;
+        background: rgba(219, 39, 119, 0.1);
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .quest-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #831843;
+        margin-bottom: 6px;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .quest-desc {
+        font-size: 0.82rem;
+        color: #64748b;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .quest-milestones {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .milestone-pill {
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: white;
+        border: 1px solid #fbcfe8;
+        color: #831843;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+
+    .milestone-pill.highlight {
+        background: #fdf2f8;
+        border-color: #db2777;
+        color: #db2777;
+    }
+
+    .milestone-arrow {
+        font-size: 0.7rem;
+        color: #db2777;
+    }
+
+    /* ===== RIGHT COLUMN: ACTIVE LOBBIES ===== */
+    .lobby-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        text-align: left;
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        background: rgba(16, 185, 129, 0.1);
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .pulse-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--secondary-color);
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.3); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .room-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .room-item {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color 0.15s;
+    }
+
+    .room-item:hover {
+        border-color: #94a3b8;
+    }
+
+    .room-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .room-id {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .room-badge {
+        font-size: 0.72rem;
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    .room-meta {
+        font-size: 0.76rem;
+        color: var(--text-light);
+    }
+
+    .join-pill-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+    }
+
+    .join-pill-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    .hall-of-fame-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+        border: 1px solid rgba(79, 70, 229, 0.15);
+        padding: 12px 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        margin-top: 4px;
+    }
+
+    .hall-of-fame-link:hover {
+        background: rgba(79, 70, 229, 0.1);
+        transform: translateX(2px);
+    }
+
+    .game-type-radios {
+        position: absolute;
+        left: -9999px;
+    }
+
+    /* ===== EDUCATIONAL HOMEPAGE ACCORDION SECTIONS ===== */
+    .edu-section {
+        margin-top: 3.5rem;
+        text-align: left;
+        border-top: 1px solid var(--border-light);
+        padding-top: 2rem;
+    }
+    .edu-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .edu-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.4rem;
+        color: var(--text-color);
+    }
+    .edu-subtitle {
+        color: var(--text-light);
+        text-align: center;
+        max-width: 650px;
+        margin: 0 auto;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    .feature-pills {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .feature-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .edu-accordion-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .edu-accordion {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .edu-accordion:hover {
+        border-color: var(--primary-color);
+    }
+    .edu-accordion[open] {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.06);
+    }
+    .edu-summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 0.95rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        transition: background-color 0.15s;
+    }
+    .edu-summary::-webkit-details-marker {
+        display: none;
+    }
+    .edu-summary:hover {
+        background: rgba(79, 70, 229, 0.03);
+    }
+    .summary-left {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .summary-icon {
+        font-size: 1.2rem;
+    }
+    .summary-heading {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0;
+        display: inline;
+    }
+    .summary-right {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .summary-badge {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        background: rgba(0,0,0,0.04);
+        padding: 0.2rem 0.55rem;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    .summary-chevron {
+        font-size: 0.85rem;
+        color: var(--primary-color);
+        transition: transform 0.2s ease;
+        display: inline-block;
+    }
+    .edu-accordion[open] .summary-chevron {
+        transform: rotate(90deg);
+    }
+    .edu-content {
+        padding: 0 1.25rem 1.25rem 1.25rem;
+        border-top: 1px solid var(--border-light);
+        animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .edu-intro {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0.85rem 0 1.25rem 0;
+    }
+    .edu-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+    }
+    .edu-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+    .edu-card-icon {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+    .edu-card h4 {
+        font-size: 1.05rem;
+        margin-bottom: 0.4rem;
+        color: var(--primary-color);
+    }
+    .edu-card p {
+        color: var(--text-light);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        margin: 0;
+    }
+    .category-showcase {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+    }
+    .category-box {
+        background: var(--bg-color);
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        padding: 1.25rem;
+        border-top: 3px solid var(--primary-color);
+    }
+    .category-box h4 {
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
+        color: var(--text-color);
+    }
+    .category-box p {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        line-height: 1.5;
+        margin-bottom: 0.6rem;
+    }
+    .category-box .example-tag {
+        display: inline-block;
+        background: rgba(79, 70, 229, 0.08);
+        color: var(--primary-color);
+        padding: 0.2rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-family: 'Fira Code', monospace;
+    }
+    .why-math-banner {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 0.5rem;
+    }
+    .why-math-banner p {
+        color: var(--text-light);
+        line-height: 1.65;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* ===== RESPONSIVE MEDIA QUERIES ===== */
+    @media (max-width: 768px) {
+        .arena-layout {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+        }
+        .mode-deck {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+        .mode-tile {
+            padding: 12px 14px !important;
+        }
+        .player-passport {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 12px 14px !important;
+            gap: 10px !important;
+        }
+        .passport-left {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+        .passport-right {
+            border-left: none !important;
+            border-top: 1px solid var(--border-light) !important;
+            padding-left: 0 !important;
+            padding-top: 10px !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+        }
+    }
+
+    @media (max-width: 440px) {
+        .hero-banner {
+            padding: 6px 4px 14px 4px !important;
+        }
+        .hero-title {
+            font-size: 1.4rem !important;
+        }
+        .hero-subtitle {
+            font-size: 0.84rem !important;
+            margin-bottom: 10px !important;
+        }
+        .hero-feature-tags {
+            gap: 4px !important;
+        }
+        .feature-tag {
+            font-size: 0.68rem !important;
+            padding: 2px 7px !important;
+        }
+        .arena-card, .lobby-card {
+            padding: 14px 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .quest-hero-card {
+            padding: 12px 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            margin-bottom: 12px !important;
+        }
+        .quest-title {
+            font-size: 0.95rem !important;
+        }
+        .quest-desc {
+            font-size: 0.78rem !important;
+        }
+        .category-pill-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 5px !important;
+        }
+        .cat-chip {
+            font-size: 0.72rem !important;
+            padding: 7px 6px !important;
+        }
+        .segmented-row {
+            gap: 2px !important;
+            padding: 2px !important;
+        }
+        .segment-btn {
+            font-size: 0.69rem !important;
+            padding: 6px 2px !important;
+        }
+        .presets-row {
+            gap: 4px !important;
+        }
+        .preset-chip {
+            font-size: 0.7rem !important;
+            padding: 5px 2px !important;
+        }
+        .launch-btn {
+            padding: 12px 10px !important;
+            font-size: 0.88rem !important;
+        }
+    }
+{% endblock %}
 
 {% block content %}
-    <h1>Welcome to the Math Game!</h1>
+    <!-- 1. Hero Banner -->
+    <section class="hero-banner">
+        <div class="hero-content">
+            <h1 class="hero-title">Master Math, <span class="gradient-text">Challenge Friends</span> 🧮</h1>
+            <p class="hero-subtitle">High-speed mental arithmetic, AI-adaptive puzzles, and real-time multiplayer duels.</p>
+            
+            <div class="hero-feature-tags">
+                <span class="feature-tag highlight">🤖 AI-Adaptive Engine</span>
+                <span class="feature-tag">⚔️ Live Synchronized Duels</span>
+                <span class="feature-tag">🦄 $1B Unicorn Quest</span>
+                <span class="feature-tag">⚡ 20s Blitz Mode</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Unified Player Identity Passport -->
+    <div class="player-passport" id="player-passport">
+        <div class="passport-left">
+            <div class="player-avatar" id="avatar-icon">🧙‍♂️</div>
+            <div class="passport-input-group">
+                <label class="passport-label" for="player_name">
+                    <span>GamerId</span> • <span id="gamer-status">{{ 'Verified' if session.get('user_id') else 'Guest' }}</span>
+                </label>
+                <div class="passport-input-wrapper">
+                    <input type="text" id="player_name" name="player_name" class="gamer-input"
+                           value="{{ session.get('player_name', '') }}"
+                           {{ 'readonly' if session.get('user_id') }}
+                           maxlength="20" placeholder="e.g. MathWizard" required aria-required="true"
+                           style="{{ 'background-color: transparent;' }}">
+                    {% if not session.get('user_id') %}
+                    <button type="button" class="dice-btn" onclick="randomizeGamerId()" title="Randomize GamerId">🎲</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="passport-right" id="auth-badge-container">
+            {% if session.get('user_id') %}
+                <div class="auth-badge verified">
+                    <span>✓ Google Synced</span>
+                    <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+                </div>
+            {% else %}
+                <button type="button" class="passport-auth-btn" onclick="openAuthModal()" id="passport-auth-btn" title="Sign In or Register with Google">
+                    <span class="passport-auth-icon">🔑</span>
+                    <span class="passport-auth-text">Sign In / Register</span>
+                    <span class="passport-auth-badge">Sync Stats</span>
+                </button>
+            {% endif %}
+        </div>
+    </div>
 
     {% if error %}
-        <p class="error" role="alert">{{ error }}</p>
+        <p class="error" role="alert" id="error_msg">{{ error }}</p>
     {% endif %}
 
-    <div class="home-grid">
-        <!-- Setup Game -->
-        <section class="setup-box">
-            <h2>Start New Game</h2>
-            <form action="{{ url_for('index') }}" method="post">
+    {% if prefill_room %}
+        <div class="info-box" style="border-left-color: var(--secondary-color); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; text-align: left; background: rgba(16, 185, 129, 0.05); border-left: 4px solid var(--secondary-color); padding: 1rem; border-radius: 0 8px 8px 0;">
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">👋 You're Invited!</h3>
+            <p style="margin: 0; font-size: 0.9rem;">Enter your GamerId below to join room: <strong>{{ prefill_room }}</strong></p>
+            <form action="{{ url_for('index') }}" method="post" style="margin-top: 1rem;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div>
-                    <label for="player_name">Enter your GamerId:</label><br>
-                    <input type="text" id="player_name" name="player_name" required aria-required="true" placeholder="e.g. MathWizard">
+                <input type="hidden" name="join_room_id" value="{{ prefill_room }}">
+                <div style="display:flex; gap: 0.5rem;">
+                    <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 40px; padding: 0 10px; border: 1px solid var(--border-light); border-radius: 8px;">
+                    <button type="submit" style="background: var(--secondary-color); color: white; border: none; border-radius: 8px; width: auto; min-height: 40px; padding: 0 1rem; font-weight: 700; cursor: pointer;">Join Lobby</button>
                 </div>
-                <br>
-                <fieldset style="border:none; padding:0;">
-                    <legend style="font-weight:bold;">Game Type:</legend>
-                    <input type="radio" id="single" name="game_type" value="single" onchange="toggleGameType()">
-                    <label for="single">Single Player</label>
-                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" checked onchange="toggleGameType()">
-                    <label for="multiplayer">Multiplayer</label>
-                </fieldset>
-                <br>
-
-                <div id="game-options">
-                    <label for="category">Choose a category:</label><br>
-                    <select id="category" name="category" style="width:100%;">
-                        <option value="basic">Basic Arithmetic</option>
-                        <option value="decimal">Decimals and Fractions</option>
-                        <option value="percentage" selected>Percentages</option>
-                        <option value="profit">Profit and Loss</option>
-                        <option value="algebra">Algebra</option>
-                    </select><br><br>
-
-                    <label for="difficulty">Choose a difficulty:</label><br>
-                    <select id="difficulty" name="difficulty" style="width:100%;">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard</option>
-                    </select><br><br>
-
-                    <label for="mode">Choose a game mode:</label><br>
-                    <select id="mode" name="mode" onchange="updateModeLabel()" style="width:100%;">
-                        <option value="time">Time Mode</option>
-                        <option value="questions">Question Count Mode</option>
-                    </select><br><br>
-
-                    <label for="mode_value" id="mode_label">Time in seconds (5-300):</label><br>
-                    <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required style="width:100%;">
-                </div>
-                <br>
-                <button type="submit" id="start_btn" style="width:100%;">Create Multiplayer Lobby</button>
             </form>
-        </section>
+        </div>
+    {% endif %}
 
-        <!-- Join Existing Lobby -->
-        <section class="setup-box">
-            <h2>Join Active Lobby</h2>
+    <!-- 3. Tactile 3D Game Mode Deck -->
+    <div class="mode-deck" role="tablist">
+        <!-- Mode 1: Solo Challenge -->
+        <button type="button" class="mode-tile tab" id="tab-single" role="tab" onclick="setGameType('single')">
+            <span class="mode-badge badge-solo">Solo Blitz</span>
+            <div class="mode-header">
+                <span class="mode-icon">🎯</span>
+                <div class="mode-name">Solo Challenge</div>
+            </div>
+            <div class="mode-desc">Beat your personal records with AI difficulty calibration.</div>
+        </button>
+
+        <!-- Mode 2: Multiplayer Arena (Active by default) -->
+        <button type="button" class="mode-tile tab active" id="tab-multiplayer" role="tab" onclick="setGameType('multiplayer')">
+            <span class="mode-badge badge-multi">Live Battle</span>
+            <div class="mode-header">
+                <span class="mode-icon">⚔️</span>
+                <div class="mode-name">Arena Duels</div>
+            </div>
+            <div class="mode-desc">Synchronized room duels with live score progression.</div>
+        </button>
+
+        <!-- Mode 3: Startup Quest -->
+        <button type="button" class="mode-tile tab" id="tab-startup_challenge" role="tab" onclick="setGameType('startup_challenge')">
+            <span class="mode-badge badge-quest">RPG Quest</span>
+            <div class="mode-header">
+                <span class="mode-icon">🦄</span>
+                <div class="mode-name">Startup Quest</div>
+            </div>
+            <div class="mode-desc">$100K Seed ➔ $1B Unicorn executive business puzzles.</div>
+        </button>
+    </div>
+
+    <!-- 4. Action Arena (Configuration Console & Lobbies) -->
+    <div class="arena-layout" id="arena-layout">
+        
+        <!-- Left: Configuration Console -->
+        <div class="arena-card" id="game-setup-section">
+            <form action="{{ url_for('index') }}" method="post" id="game_form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="player_name" id="hidden_player_name">
+                
+                <!-- Radio inputs for Selenium interaction -->
+                <div class="game-type-radios">
+                    <input type="radio" id="single" name="game_type" value="single" onchange="syncTabs()">
+                    <input type="radio" id="multiplayer" name="game_type" value="multiplayer" onchange="syncTabs()">
+                    <input type="radio" id="startup_challenge" name="game_type" value="startup_challenge" onchange="syncTabs()">
+                </div>
+
+                <!-- Standard Settings (Solo & Multiplayer) -->
+                <div id="standard-options" class="form-section">
+                    <div class="card-header-row">
+                        <span class="card-title">⚙️ Arena Configuration</span>
+                        <span class="card-subtitle-tag" id="mode-state-tag">Multiplayer Lobby</span>
+                    </div>
+
+                    <!-- Category Selection -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="category">
+                            <span>Category</span>
+                            <span class="setting-helper" id="cat-desc">Growth, discounts & change shortcuts</span>
+                        </label>
+                        <div class="category-pill-grid">
+                            <div class="cat-chip" data-cat="basic" role="button" tabindex="0" onclick="selectCategoryChip('basic')">📚 Basic Math</div>
+                            <div class="cat-chip" data-cat="decimal" role="button" tabindex="0" onclick="selectCategoryChip('decimal')">📊 Decimals</div>
+                            <div class="cat-chip active" data-cat="percentage" role="button" tabindex="0" onclick="selectCategoryChip('percentage')">📈 Percentages</div>
+                            <div class="cat-chip" data-cat="profit" role="button" tabindex="0" onclick="selectCategoryChip('profit')">💰 Profit & Loss</div>
+                            <div class="cat-chip" data-cat="algebra" role="button" tabindex="0" onclick="selectCategoryChip('algebra')">🔢 Algebra</div>
+                        </div>
+                        <select id="category" name="category" class="styled-form-select" onchange="syncCategorySelect()">
+                            <option value="basic">📚 Basic Arithmetic</option>
+                            <option value="decimal">📊 Decimals and Fractions</option>
+                            <option value="percentage" selected>📈 Percentages</option>
+                            <option value="profit">💰 Profit and Loss</option>
+                            <option value="algebra">🔢 Algebra</option>
+                        </select>
+                    </div>
+
+                    <!-- Difficulty Selection -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="difficulty">
+                            <span>Difficulty Mode</span>
+                        </label>
+                        <div class="segmented-row">
+                            <button type="button" class="segment-btn" data-diff="easy" onclick="selectDifficultyChip('easy')">🟢 Easy</button>
+                            <button type="button" class="segment-btn" data-diff="medium" onclick="selectDifficultyChip('medium')">🟡 Medium</button>
+                            <button type="button" class="segment-btn" data-diff="hard" onclick="selectDifficultyChip('hard')">🔴 Hard</button>
+                            <button type="button" class="segment-btn active ai-active" data-diff="adaptive" onclick="selectDifficultyChip('adaptive')">🤖 Adaptive</button>
+                        </div>
+                        <select id="difficulty" name="difficulty" class="styled-form-select" onchange="syncDifficultySelect()">
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="adaptive" selected>🤖 Adaptive (AI-Powered)</option>
+                        </select>
+                    </div>
+
+                    <!-- Game Mode & Time/Questions Presets -->
+                    <div class="setting-group">
+                        <label class="setting-label" for="mode">
+                            <span id="mode_label">Time in seconds (5-300):</span>
+                            <span class="setting-helper">Quick tap</span>
+                        </label>
+                        <div class="segmented-row">
+                            <button type="button" class="segment-btn active" id="mode-btn-time" onclick="selectModeType('time')">⏱️ Time Mode</button>
+                            <button type="button" class="segment-btn" id="mode-btn-questions" onclick="selectModeType('questions')">❓ Questions</button>
+                        </div>
+                        <div class="presets-row" id="presets-row">
+                            <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(15)">15s</div>
+                            <div class="preset-chip active" role="button" tabindex="0" onclick="setPresetValue(20)">20s (Std)</div>
+                            <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(45)">45s</div>
+                            <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(60)">60s Blitz</div>
+                        </div>
+                        <select id="mode" name="mode" class="styled-form-select" onchange="updateModeLabel()">
+                            <option value="time" selected>⏱️ Time Mode</option>
+                            <option value="questions">❓ Question Count Mode</option>
+                        </select>
+                        <input type="number" id="mode_value" name="mode_value" min="5" max="300" value="20" required class="styled-number-input">
+                    </div>
+                </div>
+
+                <!-- Startup Challenge Info Box -->
+                <div id="startup-info" class="form-section hidden">
+                    <div class="quest-hero-card">
+                        <div class="quest-header-row">
+                            <span class="quest-badge">Executive Simulation</span>
+                            <span class="quest-rounds">10 Decision Rounds</span>
+                        </div>
+                        <div class="quest-title">CEO Quest: The Unicorn Hunt 🦄</div>
+                        <p class="quest-desc">$100K Seed ➡️ $1B Exit. Solve 10 high-stakes financial, equity dilution, burn-rate, and valuation decisions. Take your startup from a $100K Angel Seed to a $1B Unicorn Exit!</p>
+                        <div class="quest-milestones">
+                            <span class="milestone-pill">🌱 $100K Seed</span>
+                            <span class="milestone-arrow">➔</span>
+                            <span class="milestone-pill">📈 Series A</span>
+                            <span class="milestone-arrow">➔</span>
+                            <span class="milestone-pill highlight">🦄 $1B Unicorn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Launch Button -->
+                <button type="submit" id="start_btn" class="launch-btn hidden">Create Multiplayer Lobby</button>
+            </form>
+        </div>
+
+        <!-- Right Column: Live Lobbies & Hall of Fame -->
+        <div class="lobby-card" id="lobby-section">
+            <div class="card-header-row">
+                <span class="card-title">⚔️ Active Lobbies</span>
+                {% if active_rooms %}
+                    <span class="live-indicator"><span class="pulse-dot"></span> {{ active_rooms | length }} Live</span>
+                {% endif %}
+            </div>
+
             {% if active_rooms %}
                 <ul class="room-list">
                     {% for room_id, details in active_rooms.items() %}
                         <li class="room-item">
-                            <div>
-                                <strong>Room: {{ room_id }}</strong><br>
-                                <small>{{ details.category | capitalize }} - {{ details.difficulty | capitalize }} ({{ details.mode }})</small><br>
-                                <span>Players: {{ details.players | length }}</span>
+                            <div class="room-header">
+                                <span class="room-id">🎮 Room {{ room_id }}</span>
+                                <span class="room-badge">👥 {{ details.players | length }}</span>
+                            </div>
+                            <div class="room-meta">
+                                {{ details.category | capitalize }} • {{ details.difficulty | capitalize }} ({{ details.mode }})
                             </div>
                             <form action="{{ url_for('index') }}" method="post">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="join_room_id" value="{{ room_id }}">
-                                <input type="text" name="player_name" placeholder="Your GamerId" required aria-label="GamerId to join">
-                                <button type="submit" style="margin-top:5px; width:100%;">Join Lobby</button>
+                                <div style="display:flex; gap: 0.5rem;">
+                                    <input type="text" name="player_name" placeholder="GamerId" required style="flex:1; min-height: 38px; padding: 0 10px; border: 1px solid var(--border-light); border-radius: 8px;">
+                                    <button type="submit" class="join-pill-btn" style="min-height: 38px; padding: 0 1rem; width: auto;">Join</button>
+                                </div>
                             </form>
                         </li>
                     {% endfor %}
                 </ul>
             {% else %}
-                <p>No active lobbies. Create one to play with friends!</p>
+                <div class="empty-state" style="padding: 2.5rem 1rem; text-align: center; background: var(--bg-color); border-radius: 12px; border: 2px dashed var(--border-light); color: var(--text-light);">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🛋️</div>
+                    <p style="margin: 0; font-weight: 600;">No active lobbies at the moment.</p>
+                    <small>Create one above to invite your friends!</small>
+                </div>
             {% endif %}
-        </section>
+
+            {% include 'components/ad_banner.html' %}
+
+            <div style="margin-top: 0.75rem; text-align: left;">
+                <a href="{{ url_for('leaderboard') }}" id="leaderboard_link" class="hall-of-fame-link">
+                    <span>🏆 Global Hall of Fame</span>
+                    <span>Top Players ➔</span>
+                </a>
+            </div>
+        </div>
+
     </div>
 
-    <div style="margin-top: 30px;">
-        <a href="{{ url_for('leaderboard') }}" style="text-decoration:none; color:var(--primary-color); font-weight:bold;">View Global Hall of Fame</a>
+    <!-- Key Feature Highlights -->
+    <div class="feature-pills" aria-label="MathPuzzle Highlights" style="margin-top: 2rem;">
+        <div class="feature-pill"><span>🧠</span> Adaptive AI Engine</div>
+        <div class="feature-pill"><span>⚔️</span> Real-Time Multiplayer</div>
+        <div class="feature-pill"><span>🦄</span> Startup Quest Simulation</div>
+        <div class="feature-pill"><span>📊</span> Personal Analytics</div>
     </div>
+
+    <!-- Educational & Informational Content Hub (Collapsible for Clean UX, Fully Crawlable for SEO/AdSense) -->
+    <section class="edu-section" id="educational-guide">
+        <div class="edu-header">
+            <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--primary-color);">Curriculum & Learning Guide</span>
+            <h2>Explore Math Training & Game Modes</h2>
+            <p class="edu-subtitle">Learn how MathPuzzle combines cognitive science, adaptive algorithms, and competition. Tap any section to view full details.</p>
+        </div>
+
+        <div class="edu-accordion-container">
+            <!-- Accordion 1: Platform Overview & AI Engine -->
+            <details class="edu-accordion" id="accordion-features">
+                <summary class="edu-summary">
+                    <div class="summary-left">
+                        <span class="summary-icon">⚡</span>
+                        <h3 class="summary-heading">Master Mental Math with Speed & Strategy</h3>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-badge">Adaptive Learning & Modes</span>
+                        <span class="summary-chevron" aria-hidden="true">▸</span>
+                    </div>
+                </summary>
+                <div class="edu-content">
+                    <p class="edu-intro">MathPuzzle blends cognitive science, real-time competitive gaming, and practical business arithmetic to turn mental math into your greatest everyday superpower.</p>
+                    <div class="edu-grid-3">
+                        <div class="edu-card">
+                            <div class="edu-card-icon">🧠</div>
+                            <h4>Adaptive AI Engine</h4>
+                            <p>Never too easy, never overwhelming. Our algorithmic difficulty engine analyzes your reaction times and accuracy to serve problems right at your learning edge.</p>
+                        </div>
+                        <div class="edu-card">
+                            <div class="edu-card-icon">⚔️</div>
+                            <h4>Real-Time Multiplayer Duels</h4>
+                            <p>Challenge friends, classmates, or colleagues. Synchronized problem sets guarantee fair competition with instant WebSocket scoreboard updates.</p>
+                        </div>
+                        <div class="edu-card">
+                            <div class="edu-card-icon">🦄</div>
+                            <h4>Real-World Startup Math</h4>
+                            <p>Tackle practical finance and venture capital puzzles in Startup Quest: compute burn rates, runway, CAC-to-LTV ratios, and equity dilution.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Accordion 2: Quantitative Disciplines & Topics -->
+            <details class="edu-accordion" id="accordion-categories">
+                <summary class="edu-summary">
+                    <div class="summary-left">
+                        <span class="summary-icon">📚</span>
+                        <h3 class="summary-heading">Explore Challenge Categories</h3>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-badge">6 Quantitative Disciplines</span>
+                        <span class="summary-chevron" aria-hidden="true">▸</span>
+                    </div>
+                </summary>
+                <div class="edu-content">
+                    <p class="edu-intro">Whether preparing for exams, interviews, or daily cognitive fitness, MathPuzzle covers essential quantitative disciplines.</p>
+                    <div class="category-showcase">
+                        <div class="category-box">
+                            <h4>🔢 Basic Arithmetic</h4>
+                            <p>Fast-fire mental addition, subtraction, multiplication, and division designed to boost core number sense and eliminate reliance on calculators.</p>
+                            <span class="example-tag">Speed drills: 7 × 18, 144 ÷ 12</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>📊 Decimals & Fractions</h4>
+                            <p>Master seamless conversions between fractions, decimals, and mixed numbers. Essential for science, engineering, and data analysis.</p>
+                            <span class="example-tag">Benchmarks: 3/8 = 0.375, 5/6 ≈ 0.833</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>📈 Percentages</h4>
+                            <p>Learn decomposition techniques (10% and 1% rules) to calculate discounts, interest, tips, and percentage changes in your head.</p>
+                            <span class="example-tag">Shortcuts: 15% of 240, 16% of 50 = 8</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>💰 Profit, Loss & Margins</h4>
+                            <p>Understand the critical commercial difference between markup on cost and gross profit margin on selling price.</p>
+                            <span class="example-tag">Formulas: Margin vs Markup</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>📐 Algebra & Equations</h4>
+                            <p>Develop rapid algebraic intuition. Balance linear equations and isolate variables without writing scratch steps.</p>
+                            <span class="example-tag">Equations: 4x + 12 = 36 ➔ x = 6</span>
+                        </div>
+                        <div class="category-box">
+                            <h4>🚀 Startup Quest Simulation</h4>
+                            <p>10 levels of high-stakes entrepreneurial math. Make executive decisions on pricing, hiring, and venture equity.</p>
+                            <span class="example-tag">Business: $100K Seed ➔ $1B Unicorn</span>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Accordion 3: The Science & Guides -->
+            <details class="edu-accordion" id="accordion-science">
+                <summary class="edu-summary">
+                    <div class="summary-left">
+                        <span class="summary-icon">💡</span>
+                        <h3 class="summary-heading">The Science of Mental Computation</h3>
+                    </div>
+                    <div class="summary-right">
+                        <span class="summary-badge">Cognitive Benefits & Guides</span>
+                        <span class="summary-chevron" aria-hidden="true">▸</span>
+                    </div>
+                </summary>
+                <div class="edu-content">
+                    <div class="why-math-banner">
+                        <p>
+                            Neuroscience research shows that practicing mental calculation strengthens the brain's prefrontal cortex, enhancing working memory, focus, and rapid logical deduction. By eliminating calculation anxiety and transforming math into an intuitive game, MathPuzzle helps learners of all ages build durable quantitative confidence.
+                        </p>
+                        <div style="margin-top: 1.25rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="{{ url_for('how_to_play') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">📖 Read our Mental Math Guides & Strategy</a>
+                            <span style="color: var(--text-light);">•</span>
+                            <a href="{{ url_for('about') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">ℹ️ About MathPuzzle & Our Mission</a>
+                            <span style="color: var(--text-light);">•</span>
+                            <a href="{{ url_for('faq') }}" style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">❓ Frequently Asked Questions</a>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </section>
 
     <script>
+        const catDescriptions = {
+            'basic': 'Addition, subtraction, multiplication & division drills',
+            'decimal': 'Decimals, fractions & benchmarks conversions',
+            'percentage': 'Growth, discounts & change shortcuts',
+            'profit': 'Cost markup vs profit margin analytics',
+            'algebra': 'Balance linear equations & variable isolation'
+        };
+
+        function generateRandomGamerId() {
+            const adjectives = ['Cool', 'Super', 'Math', 'Alpha', 'Quantum', 'Epic', 'Swift', 'Mega'];
+            const nouns = ['Wizard', 'Solver', 'Hero', 'Thinker', 'Logic', 'Geek', 'Master', 'Prime'];
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const noun = nouns[Math.floor(Math.random() * nouns.length)];
+            const num = Math.floor(100 + Math.random() * 900);
+            return `${adj}${noun}${num}`;
+        }
+
+        function setupGamerId() {
+            const mainInput = document.getElementById('player_name');
+            const hiddenInput = document.getElementById('hidden_player_name');
+            const isLoggedIn = {{ 'true' if session.get('user_id') else 'false' }};
+            
+            let gamerId = mainInput.value.trim();
+            if (!gamerId) {
+                gamerId = localStorage.getItem('mathpuzzle_gamer_id');
+            }
+            if (!gamerId) {
+                gamerId = generateRandomGamerId();
+                localStorage.setItem('mathpuzzle_gamer_id', gamerId);
+            }
+            
+            mainInput.value = gamerId;
+            if (hiddenInput) hiddenInput.value = gamerId;
+
+            // Sync with all join forms in lobby section AND the invitation section
+            document.querySelectorAll('input[name="player_name"]').forEach(input => {
+                input.value = gamerId;
+            });
+
+            if (!isLoggedIn) {
+                mainInput.addEventListener('input', (e) => {
+                    const newValue = e.target.value;
+                    if (newValue.trim()) {
+                        localStorage.setItem('mathpuzzle_gamer_id', newValue);
+                        if (hiddenInput) hiddenInput.value = newValue;
+                        
+                        document.querySelectorAll('input[name="player_name"]').forEach(input => {
+                            input.value = newValue;
+                        });
+                    }
+                    syncTabs();
+                });
+            }
+        }
+
+        function randomizeGamerId() {
+            const mainInput = document.getElementById('player_name');
+            const hiddenInput = document.getElementById('hidden_player_name');
+            const newId = generateRandomGamerId();
+            mainInput.value = newId;
+            if (hiddenInput) hiddenInput.value = newId;
+            localStorage.setItem('mathpuzzle_gamer_id', newId);
+            document.querySelectorAll('input[name="player_name"]').forEach(input => {
+                input.value = newId;
+            });
+            syncTabs();
+            const avatars = ['🧙‍♂️', '⚡', '🧠', '🦄', '🎯', '🦊', '🚀', '👑'];
+            const avatarEl = document.getElementById('avatar-icon');
+            if (avatarEl) {
+                avatarEl.textContent = avatars[Math.floor(Math.random() * avatars.length)];
+            }
+        }
+
+        function selectCategoryChip(val) {
+            const select = document.getElementById('category');
+            if (select) {
+                select.value = val;
+                syncCategorySelect();
+            }
+        }
+
+        function syncCategorySelect() {
+            const select = document.getElementById('category');
+            if (!select) return;
+            const val = select.value;
+            document.querySelectorAll('.cat-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.getAttribute('data-cat') === val);
+            });
+            const helper = document.getElementById('cat-desc');
+            if (helper && catDescriptions[val]) {
+                helper.textContent = catDescriptions[val];
+            }
+        }
+
+        function selectDifficultyChip(val) {
+            const select = document.getElementById('difficulty');
+            if (select) {
+                select.value = val;
+                syncDifficultySelect();
+            }
+        }
+
+        function syncDifficultySelect() {
+            const select = document.getElementById('difficulty');
+            if (!select) return;
+            const val = select.value;
+            document.querySelectorAll('.segment-btn[data-diff]').forEach(btn => {
+                const isActive = btn.getAttribute('data-diff') === val;
+                btn.classList.toggle('active', isActive);
+                if (btn.getAttribute('data-diff') === 'adaptive') {
+                    btn.classList.toggle('ai-active', isActive);
+                }
+            });
+        }
+
+        function selectModeType(type) {
+            const select = document.getElementById('mode');
+            if (select) {
+                select.value = type;
+                updateModeLabel();
+            }
+        }
+
+        function setPresetValue(val) {
+            const input = document.getElementById('mode_value');
+            if (input) {
+                input.value = val;
+            }
+            document.querySelectorAll('.preset-chip').forEach(chip => {
+                chip.classList.toggle('active', parseInt(chip.textContent) === val);
+            });
+        }
+
         function updateModeLabel() {
             const mode = document.getElementById('mode').value;
             const label = document.getElementById('mode_label');
             const input = document.getElementById('mode_value');
+            const timeBtn = document.getElementById('mode-btn-time');
+            const questBtn = document.getElementById('mode-btn-questions');
+            const presets = document.getElementById('presets-row');
+
             if (mode === 'time') {
-                label.textContent = "Time in seconds (5-300):";
-                input.min = 5;
-                input.max = 300;
-                input.value = 20;
+                if (label) label.textContent = "Time in seconds (5-300):";
+                if (input) {
+                    input.min = 5;
+                    input.max = 300;
+                    if (input.value < 5 || input.value > 300) input.value = 20;
+                }
+                if (timeBtn) timeBtn.classList.add('active');
+                if (questBtn) questBtn.classList.remove('active');
+                if (presets) {
+                    presets.innerHTML = `
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(15)">15s</div>
+                        <div class="preset-chip ${input && input.value == 20 ? 'active' : ''}" role="button" tabindex="0" onclick="setPresetValue(20)">20s (Std)</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(45)">45s</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(60)">60s Blitz</div>
+                    `;
+                }
             } else {
-                label.textContent = "Number of questions (1-100):";
-                input.min = 1;
-                input.max = 100;
-                input.value = 10;
+                if (label) label.textContent = "Number of questions (1-100):";
+                if (input) {
+                    input.min = 1;
+                    input.max = 100;
+                    if (input.value < 1 || input.value > 100) input.value = 10;
+                }
+                if (timeBtn) timeBtn.classList.remove('active');
+                if (questBtn) questBtn.classList.add('active');
+                if (presets) {
+                    presets.innerHTML = `
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(5)">5 Qs</div>
+                        <div class="preset-chip ${input && input.value == 10 ? 'active' : ''}" role="button" tabindex="0" onclick="setPresetValue(10)">10 Qs (Std)</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(20)">20 Qs</div>
+                        <div class="preset-chip" role="button" tabindex="0" onclick="setPresetValue(50)">50 Marathon</div>
+                    `;
+                }
             }
         }
 
-        function toggleGameType() {
-            const isMultiplayer = document.getElementById('multiplayer').checked;
+        function setGameType(type) {
+            const radio = document.getElementById(type);
+            if (radio) {
+                radio.checked = true;
+                syncTabs();
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        function syncTabs() {
+            const types = ['single', 'multiplayer', 'startup_challenge'];
+            let activeType = 'multiplayer';
+            
+            types.forEach(t => {
+                const radio = document.getElementById(t);
+                const tab = document.getElementById('tab-' + t);
+                if (radio && radio.checked) {
+                    activeType = t;
+                    if (tab) tab.classList.add('active');
+                } else if (tab) {
+                    tab.classList.remove('active');
+                }
+            });
+
             const btn = document.getElementById('start_btn');
-            btn.textContent = isMultiplayer ? "Create Multiplayer Lobby" : "Start Single Player Game";
+            const standardOptions = document.getElementById('standard-options');
+            const startupInfo = document.getElementById('startup-info');
+            const lobbySection = document.getElementById('lobby-section');
+            const arenaLayout = document.getElementById('arena-layout');
+            const modeTag = document.getElementById('mode-state-tag');
+            const gamerId = document.getElementById('player_name').value.trim();
+
+            if (gamerId) {
+                // Reveal options
+                btn.classList.remove('hidden');
+                if (activeType === 'startup_challenge') {
+                    btn.textContent = "Start Startup Quest";
+                    btn.style.background = 'linear-gradient(135deg, #db2777 0%, #be185d 100%)';
+                    standardOptions.classList.add('hidden');
+                    startupInfo.classList.remove('hidden');
+                    if (arenaLayout) arenaLayout.classList.add('single-column');
+                    if (lobbySection) lobbySection.style.display = 'none';
+                } else if (activeType === 'single') {
+                    btn.textContent = "Start Solo Challenge";
+                    btn.style.background = '';
+                    if (modeTag) modeTag.textContent = 'Solo Sprint';
+                    standardOptions.classList.remove('hidden');
+                    startupInfo.classList.add('hidden');
+                    if (arenaLayout) arenaLayout.classList.add('single-column');
+                    if (lobbySection) lobbySection.style.display = 'none';
+                } else {
+                    btn.textContent = "Create Multiplayer Lobby";
+                    btn.style.background = '';
+                    if (modeTag) modeTag.textContent = 'Multiplayer Lobby';
+                    standardOptions.classList.remove('hidden');
+                    startupInfo.classList.add('hidden');
+                    if (arenaLayout) arenaLayout.classList.remove('single-column');
+                    if (lobbySection) lobbySection.style.display = 'flex';
+                }
+            } else {
+                // Hide options
+                btn.classList.add('hidden');
+                standardOptions.classList.add('hidden');
+                startupInfo.classList.add('hidden');
+                if (lobbySection) lobbySection.style.display = 'none';
+            }
         }
 
         window.onload = function() {
-            toggleGameType();
+            if (!document.querySelector('input[name="game_type"]:checked')) {
+                const multiRadio = document.getElementById('multiplayer');
+                if (multiRadio) multiRadio.checked = true;
+            }
+            setupGamerId();
+            syncTabs();
+            syncCategorySelect();
+            syncDifficultySelect();
             updateModeLabel();
         };
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.key === 'Enter' || e.key === ' ') && e.target && (e.target.classList.contains('cat-chip') || e.target.classList.contains('preset-chip'))) {
+                e.preventDefault();
+                e.target.click();
+            }
+        });
     </script>
 {% endblock %}
