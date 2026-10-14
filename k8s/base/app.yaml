@@ -14,6 +14,9 @@ spec:
     spec:
       dnsPolicy: ClusterFirst
       dnsConfig:
+        nameservers:
+        - "8.8.8.8"
+        - "1.1.1.1"
         options:
         - name: ndots
           value: "2"
@@ -45,6 +48,8 @@ spec:
         env:
         - name: FLASK_ENV
           value: "production"
+        - name: ENABLE_SSO_GUEST_MIGRATION
+          value: "true"
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:

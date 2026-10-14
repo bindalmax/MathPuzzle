@@ -6,6 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Prioritize IPv4 over IPv6 for dual-stack hosts (prevents AAAA connect timeouts on Ubuntu)
+RUN echo "precedence ::ffff:0:0/96 100" >> /etc/gai.conf
+
 # Copy application files
 COPY . .
 

@@ -5,12 +5,17 @@ services:
     build: .
     ports:
       - "8080:5000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=${SECRET_KEY}
       - DATABASE_URL=${DATABASE_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-    # Cloud-optimized Gunicorn command (no local SSL certs, as proxy handles it)
-    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 100 app:app
+      - ENABLE_SSO_GUEST_MIGRATION=${ENABLE_SSO_GUEST_MIGRATION:-true}
+      - GOOGLE_AUTH_OFFLINE_FALLBACK=${GOOGLE_AUTH_OFFLINE_FALLBACK:-false}
+    # Cloud-optimized Gunicorn command (dual-stack IPv4/IPv6 support)
+    command: gunicorn --bind [::]:5000 --workers 1 --threads 100 app:app
     restart: always
