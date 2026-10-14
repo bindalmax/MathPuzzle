@@ -44,6 +44,7 @@ class TestUIAutomation(unittest.TestCase):
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
             options.add_argument('--disable-gpu')
+            options.set_capability('goog:loggingPrefs', {'browser': 'ALL'})
             self.driver = webdriver.Chrome(options=options)
         except Exception:
             self.driver = webdriver.Chrome()
@@ -205,6 +206,47 @@ class TestUIAutomation(unittest.TestCase):
         # Verify QR image has src from qrserver
         qr_img = wait.until(EC.visibility_of_element_located((By.ID, "qr-image")))
         self.assertIn("qrserver.com", qr_img.get_attribute("src"))
+
+    def test_csp_and_console_zero_severe_errors(self):
+        """Verify that under the active CSP, pages load with zero CSP blocks or script rejections."""
+        self.driver.get(self.base_url)
+        wait = WebDriverWait(self.driver, 10)
+        wait.until(EC.presence_of_element_located((By.ID, "game_form")))
+
+        # Check console logs for CSP violations on homepage
+        logs = self.driver.get_log('browser')
+        csp_violations = [
+            log for log in logs 
+            if 'Content-Security-Policy' in log.get('message', '') 
+            or 'violates the following Content Security Policy directive' in log.get('message', '')
+            or 'Refused to' in log.get('message', '')
+        ]
+        self.assertEqual(len(csp_violations), 0, f"CSP violation on homepage: {csp_violations}")
+
+        # Start game and verify math notation with KaTeX works without CSP blocks
+        self.click_safe(By.ID, "single")
+        time.sleep(0.3)
+        self.driver.find_element(By.NAME, "player_name").send_keys("CSPTester")
+        
+        category_select = self.driver.find_element(By.ID, "category")
+        category_select.find_element(By.XPATH, "//option[@value='algebra']").click()
+        
+        self.click_safe(By.ID, "start_btn")
+        wait.until(EC.url_contains("game"))
+        
+        # Verify KaTeX element rendered successfully
+        katex_el = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "katex")))
+        self.assertTrue(katex_el.is_displayed())
+
+        # Check game page console logs for CSP violations
+        game_logs = self.driver.get_log('browser')
+        game_csp_violations = [
+            log for log in game_logs 
+            if 'Content-Security-Policy' in log.get('message', '') 
+            or 'violates the following Content Security Policy directive' in log.get('message', '')
+            or 'Refused to' in log.get('message', '')
+        ]
+        self.assertEqual(len(game_csp_violations), 0, f"CSP violation on game page: {game_csp_violations}")
 
 if __name__ == '__main__':
     unittest.main()
